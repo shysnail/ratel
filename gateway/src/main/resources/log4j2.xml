@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="OFF" monitorInterval="1800">
+
+    <properties>
+        <property name="LOG_HOME">${logger.rootdir}</property>
+        <property name="LEVEL">${logger.level}</property>
+    </properties>
+
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%highlight{%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %class.%L - %msg%n}{FATAL=Bright Red, ERROR=Bright Magenta, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Black, TRACE=Bright White}"/>
+        </Console>
+
+        <RollingFile name="errorLog" append="true"
+                     fileName="${LOG_HOME}/error.${date:yyyy-MM-dd}.log"
+                     filePattern="${LOG_HOME}/${date:yyyy-MM-dd}/error.%d{yyyy-MM-dd}-%i.log"
+        >
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout
+                    pattern="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{15}.%line - %msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="20"/>
+        </RollingFile>
+
+        <RollingFile name="infoLog"
+                     fileName="${LOG_HOME}/info.${date:yyyy-MM-dd}.log"
+                     filePattern="${LOG_HOME}/${date:yyyy-MM-dd}/info.%d{yyyy-MM-dd}-%i.log"
+        >
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <ThresholdFilter level="${LEVEL}" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout
+                    pattern="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{15}.%line - %msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="20"/>
+        </RollingFile>
+
+        <!--网络输出 按具体情况决定是否适用-->
+        <!--<Socket name="system" host="localHost" port="5001" >-->
+        <!--<SerializedLayout />-->
+        <!--<PatternLayout-->
+        <!--pattern="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{15}.%line - %msg%n"/>-->
+        <!--</Socket>-->
+
+    </Appenders>
+
+    <Loggers>
+        <!--3rdparty Loggers-->
+        <asyncLogger name="org.apache" level="ERROR"></asyncLogger>
+        <asyncLogger name="io.netty" level="ERROR"></asyncLogger>
+        <asyncLogger name="io.vertx" level="ERROR"></asyncLogger>
+        <asyncLogger name="java.sql" level="ERROR"></asyncLogger>
+        <asyncLogger name="com.alibaba.druid" level="ERROR"></asyncLogger>
+
+        <!--<asyncLogger name="com.ehaier.darwin" level="${logger.level}" includeLocation="true" additivity="false">-->
+        <!--<appender-ref ref="infoLog" />-->
+        <!--<appender-ref ref="Console"/>-->
+        <!--</asyncLogger>-->
+
+        <asyncRoot level="${LEVEL}" includeLocation="true">
+            <appender-ref ref="infoLog"/>
+            <appender-ref ref="errorLog"/>
+            <appender-ref ref="Console"/>
+        </asyncRoot>
+    </Loggers>
+</Configuration>

@@ -1,0 +1,39 @@
+name: ${project.artifactId}
+version: ${project.version}
+
+## DEV|PRODUCT, default is product
+mode: DEV
+## port for console , default 5678, if not assign port, console is disabled on this node.
+port: 5678
+
+domainName:
+
+upload:
+  tmpdir: file-uploads
+
+cluster:
+  enabled: true
+#  host: ${cluster.host}
+  port: ${cluster.port}
+  pingInterval: 30000
+  pingRetryInterval: 30000
+  zookeeperHosts: ${zkhosts}
+  rootPath: com.kaitusoft.ratel
+  sessionTimeoutMs: 600000
+  connectionTimeoutMs: 3000
+  retry:
+    initialSleepTimeMs: 1000
+    maxTimes: 3
+    maxSleepMs: 3000
+# Connection parameters
+database:
+  providerClass: com.kaitusoft.ratel.core.component.DruidDatasourceProvider
+  driverClass: com.mysql.jdbc.Driver
+  url: ${db.url}
+  username: ${db.username}
+  password: ${db.password}
+
+monitor:
+  enabled: false
+
+

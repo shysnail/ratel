@@ -1,0 +1,3 @@
+mode: SINGLE
+masterAddresses:
+  - "localhost:6379"

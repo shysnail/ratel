@@ -1,0 +1,107 @@
+.navbar-nav .logo {
+    height: 64px;
+    width: 64px;
+}
+
+.Hui-aside cursor{
+    background: #ccc;
+}
+
+.menu_dropdown .cursor{
+    background: #cccccc;
+}
+
+li a{
+    float:left;
+}
+
+li i{
+    position: absolute;
+    right:15px;
+}
+
+.pagination {
+    float: right;
+    padding-right: 20px;
+}
+
+.e-p-b {
+    display: none;
+}
+
+.e-p-i-b {
+    display: none;
+}
+
+.opbox{
+    color:#fff;
+}
+
+.opbox a{
+    color:#fff;
+}
+
+.opbox a:before{
+    color:#fff;
+}
+
+.opbox a:after{
+    color:#fff;
+}
+
+.opbox .iconfont{
+    margin-left: .5rem;
+}
+
+.article-title a{
+    color: #0e90d2;
+    text-decoration: underline;
+}
+
+.article-title a:after{
+    color: #bd362f;
+}
+
+.article-status img{
+    height:1.2rem;
+    width: 1.2rem;
+}
+
+.Hui-article .iconfont{
+    text-decoration:none;
+}
+
+.Hui-article .icon-timeout{
+    color: #8945b0;
+}
+
+.Hui-article .icon-stop{
+    color: #e5992d;
+}
+
+.Hui-article .icon-redo{
+    color: #3673ff;
+}
+
+.Hui-article .icon-play-circle{
+    color: #26c100;
+}
+
+.Hui-article .icon-delete{
+    color: #ff0008;
+}
+
+.article-status a{
+    color: #d76c1c;
+}
+
+#table_items .dongjie{
+    color: #4297ca;
+}
+
+#table_items .jiedong{
+    color: #f37629;
+}
+
+.popover {position: absolute;top: 0;left: 0;z-index: 1060;display: none;min-width:150px;max-width: 276px;padding: 1px;font-size: 14px;font-weight: normal;line-height: 1.42857143;text-align: left;white-space: normal;background-color: #fff;-webkit-background-clip: padding-box;background-clip: padding-box;border: 1px solid #ccc;border: 1px solid rgba(0, 0, 0, .2);border-radius: 6px;-webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, .2);box-shadow: 0 5px 10px rgba(0, 0, 0, .2);}
+
