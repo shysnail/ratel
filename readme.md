@@ -13,7 +13,7 @@
  > JDK: 1.8 + (如使用openjdk 请自行匹配版本，暂时未评测) <br/>
  > build: maven <br/>
 ```html
-mvn clean package
+mvn clean package -Dmaven.test.skip=true
 cd gateway/target/ratel
 将conf目录下 ratel.sql导入至数据库
 修改conf目录ratel.yml配置，包括集群模式，数据库配置等等
@@ -21,7 +21,7 @@ cd gateway/target/ratel
 ```
 #### way 2.下载发布包
 ```html
-wget https://github.
+wget https://github.com/shysnail/ratel/releases/download/x.x.x/ratel.zip
 tar xvf 
 cd ratel-xxx
 将conf目录下 ratel.sql导入至数据库
