@@ -16,5 +16,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Upload {
-    private String tmpdir;
+    private String tmpdir = "file-uploads";
+
+    private String size;
 }

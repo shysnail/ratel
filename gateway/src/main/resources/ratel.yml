@@ -8,9 +8,6 @@ port: 5678
 
 domainName:
 
-upload:
-  tmpdir: file-uploads
-
 cluster:
   enabled: true
 #  host: ${cluster.host}

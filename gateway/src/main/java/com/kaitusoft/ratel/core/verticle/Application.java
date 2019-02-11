@@ -23,10 +23,7 @@ import io.vertx.core.net.PfxOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.CookieHandler;
-import io.vertx.ext.web.handler.CorsHandler;
-import io.vertx.ext.web.handler.SessionHandler;
-import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.ext.web.handler.*;
 import io.vertx.ext.web.sstore.ClusteredSessionStore;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
@@ -378,9 +375,25 @@ public class Application extends AbstractVerticle {
         if (this.ipBlanklist != null && this.ipBlanklist.length > 0)
             refRouter.route().handler(new IpFilterHandler(this.ipBlanklist));
 
-        refRouter.route().handler(CookieHandler.create());
+        /**
+         * 设置服务选项，如上传路径，请求体大小
+         */
+//        refRouter.route().handler(BodyHandler.create());
 
         SessionOption sessionOption = app.getSessionOption();
+        if (sessionOption != null) {
+
+            SessionStore sessionStore;
+            if (vertx.isClustered()) {
+                sessionStore = ClusteredSessionStore.create(vertx);
+            } else {
+                sessionStore = LocalSessionStore.create(vertx);
+            }
+            SessionHandler sessionHandler = SessionHandler.create(sessionStore);
+            sessionHandler.setSessionCookieName(sessionOption.getName());
+            sessionHandler.setSessionTimeout(sessionOption.getInterval() * 1000);
+            refRouter.route().handler(CookieHandler.create()).handler(sessionHandler);
+        }
 
         refRouter.route().handler((context) -> {
             HttpServerRequest request = context.request();
@@ -395,21 +408,6 @@ public class Application extends AbstractVerticle {
             }
             context.next();
         });
-
-        if (sessionOption != null) {
-
-            SessionStore sessionStore;
-            if (vertx.isClustered()) {
-                sessionStore = ClusteredSessionStore.create(vertx);
-            } else {
-                sessionStore = LocalSessionStore.create(vertx);
-            }
-            SessionHandler sessionHandler = SessionHandler.create(sessionStore);
-            sessionHandler.setSessionCookieName(sessionOption.getName());
-            sessionHandler.setSessionTimeout(sessionOption.getInterval() * 1000);
-
-            refRouter.route().handler(sessionHandler);
-        }
 
         if (app.getCrossDomain() != null) {
             CrossDomain crossDomain = app.getCrossDomain();

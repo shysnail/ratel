@@ -471,42 +471,6 @@
                     </div>
                 </div>
 
-                <!--<div class="e-p-i panel panel-default mt-20">-->
-                <!--<div class="e-p-i-h panel-header cl">-->
-                <!--<label class="col-xs-3 text-l pl-5">熔断策略</label>-->
-                <!--<div class="col-xs-2"><input type="checkbox" class="item_trigger" id="fusing" name="fusing" value="1"> <b class='openOrClose'>启用</b></div>-->
-                <!--</div>-->
-                <!--<div class="e-p-i-b panel-body">-->
-                <!--<div class="row cl">-->
-                <!--<label class="form-label col-xs-3">流控:</label>-->
-                <!--<div class="formControls col-xs-8">-->
-                <!--<input type="text" class="input-text" name="fusing.name" placeholder="权限认证"/>-->
-                <!--</div>-->
-                <!--</div>-->
-                <!--</div>-->
-                <!--</div>-->
-
-                <!--<div class="e-p-i panel panel-default mt-20">-->
-                <!--<div class="e-p-i-h panel-header cl">-->
-                <!--<label class="col-xs-3 text-l pl-5">缓存</label>-->
-                <!--<div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openCache" name="openCache" value="1"> <b class='openOrClose'>启用</b></div>-->
-                <!--</div>-->
-                <!--<div class="e-p-i-b panel-body">-->
-                <!--<div class="row cl">-->
-                <!--<label class="form-label col-xs-3">匹配规则:</label>-->
-                <!--<div class="formControls col-xs-8">-->
-                <!--<input type="text" class="input-text" name="cache.rule" placeholder="路径，支持正则表达式，多个用 ',' 拼接"/>-->
-                <!--</div>-->
-                <!--</div>-->
-                <!--<div class="row cl">-->
-                <!--<label class="form-label col-xs-3">生命周期(秒):</label>-->
-                <!--<div class="formControls col-xs-8">-->
-                <!--<input type="text" class="input-text" name="cache.interval" value="1800" style="width: 15%"/>-->
-                <!--</div>-->
-                <!--</div>-->
-                <!--</div>-->
-                <!--</div>-->
-
                 <div class="e-p-i panel panel-default mt-20">
                     <div class="e-p-i-h panel-header cl">
                         <label class="col-xs-3 text-l pl-5">IP黑名单</label>
@@ -582,6 +546,78 @@
                     </div>
                 </div>
 
+                <div class="e-p-i panel panel-default mt-20" style="display: none">
+                    <div class="e-p-i-h panel-header cl">
+                        <label class="col-xs-3 text-l pl-5">自动降级/熔断</label>
+                        <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openBlow"
+                                                     name="openBlow" value="1" disabled> <b class='openOrClose'>启用</b>
+                        </div>
+                    </div>
+                    <div class="e-p-i-b panel-body">
+                        <div class="row cl">
+                            <label class="form-label col-xs-3">开启自动熔断:</label>
+                            <div class="formControls col-xs-8">
+                                <input type="checkbox" class="input-text" name="blow.auto" disabled/>
+                            </div>
+                        </div>
+                        <div class="row cl">
+                            <div class="row cl">
+                                <label class="form-label col-xs-3">熔断阈值:</label>
+                                <div class="formControls col-xs-8">
+                                    <input type="text" class="input-text" name="blow.errorCycle" value="5"
+                                           style="width: 3rem;"/> 分钟 接口错误率超过 <input type="text" class="input-text" name="blow.errorRate" value="5"
+                                                                                    style="width: 3rem;"/>%
+                                </div>
+                            </div>
+                            <div class="row cl">
+                                <label class="form-label col-xs-3">超时占比:</label>
+                                <div class="formControls col-xs-8">
+                                    响应超过<input type="text" class="input-text" name="blow.timeout" value="30000"
+                                               style="width: 4rem;"/> 秒的响应超过<input type="text" class="input-text" name="blow.timeoutRate" value="10"
+                                                                                   style="width: 3rem;"/>%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row cl">
+                            <div class="row cl">
+                                <label class="form-label col-xs-3">熔断阈值:</label>
+                                <div class="formControls col-xs-8">
+                                    <input type="text" class="input-text" name="blow.errorCycle" value="5"
+                                           style="width: 3rem;"/> 分钟 接口错误率小于 <input type="text" class="input-text" name="blow.errorRate" value="5"
+                                                                                    style="width: 2rem;"/>%
+                                </div>
+                            </div>
+                            <div class="row cl">
+                                <label class="form-label col-xs-3">超时占比:</label>
+                                <div class="formControls col-xs-8">
+                                    响应超过<input type="text" class="input-text" name="blow.timeout" value="30000"
+                                               style="width: 4rem;"/> 秒的响应小于<input type="text" class="input-text" name="blow.timeoutRate" value="10"
+                                                                                   style="width: 3rem;"/>%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row cl">
+                            <label class="form-label col-xs-3">返回码:</label>
+                            <div class="formControls col-xs-8">
+                                <input type="text" class="input-text" name="blow.result.code" value="200" style="width: 3rem;"/>
+                            </div>
+                        </div>
+                        <div class="row cl">
+                            <label class="form-label col-xs-3">信息类型:</label>
+                            <div class="formControls col-xs-8">
+                                <input type="text" class="input-text" name="blow.result.contentType"
+                                       value="application/json"/>
+                            </div>
+                        </div>
+                        <div class="row cl">
+                            <label class="form-label col-xs-3">内容:</label>
+                            <div class="formControls col-xs-8">
+                                <input type="text" class="input-text" name="blow.result.content" value='{"success":true,"msg":"服务暂时停止了"}'/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="e-p-i panel panel-default mt-20">
                     <div class="e-p-i-h panel-header cl">
                         <label class="col-xs-3 text-l pl-5">前置处理器</label>
@@ -649,79 +685,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i panel panel-default mt-20">
-                    <div class="e-p-i-h panel-header cl">
-                        <label class="col-xs-3 text-l pl-5">降级/熔断</label>
-                        <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openBlow"
-                                                     name="openBlow" value="1"> <b class='openOrClose'>启用</b>
-                        </div>
-                    </div>
-                    <div class="e-p-i-b panel-body">
-                        <div class="row cl">
-                            <label class="form-label col-xs-3">开启自动熔断:</label>
-                            <div class="formControls col-xs-8">
-                                <input type="checkbox" class="input-text" name="blow.auto" disabled/>
-                            </div>
-                        </div>
-                        <div class="row cl">
-                            <div class="row cl">
-                                <label class="form-label col-xs-3">熔断阈值:</label>
-                                <div class="formControls col-xs-8">
-                                    <input type="text" class="input-text" name="blow.errorCycle" value="5"
-                                           style="width: 3rem;"/> 分钟 接口错误率超过 <input type="text" class="input-text" name="blow.errorRate" value="5"
-                                           style="width: 3rem;"/>%
-                                </div>
-                            </div>
-                            <div class="row cl">
-                                <label class="form-label col-xs-3">超时占比:</label>
-                                <div class="formControls col-xs-8">
-                                    响应超过<input type="text" class="input-text" name="blow.timeout" value="30000"
-                                           style="width: 4rem;"/> 秒的响应超过<input type="text" class="input-text" name="blow.timeoutRate" value="10"
-                                                                       style="width: 3rem;"/>%
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row cl">
-                            <div class="row cl">
-                                <label class="form-label col-xs-3">熔断阈值:</label>
-                                <div class="formControls col-xs-8">
-                                    <input type="text" class="input-text" name="blow.errorCycle" value="5"
-                                           style="width: 3rem;"/> 分钟 接口错误率小于 <input type="text" class="input-text" name="blow.errorRate" value="5"
-                                                                                   style="width: 2rem;"/>%
-                                </div>
-                            </div>
-                            <div class="row cl">
-                                <label class="form-label col-xs-3">超时占比:</label>
-                                <div class="formControls col-xs-8">
-                                    响应超过<input type="text" class="input-text" name="blow.timeout" value="30000"
-                                               style="width: 4rem;"/> 秒的响应小于<input type="text" class="input-text" name="blow.timeoutRate" value="10"
-                                                                                  style="width: 3rem;"/>%
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row cl">
-                            <label class="form-label col-xs-3">返回码:</label>
-                            <div class="formControls col-xs-8">
-                                <input type="text" class="input-text" name="blow.result.code" value="200" style="width: 3rem;"/>
-                            </div>
-                        </div>
-                        <div class="row cl">
-                            <label class="form-label col-xs-3">信息类型:</label>
-                            <div class="formControls col-xs-8">
-                                <input type="text" class="input-text" name="blow.result.contentType"
-                                       value="application/json"/>
-                            </div>
-                        </div>
-                        <div class="row cl">
-                            <label class="form-label col-xs-3">内容:</label>
-                            <div class="formControls col-xs-8">
-                                <input type="text" class="input-text" name="blow.result.content" value='{"success":true,"msg":"服务暂时停止了"}'/>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="e-p-i-normal panel panel-default mt-20">
+                <div class="e-p-i-normal panel panel-default mt-20" style="display: none;">
                     <div class="e-p-i-h panel-header">响应状态码定义<b style="float:right;margin-right: 10px">+</b></div>
                     <div class="e-p-i-b panel-body" id="code_panel">
                         <div class="row cl">
