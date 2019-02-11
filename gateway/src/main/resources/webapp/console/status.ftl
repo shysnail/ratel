@@ -58,7 +58,7 @@
 
 
     <div id="request" class="col-xs-5 h300 mt-30"></div>
-    <div id="request_time" class="col-xs-5 h300 ml-40 mt-30"></div>
+    <div id="request_time" class="col-xs-5 h300 ml-40 mt-30" style="display: none;"></div>
 
     <div id="memory" class="col-xs-5 h300 mt-30"></div>
     <div id="cpu" class="col-xs-5 h300 ml-40 mt-30"></div>

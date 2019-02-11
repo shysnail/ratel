@@ -29,6 +29,9 @@ cd ratel-xxx
 使用 sh bin/start.sh 启动
 ```
 
+#### 扩展
+lib目录下有siga不同环境的包，是监控采样cpu，网卡数据的依赖包，放入你的jdk文件夹的bin目录下（或放入你的path环境变量里配置的任何一个地址下）
+
 # 配置说明
 配置文件位于 conf目录下，使用yaml编写
 ```html
