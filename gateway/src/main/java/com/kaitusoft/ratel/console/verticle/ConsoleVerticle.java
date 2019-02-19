@@ -269,11 +269,11 @@ public class ConsoleVerticle extends AbstractVerticle {
 
 
     protected String getTemplateRoot() {
-        if (ResourceUtil.inJar(ConsoleVerticle.class)) {
-            FileResolver resolver = new FileResolver(vertx);
-            File file = resolver.resolveFile(new File(ResourceUtil.getPath("webapp/console")).getPath());
-            return "/" + file.getPath();
-        }
+//        if (ResourceUtil.inJar(ConsoleVerticle.class)) {
+//            FileResolver resolver = new FileResolver(vertx);
+//            File file = resolver.resolveFile(new File(ResourceUtil.getPath("webapp/console")).getPath());
+//            return "/" + file.getPath();
+//        }
 
         return "webapp/console";
     }
