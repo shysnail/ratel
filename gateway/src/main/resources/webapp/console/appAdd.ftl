@@ -44,10 +44,10 @@
                             <input type="radio" id="protocol-1" name="protocol" value="HTTP_HTTPS" checked>
                             <label for="protocol-1">HTTP(/HTTPS)</label>
                         </div>
-                        <div class="radio-box">
-                            <input type="radio" id="protocol-3" name="protocol" value="WEB_SOCKET" disabled>
-                            <label for="protocol-3">WEB_SOCKET</label>
-                        </div>
+                        <#--<div class="radio-box">-->
+                            <#--<input type="radio" id="protocol-3" name="protocol" value="WEB_SOCKET" disabled>-->
+                            <#--<label for="protocol-3">WEB_SOCKET</label>-->
+                        <#--</div>-->
                         <div class="radio-box">
                             <input type="radio" id="protocol-4" name="protocol" value="TCP" disabled>
                             <label for="protocol-4">TCP</label>
