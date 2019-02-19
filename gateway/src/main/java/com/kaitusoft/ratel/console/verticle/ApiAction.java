@@ -275,13 +275,13 @@ public class ApiAction extends BaseAction {
 
                 ApiOption api = body.mapTo(ApiOption.class);
 
-                context.vertx().eventBus().<ApiOption>send(id != null ? ClusterVerticle.myNodeId + Event.UPDATE_API : ClusterVerticle.myNodeId + Event.ADD_API, api, new DeliveryOptions().setCodecName(Configuration.MODEL_CODEC), apiReply -> {
+                context.vertx().eventBus().<ApiOption>send(id != null ? Event.formatInternalAddress(Event.UPDATE_API) : Event.formatInternalAddress(Event.ADD_API), api, new DeliveryOptions().setCodecName(Configuration.MODEL_CODEC), apiReply -> {
                     if (apiReply.succeeded()) {
                         logger.debug("APP:{} updateAPI:{} -> ok", appId, id);
                         response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON).end(Json.encode(new ExecuteResult("ok")));
                     } else {
                         String error = apiReply.cause().getMessage();
-                        logger.error("APP:{} updateAPI:{} -> failed", appId, id, error);
+                        logger.error("APP:{} updateAPI:{} -> failed", appId, id, apiReply.cause());
                         response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end(error);
                     }
                 });

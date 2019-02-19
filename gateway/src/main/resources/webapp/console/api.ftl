@@ -267,7 +267,7 @@
                         options.push("<a href='javascript:void(0)' onclick='apiAction(" + v.id + ", 3)'><i class='iconfont icon-redo' title='重启'></i></a>");
                     }
 
-                    options.push("<a href='${context.domain!''}/apiAdd.html?id=" + v.id + "' ><i class='iconfont icon-tianxie' title='编辑'></i></a>");
+                    options.push("<a href='${context.domain!''}/apiAdd.html?appId="+v.appId+"&id=" + v.id + "' ><i class='iconfont icon-tianxie' title='编辑'></i></a>");
                     options.push("<a href='javascript:void(0)' onclick='deleteApi(" + v.id + ")'><i class='iconfont icon-delete' title='删除'></i></a>");
 
                     var optionHtml = "";
