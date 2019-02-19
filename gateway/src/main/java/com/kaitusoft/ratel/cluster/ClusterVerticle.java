@@ -5,6 +5,7 @@ import com.kaitusoft.ratel.core.common.Event;
 import com.kaitusoft.ratel.core.model.vo.Node;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.core.spi.cluster.NodeListener;
@@ -130,7 +131,7 @@ public class ClusterVerticle extends AbstractVerticle {
                 newNode.setHostname(myNodeId);
                 newNode.setGroupId(myGroup.toString());
                 vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_GET_NODES), message -> {
-                    message.reply(JsonObject.mapFrom(newNode));
+                    message.reply(new JsonArray().add(JsonObject.mapFrom(newNode)));
                 });
                 vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_GET_NODE), message -> {
                     message.reply(JsonObject.mapFrom(newNode));

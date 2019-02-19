@@ -9,7 +9,7 @@ port: 5678
 domainName:
 
 cluster:
-  enabled: true
+  enabled: false
 #  host: ${cluster.host}
   port: ${cluster.port}
   pingInterval: 30000
