@@ -191,10 +191,13 @@ public class Ratel {
                 }else
                     vertx = result.result();
 
+                if(!vertx.isClustered())
+                    ClusterVerticle.myNodeId = Configuration.hostname;
                 future.complete();
             });
         }else{
             vertx = Vertx.vertx(options);
+            ClusterVerticle.myNodeId = Configuration.hostname;
             future.complete();
         }
 

@@ -24,9 +24,7 @@ cd gateway/target/ratel
 wget https://github.com/shysnail/ratel/releases/download/x.x.x/ratel.zip
 tar xvf 
 cd ratel-xxx
-将conf目录下 ratel.sql导入至数据库
-修改conf目录ratel.yml配置，包括集群模式，数据库配置等等
-使用 sh bin/start.sh 启动
+将conf目录ttart.sh 启动
 ```
 
 #### 扩展

@@ -125,7 +125,6 @@ public class ClusterVerticle extends AbstractVerticle {
             vertx.eventBus().consumer(Event.formatAddress(Event.CLUSTER_GROUPING), groupNodeManager::grouping);
 
             if(!vertx.isClustered()) {
-                myNodeId = Configuration.hostname;
                 Node newNode = new Node();
                 newNode.setNodeId(myNodeId);
                 newNode.setHostname(myNodeId);

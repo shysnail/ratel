@@ -4,6 +4,7 @@ import com.kaitusoft.ratel.core.model.Target;
 import com.kaitusoft.ratel.util.StringUtils;
 import io.vertx.ext.web.RoutingContext;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -15,7 +16,7 @@ import java.util.Set;
 public abstract class ProxyPolicy {
 
     protected Target[] targets;
-    protected Set<Target> deadTargets;
+    protected Set<Target> deadTargets = new HashSet<>();
 
     public static ProxyPolicy create(LoadBalance loadBalance, Target[] targets) {
         ProxyPolicy proxyPolicy = null;
