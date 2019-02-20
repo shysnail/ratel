@@ -29,6 +29,8 @@ public class UpstreamProxy extends Proxy {
 
     private static final Logger logger = LoggerFactory.getLogger(UpstreamProxy.class);
 
+    private static final int HOST_CHECK_TASK_INTERVAL = 10000;
+
     private HttpClient httpClient;
     private UpstreamOption upstreamOption;
     private PassBody passBody;
@@ -245,7 +247,7 @@ public class UpstreamProxy extends Proxy {
                 //接口需标记为异常，重试其它目标
                 proxyPolicy.dead(currentTarget);
                 doUpstream(context, clientRequest, clientHeaders);
-                tryReconnect(currentTarget, context.vertx(), clientMethod, target);
+                tryReconnectTask(currentTarget, context.vertx(), clientMethod, target);
             }
 
             if (hasPostProcessor) {
@@ -388,26 +390,31 @@ public class UpstreamProxy extends Proxy {
      * @param clientMethod
      * @param target
      */
-    private void tryReconnect(Target currentTarget, Vertx vertx, HttpMethod clientMethod, String target) {
+    private void tryReconnectTask(Target currentTarget, Vertx vertx, HttpMethod clientMethod, String target) {
         logger.warn("retry connect target {}:{}", clientMethod, target);
         Handler retryTask = new Handler() {
             @Override
             public void handle(Object event) {
-                httpClient.requestAbs(clientMethod, target).setTimeout(upstreamOption.getTimeout()).handler(response -> {
-                    int statusCode = response.statusCode();
-                    if (statusCode != 200) {
-                        logger.warn("app:{}, api:{} , 失败接口已连接，返回码非 200，{}", api.getApp().getName(), api.getPath(), statusCode);
-                    } else {
-                        logger.warn("app:{}, api:{} , 失败接口已连接", api.getApp().getName(), api.getPath());
-                    }
-                    proxyPolicy.rebirth(currentTarget);
-                }).exceptionHandler(e -> {
-                    logger.error("app:{}, api:{} , 失败接口已连接", api.getApp().getName(), api.getPath(), e);
-                    vertx.setTimer(10000, this);
-                }).end();
+                doReconnect(currentTarget, vertx, clientMethod, target, this);
             }
         };
 
-        vertx.setTimer(10000, retryTask);
+        vertx.setTimer(HOST_CHECK_TASK_INTERVAL, retryTask);
+    }
+
+    private void doReconnect(Target currentTarget, Vertx vertx, HttpMethod clientMethod, String target, Handler task){
+        httpClient.requestAbs(clientMethod, target).setTimeout(upstreamOption.getTimeout()).handler(response -> {
+            int statusCode = response.statusCode();
+            if (statusCode != 200) {
+                logger.warn("app:{}, api:{} , 失败接口已连接，返回码非 200，{}", api.getApp().getName(), api.getPath(), statusCode);
+            } else {
+                logger.warn("app:{}, api:{} , 失败接口已连接", api.getApp().getName(), api.getPath());
+            }
+            proxyPolicy.rebirth(currentTarget);
+        }).exceptionHandler(e -> {
+            logger.error("app:{}, api:{} , 失败接口已连接", api.getApp().getName(), api.getPath(), e);
+            if(task != null)
+                vertx.setTimer(HOST_CHECK_TASK_INTERVAL, task);
+        }).end();
     }
 }

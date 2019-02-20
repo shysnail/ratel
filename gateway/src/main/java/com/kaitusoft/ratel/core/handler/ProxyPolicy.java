@@ -46,7 +46,7 @@ public abstract class ProxyPolicy {
             return;
 
         Target t = null;
-        Target[] newTargets = new Target[targets.length];
+        Target[] newTargets = new Target[targets.length - 1];
         for (int i = 0, j = 0; i < targets.length; i++, j++) {
             if (targets[i].getUrl().equals(target)) {
                 t = targets[i];
