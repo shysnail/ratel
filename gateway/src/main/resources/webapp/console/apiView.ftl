@@ -491,7 +491,7 @@
 
                     $('#upstreamOption\\.targets').html(targets);
                     var threadType = upstreamOption.threadType == 'APP' ? ('整个应用公用线程池') : ('接口自用线程池');
-                    threadType += '&nbsp;&nbsp;大小:' + upstreamOption.maxPoolSize ? upstreamOption.maxPoolSize : "不限";
+                    threadType += '&nbsp;&nbsp;大小:' + (upstreamOption.maxPoolSize ? upstreamOption.maxPoolSize : "不限");
                     $('#upstreamOption\\.threadType').html(threadType);
 
                     $('#proxyOption_REDIRECT').hide();
