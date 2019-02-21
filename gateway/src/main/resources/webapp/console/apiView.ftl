@@ -86,7 +86,7 @@
                         <div class="row cl proxy_upstream">
                             <label class="form-label col-xs-3">负载策略:</label>
                             <div class="formControls col-xs-3">
-                                <select id="upstreamOption.proxyPolicy" size="1" class="select-box" disabled>
+                                <select id="upstreamOption.proxyPolicy" size="1" class="select-box" readonly>
                                     <option value="RANDOM">随机</option>
                                     <option value="POLLING_AVAILABLE">权重轮训</option>
                                     <option value="IP_HASH">IP分配</option>
@@ -453,7 +453,7 @@
                 $('#vhost').text(api.vhost);
 
                 var running = api.running;
-                alert(running);
+
                 if (running == 0) {
                     $('#action_start').show();
                 } else if(running == 1){
@@ -481,7 +481,8 @@
                     $('#proxyType').text('反响代理请求');
 
                     $('#upstreamOption\\.methodForward').text(upstreamOption.methodForward == undefined ? '使用请求的方法' : upstreamOption.methodForward);
-                    $('#upstreamOption\\.proxyPolicy').val(upstreamOption.proxyPolicy);
+                    $('#upstreamOption\\.proxyPolicy').val(upstreamOption.loadBalance);
+                    $('#upstreamOption\\.proxyPolicy').change();
 
                     var targets = "";
                     for (var i = 0; i < upstreamOption.targets.length; i++) {
