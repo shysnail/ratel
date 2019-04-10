@@ -390,7 +390,7 @@
     </form>
 
     <div class="row cl mt-30 mb-40 text-c">
-        <button class="btn btn-primary radius" type="button" onclick="submit();">提 交</button>
+        <#--<button class="btn btn-primary radius" type="button" onclick="submit();">提 交</button>-->
         <button class="btn btn-default radius ml-50" type="button" onclick="javascript:window.history.go(-1);">返回</button>
     </div>
 
