@@ -170,8 +170,8 @@
                     rowHtml = rowHtml.replace(/\%\{item.port}/g, v.port);
                     rowHtml = rowHtml.replace(/\%\{item.name}/g, v.name);
                     rowHtml = rowHtml.replace(/\%\{item.description}/g, v.description);
-                    rowHtml = rowHtml.replace(/\%\{item.createTime}/g, v.createTime.replace("T", ' ').replace("Z", ''));
-                    rowHtml = rowHtml.replace(/\%\{item.group}/g, v.groupName == undefined ? v.deployGroup : v.groupName);
+                    rowHtml = rowHtml.replace(/\%\{item.createTime}/g, v.createTime ? v.createTime.replace("T", ' ').replace("Z", '') : "");
+                    rowHtml = rowHtml.replace(/\%\{item.group}/g, v.groupName ? v.deployGroup : v.groupName);
 
                     var running = v.running;
                     var status = '<img src="${context.domain!''}/image/stop.png" title="stopped" />';

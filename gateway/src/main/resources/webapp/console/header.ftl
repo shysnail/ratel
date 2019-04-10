@@ -25,7 +25,7 @@
 </header>
 
 <aside class="Hui-aside">
-    <div class="menu_dropdown bk_2 hidden-xs">
+    <div class="menu_dropdown bk_2">
         <ul>
             <li <#if (context.uri!"") == "index.html">class="cursor"</#if>><a href="${context.domain!''}/index.html">应用<i class="iconfont icon-yingyongguanli"></i></a></li>
         </ul>

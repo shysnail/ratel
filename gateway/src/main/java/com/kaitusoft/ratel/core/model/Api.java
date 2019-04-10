@@ -145,28 +145,30 @@ public class Api {
         String requestPath = request.path();
         String requestUri = request.uri();
 
-        String realUrl = assemble(target.getUrl(), prefix, requestPath);
 //        String queryString = requestUri.substring(requestPath.length());
 
-        if (!capture && !wildcard)
+        String realUrl = "";
+        if (!capture && !wildcard) {
+            realUrl = assemble(target.getUrl(), prefix, requestPath);
             return passQueryString ? appendQueryString(realUrl, requestUri.substring(requestPath.length())) : target.getUrl();
+        }
 
-        String real = target.getUrl();
+        realUrl = target.getUrl();
         if (target.isWildcard()) {
             String[] wildcards = target.getWildcards();
             for (int i = 0; i < wildcards.length; i++) {
-                real = real.replaceAll(wildcards[i], request.getParam(wildcards[i].substring(1)));
+                realUrl = realUrl.replaceAll(wildcards[i], request.getParam(wildcards[i].substring(1)));
             }
         }
 
         if (target.isCapture()) {
             String[] captures = target.getCaptures();
             for (int i = 0; i < captures.length; i++) {
-                real = real.replaceAll(captures[i], request.getParam("param" + captures[i].substring(1)));
+                realUrl = realUrl.replaceAll(captures[i], request.getParam("param" + captures[i].substring(1)));
             }
         }
 
-        return passQueryString ? appendQueryString(realUrl, requestUri.substring(requestPath.length())) : real;
+        return passQueryString ? appendQueryString(realUrl, requestUri.substring(requestPath.length())) : realUrl;
 
     }
 

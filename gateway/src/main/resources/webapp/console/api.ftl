@@ -241,7 +241,7 @@
                     rowHtml = rowHtml.replace(/\%\{item.appId}/g, v.appId);
                     rowHtml = rowHtml.replace(/\%\{item.name}/g, v.name);
                     rowHtml = rowHtml.replace(/\%\{item.path}/g, v.path);
-                    rowHtml = rowHtml.replace(/\%\{item.createTime}/g, v.createTime.replace("T", ' ').replace("Z", ''));
+                    rowHtml = rowHtml.replace(/\%\{item.createTime}/g, v.createTime ? v.createTime.replace("T", ' ').replace("Z", '') : "");
                     var running = v.running;
                     var status = '<img src="image/stop.png" title="stopped" />';
                     if(v.running == 1){
