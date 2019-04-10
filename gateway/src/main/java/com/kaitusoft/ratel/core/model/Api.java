@@ -141,23 +141,43 @@ public class Api {
     }
 
 
+    /**
+     *1.路径配置区分大小写，支持 精确(/user)/模糊匹配(/common/*)、路径捕获、正则表达式 <br/>
+     2. 非全正则路径 必须以'/' 开始，如 /test、/test/* 等 <br/>
+     3. 路径捕获可以使用正则捕获和预定义参数，正则捕获如/(\w+)/(\+), 使用'$参数序号 '来提取，如 /$1_$2.html;
+     预定义参数格式为':变量名' 如 /product/:pid.html 使用 ':变量名'提取 <br/>
+     4.固定便捷用法规则路径以'/*'结尾，转发路径任意位置包含'$1'，则表示需要替换请求路径中'*'的部分到转发路径'$1'位置中去
+     * @param request
+     * @param target
+     * @param prefix
+     * @param passQueryString
+     * @return
+     */
     public String assemble(HttpServerRequest request, Target target, String prefix, boolean passQueryString) {
         String requestPath = request.path();
         String requestUri = request.uri();
 
 //        String queryString = requestUri.substring(requestPath.length());
 
-        String realUrl = "";
-        if (!capture && !wildcard) {
+        String realUrl = target.getUrl();
+        boolean targetWildcardTag = realUrl.indexOf("$1") > 0;
+        if (!capture && !wildcard && !targetWildcardTag) {
             realUrl = assemble(target.getUrl(), prefix, requestPath);
             return passQueryString ? appendQueryString(realUrl, requestUri.substring(requestPath.length())) : target.getUrl();
         }
 
-        realUrl = target.getUrl();
+        String requestPrefix = new String(prefix);
+        boolean appendRelative = false;
+        if(targetWildcardTag) {
+            appendRelative = true;
+        }
+
         if (target.isWildcard()) {
             String[] wildcards = target.getWildcards();
             for (int i = 0; i < wildcards.length; i++) {
                 realUrl = realUrl.replaceAll(wildcards[i], request.getParam(wildcards[i].substring(1)));
+                if(appendRelative)
+                    requestPrefix = requestPrefix.replaceAll(wildcards[i], request.getParam(wildcards[i].substring(1)));
             }
         }
 
@@ -165,7 +185,16 @@ public class Api {
             String[] captures = target.getCaptures();
             for (int i = 0; i < captures.length; i++) {
                 realUrl = realUrl.replaceAll(captures[i], request.getParam("param" + captures[i].substring(1)));
+                if(appendRelative)
+                    requestPrefix = requestPrefix.replaceAll(captures[i], request.getParam("param" + captures[i].substring(1)));
             }
+        }
+        //固定方便用法：补全path
+        if(appendRelative){
+            String plus = "";
+            if(requestPath.length() > requestPrefix.length())
+                plus = requestPath.substring(requestPrefix.length());
+            realUrl = realUrl.replaceAll("\\$1", plus);
         }
 
         return passQueryString ? appendQueryString(realUrl, requestUri.substring(requestPath.length())) : realUrl;

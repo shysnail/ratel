@@ -455,7 +455,7 @@ public class AppAction extends BaseAction {
 
                             ClusterVerticle.clusterMessage.<JsonObject>send(toNodes, Event.formatAddress(sendAddress), body, clusterReply -> {
                                 if (clusterReply.succeeded()) {
-                                    logger.debug("节点停止，app停止");
+                                    logger.debug("节点 {}，app {}", targetStatus, targetStatus);
                                     JsonObject reply = clusterReply.result();
 
                                     resultData.put("success", true);
@@ -473,7 +473,7 @@ public class AppAction extends BaseAction {
                                 } else {
                                     prop.put("running", originStat);
                                     vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.UPDATE_APP_PROP), updates, rollback -> {
-                                        logger.debug("所有节点均停止失败，app无法停止");
+                                        logger.debug("所有节点均{}失败，app无法{}", targetStatus, targetStatus);
 //                                        response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
 //                                                .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
 //                                                .end(Json.encode(new ExecuteResult(false, "所有节点均停止失败，app无法停止")));
@@ -484,7 +484,7 @@ public class AppAction extends BaseAction {
 
                         });
                     } else {
-                        logger.error("停止APP:{} -> failed:", appId, appUpdate.cause());
+                        logger.error("{}APP:{} -> failed:", targetStatus, appId, appUpdate.cause());
 //                        response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
 //                                .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
 //                                .end(Json.encode(new ExecuteResult(false, appUpdate.cause().getMessage())));
@@ -495,7 +495,7 @@ public class AppAction extends BaseAction {
 
 
             } else {
-                logger.error("停止APP:{} -> failed:", appId, app.cause());
+                logger.error("{}APP:{} -> failed:", targetStatus, appId, app.cause());
 //                response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
 //                        .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
 //                        .end(Json.encode(new ExecuteResult(false, app.cause().getMessage())));
