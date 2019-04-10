@@ -182,6 +182,9 @@ public class DeployVerticle extends AbstractVerticle {
             if (result.succeeded()) {
                 DEPLOY_APP.remove(appId);
                 RUNNING_APIS.remove(appId);
+
+                //设置api状态为停止
+
                 message.reply(1);
                 logger.info("停止app: {} -> ok");
             } else {
@@ -416,18 +419,6 @@ public class DeployVerticle extends AbstractVerticle {
                 int apiTotalNum = array.size();
                 array.forEach(obj -> {
                     JsonObject apiJson = (JsonObject) obj;
-                    int originStat = apiJson.getInteger("running");
-
-                    if(App.STOPPED == originStat){
-                        success.incrementAndGet();
-                        if ((success.get() + fail.get()) == apiTotalNum) {
-                            result.put("success", success.get());
-                            result.put("fail", fail.get());
-                            handler.handle(Future.succeededFuture(result));
-                        }
-                        return;
-                    }
-
                     startAppApi(id, apiJson, res -> {
                         if (res.succeeded()) {
                             success.incrementAndGet();
@@ -442,10 +433,9 @@ public class DeployVerticle extends AbstractVerticle {
                             handler.handle(Future.succeededFuture(result));
                         }
                     });
-
                 });
             } else {
-                logger.error("获取 app:{} 所有api 出错", id, reply.cause());
+                logger.error("启动所有api时，获取 app:{} 所有api 出错", id, reply.cause());
                 handler.handle(Future.failedFuture(reply.cause()));
             }
         });

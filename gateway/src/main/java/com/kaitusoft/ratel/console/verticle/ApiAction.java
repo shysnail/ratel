@@ -35,8 +35,6 @@ import java.util.*;
 public class ApiAction extends BaseAction {
     private static Logger logger = LoggerFactory.getLogger(ApiAction.class);
 
-
-
     protected void find(RoutingContext context) {
         String appId = context.request().getParam("appId");
         logger.debug("获取APP:{} 所有API", appId);
@@ -58,12 +56,12 @@ public class ApiAction extends BaseAction {
                     JsonObject apiJson = (JsonObject) obj;
                     apiJson.remove("parameter");
 
-//                    apiJson.remove("running");
-//                    String id = apiJson.getInteger("id").toString();
-//                    if (runningApis != null) {
-//                        if (runningApis.contains(id))
-//                            apiJson.put("running", 1);
-//                    }
+                    apiJson.remove("running");
+                    String id = apiJson.getInteger("id").toString();
+                    if (runningApis != null) {
+                        if (runningApis.contains(id))
+                            apiJson.put("running", 1);
+                    }
 
                 });
                 result.put("apis", array);

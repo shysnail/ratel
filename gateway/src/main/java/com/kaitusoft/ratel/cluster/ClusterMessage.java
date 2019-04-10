@@ -144,6 +144,9 @@ public class ClusterMessage {
             }
         }else{ //有任意一个回复信息，都表示成功执行了
             CLUSTER_FUTURE.remove(uuid);
+            if(!vertx.isClustered()){
+                context.result.put("fullSuccess", true);
+            }
             context.future.complete(context.result);
         }
     }
