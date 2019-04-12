@@ -14,6 +14,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.*;
+import io.vertx.core.streams.Pump;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -259,6 +260,7 @@ public class UpstreamProxy extends Proxy {
             clientResponse.setStatusCode(HttpResponseStatus.BAD_GATEWAY.code()).end(e.toString());
         });
 
+        /*
         upstream.handler(upstreamResponse -> {
             if (clientResponse.ended()) {
                 context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
@@ -273,12 +275,9 @@ public class UpstreamProxy extends Proxy {
             if (clientResponse.isChunked() || needChunked(upstreamResponse))
                 clientResponse.setChunked(true);
 
-//            Pump pump = Pump.pump(upstreamResponse, clientResponse);
-
             upstreamResponse.exceptionHandler(e -> {
                 context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.<Boolean>failedFuture(e));
                 upstreamResponse.handler(null);
-//                pump.stop();
                 try {
                     upstream.end();
                 } catch (Exception ue) {
@@ -297,8 +296,6 @@ public class UpstreamProxy extends Proxy {
                 clientResponse.end();
             });
 
-//            pump.start();
-
             Handler transfer = new Handler() {
                 @Override
                 public void handle(Object data) {
@@ -311,18 +308,48 @@ public class UpstreamProxy extends Proxy {
                 }
             };
             upstreamResponse.handler(transfer);
-//
-//            upstreamResponse.handler(data -> {
-//                clientResponse.write(data);
-//                if (clientResponse.writeQueueFull()) {
-//                    upstreamResponse.pause();
-//                    clientResponse.drainHandler(v -> {
-//                        upstreamResponse.resume();
-//                    });
-//                }
-//
-//            });
 
+        });
+         */
+
+        upstream.handler(upstreamResponse -> {
+            if (clientResponse.ended()) {
+                context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
+                return;
+            }
+
+            clientResponse.setStatusCode(upstreamResponse.statusCode());
+            upstreamResponse.headers().forEach(header -> {
+                clientResponse.putHeader(header.getKey(), header.getValue());
+            });
+
+            if (clientResponse.isChunked() || needChunked(upstreamResponse))
+                clientResponse.setChunked(true);
+
+            Pump pump = Pump.pump(upstreamResponse, clientResponse);
+
+            upstreamResponse.exceptionHandler(e -> {
+                context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.<Boolean>failedFuture(e));
+                pump.stop();
+                try {
+                    upstream.end();
+                } catch (Exception ue) {
+                    logger.debug("exception occur when upstream :", e);
+                }
+
+            });
+
+            pump.start();
+
+            upstreamResponse.endHandler(end -> {
+                if (hasPostProcessor) {
+                    context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
+                    context.next();
+                    return;
+                }
+
+                clientResponse.end();
+            });
 
         });
 

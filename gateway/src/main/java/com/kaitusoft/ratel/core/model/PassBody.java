@@ -11,6 +11,7 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.streams.Pump;
 import io.vertx.core.streams.WriteStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,6 +96,57 @@ public class PassBody {
 
     }
 
+//    public void pass(HttpServerRequest clientRequest, HttpClientRequest upstreamRequest, Handler<Object> result) {
+//        if (PassBodyOption.PassBodyType.ALL_HOLD.equals(passBodyType)) {
+//            result.handle(null);
+//            return;
+//        }
+//
+//        if (method != null && !inMethods(clientRequest.method())) {
+//            result.handle(null);
+//            return;
+//        }
+//
+//        if (decoder) { //如果需要解码
+//            clientRequest.bodyHandler(buffer -> {
+//                //在这里进行解码
+//                if(dataDecoder != null) {
+//                    Buffer decoded = Buffer.buffer(dataDecoder.decode(buffer));
+//                    buffer = decoded;
+//                }
+//                pass(clientRequest.method(), buffer, upstreamRequest, result);
+//            });
+//
+//            return;
+//        }
+//
+//        upstreamRequest.setChunked(true);
+//
+//        Handler transfer = new Handler() {
+//            @Override
+//            public void handle(Object data) {
+//                upstreamRequest.write((Buffer) data);
+//                if (upstreamRequest.writeQueueFull()) {
+//                    clientRequest.pause();
+//                    clientRequest.resume();
+//                    upstreamRequest.handler(this);
+//                }
+//            }
+//        };
+//        clientRequest.handler(transfer);
+//
+//        clientRequest.exceptionHandler(e -> {
+//            clientRequest.handler(null);
+//            upstreamRequest.end();
+//            result.handle(e);
+//        });
+//
+//        clientRequest.endHandler(end -> {
+//            result.handle(null);
+//        });
+//
+//    }
+
     public void pass(HttpServerRequest clientRequest, HttpClientRequest upstreamRequest, Handler<Object> result) {
         if (PassBodyOption.PassBodyType.ALL_HOLD.equals(passBodyType)) {
             result.handle(null);
@@ -109,8 +161,10 @@ public class PassBody {
         if (decoder) { //如果需要解码
             clientRequest.bodyHandler(buffer -> {
                 //在这里进行解码
-//                Buffer decoded = Buffer.buffer(dataDecoder.decode(buffer));
-//                buffer = decoded;
+                if(dataDecoder != null) {
+                    Buffer decoded = Buffer.buffer(dataDecoder.decode(buffer));
+                    buffer = decoded;
+                }
                 pass(clientRequest.method(), buffer, upstreamRequest, result);
             });
 
@@ -118,33 +172,22 @@ public class PassBody {
         }
 
         upstreamRequest.setChunked(true);
-//        Pump upstreamPump = Pump.pump(clientRequest, upstreamRequest);
-//        upstreamPump.start();
-
-        Handler transfer = new Handler() {
-            @Override
-            public void handle(Object data) {
-                upstreamRequest.write((Buffer) data);
-                if (upstreamRequest.writeQueueFull()) {
-                    clientRequest.pause();
-                    clientRequest.resume();
-                    upstreamRequest.handler(this);
-                }
-            }
-        };
-        clientRequest.handler(transfer);
-
-        clientRequest.endHandler(end -> {
-            result.handle(null);
-        });
+        Pump upstreamPump = Pump.pump(clientRequest, upstreamRequest);
+        upstreamPump.start();
 
         clientRequest.exceptionHandler(e -> {
-//            upstreamPump.stop();
-            clientRequest.handler(null);
+            upstreamPump.stop();
             upstreamRequest.end();
             result.handle(e);
         });
 
+        /*
+        客户端请求完毕，upstreamRequest也会完毕
+         */
+        clientRequest.endHandler(end -> {
+            upstreamRequest.end();
+            result.handle(null);
+        });
 
     }
 
