@@ -249,7 +249,7 @@
                             <label class="form-label col-xs-3">拥堵时等待队列最大大小:</label>
                             <div class="formControls col-xs-2">
                                 <input type="text" class="input-text" name="upstreamOption.maxWaitQueueSize"
-                                       placeholder="-1为不限制" value="20"/>
+                                       placeholder="默认为-1，不限制" value="-1"/>
                             </div>
                         </div>
                     </div>

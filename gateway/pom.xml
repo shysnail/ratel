@@ -19,19 +19,6 @@
             <artifactId>ratel-share</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <!--<dependency>-->
-        <!--<groupId>io.vertx</groupId>-->
-        <!--<artifactId>vertx-core</artifactId>-->
-        <!--<version>1.0-SNAPSHOT</version>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-        <!--<groupId>io.vertx</groupId>-->
-        <!--<artifactId>vertx-core</artifactId>-->
-        <!--<version>3.5.4-local</version>-->
-        <!--<scope>system</scope>-->
-        <!--<systemPath>${project.basedir}/../lib/vertx-core-3.5.4-local.jar</systemPath>-->
-        <!--</dependency>-->
 
         <dependency>
             <groupId>io.vertx</groupId>
@@ -104,13 +91,10 @@
                     <programs>
                         <program>
                             <mainClass>${mainClass}</mainClass>
-                            <!--<commandLineArguments>-->
-                                <!--<commandLineArgument>run</commandLineArgument>-->
-                                <!--<commandLineArgument>${mainVerticle}</commandLineArgument>-->
-                            <!--</commandLineArguments>-->
                             <name>start</name>
                             <jvmSettings>
                                 <extraArguments>
+                                    <extraArgument>-server</extraArgument>
                                     <extraArgument>-Dfile.encoding=UTF-8</extraArgument>
                                     <extraArgument>-Dvertx.cacheDirBase=../temp/file-cache</extraArgument>
                                     <!--调整内存大小-->
