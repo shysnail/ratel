@@ -80,8 +80,9 @@ public class UpstreamProxy extends Proxy {
             }
         }
 
-        doUpstream(context, clientRequest, clientHeaders);
-
+        context.vertx().runOnContext( upstream -> {
+            doUpstream(context, clientRequest, clientHeaders);
+        });
     }
 
     private void doUpstream(RoutingContext context, HttpServerRequest clientRequest, MultiMap clientHeaders) {
@@ -115,15 +116,14 @@ public class UpstreamProxy extends Proxy {
 
         if (clientHeaders.contains(HttpHeaders.UPGRADE, HttpHeaders.WEBSOCKET, true)) {
 
-
             ServerWebSocket ws = clientRequest.upgrade();
             final String reqId = context.get(ContextAttribute.CTX_REQ_ID).toString();
-            logger.error("request:{}, ws request", reqId);
-//            if (logger.isDebugEnabled()) {
-            ws.headers().forEach((entry) -> {
-                logger.error("request:{}, ws header:{} -> {}", reqId.toString(), entry.getKey(), entry.getValue());
-            });
-//            }
+            logger.debug("request:{}, ws request", reqId);
+            if (logger.isDebugEnabled()) {
+                ws.headers().forEach((entry) -> {
+                    logger.debug("request:{}, ws header:{} -> {}", reqId.toString(), entry.getKey(), entry.getValue());
+                });
+            }
 
             String version = ws.headers().get("Sec-WebSocket-Version");
             WebsocketVersion wsVersion = WebsocketVersion.V13;
@@ -135,17 +135,17 @@ public class UpstreamProxy extends Proxy {
             String wsUrl = "ws://" + target.getHost() + url.substring(target.getUrl().length());
             ReadStream<WebSocket> readStream = wsClient.websocketStreamAbs(wsUrl, clientHeaders.remove("Sec-WebSocket-Extensions"), wsVersion, ws.subProtocol());
 
-            doWsUpstream(target, readStream, ws, context);
+            doWsUpstream(readStream, ws, context);
         } else {
             doUpstream(target, clientMethod, url, clientHeaders, clientRequest, context);
         }
     }
 
-    private void doWsUpstream(Target currentTarget, ReadStream<WebSocket> wsUpstream, ServerWebSocket wsClient, RoutingContext context) {
+    private void doWsUpstream(ReadStream<WebSocket> wsUpstream, ServerWebSocket wsClient, RoutingContext context) {
         final String reqId = context.get(ContextAttribute.CTX_REQ_ID).toString();
 
         wsClient.closeHandler(close -> {
-            logger.error("ws request close!");
+            logger.error("ws request:{},  close!", reqId);
             wsClient.frameHandler(null);
             WebSocket ws = context.remove(ContextAttribute.CTX_REQ_WS);
             if(ws != null)
@@ -153,7 +153,7 @@ public class UpstreamProxy extends Proxy {
         });
 
         wsClient.exceptionHandler(error -> {
-            logger.error("ws exception:", error);
+            logger.error("ws request:{}, exception:", reqId, error);
             wsClient.frameHandler(null);
             WebSocket ws = context.remove(ContextAttribute.CTX_REQ_WS);
             if(ws != null)
@@ -161,7 +161,7 @@ public class UpstreamProxy extends Proxy {
         });
 
         wsClient.frameHandler(frame -> {
-            logger.error("ws request-{}: {}", reqId, frame.textData());
+            logger.debug("ws request-{}: {}", reqId, frame.textData());
 
             WebSocket upstreamWs = context.get(ContextAttribute.CTX_REQ_WS);
             if (upstreamWs != null) {
@@ -175,7 +175,7 @@ public class UpstreamProxy extends Proxy {
                 });
 
                 ws.frameHandler(response -> {
-                    logger.error("ws response-{}: {}", reqId, response.textData());
+//                    logger.debug("ws response-{}: {}", reqId, response.textData());
                     wsClient.writeFrame(response);
                     if (wsClient.writeQueueFull()) {
                         ws.pause();
@@ -260,57 +260,57 @@ public class UpstreamProxy extends Proxy {
             clientResponse.setStatusCode(HttpResponseStatus.BAD_GATEWAY.code()).end(e.toString());
         });
 
-        /*
-        upstream.handler(upstreamResponse -> {
-            if (clientResponse.ended()) {
-                context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
-                return;
-            }
 
-            clientResponse.setStatusCode(upstreamResponse.statusCode());
-            upstreamResponse.headers().forEach(header -> {
-                clientResponse.putHeader(header.getKey(), header.getValue());
-            });
+//        upstream.handler(upstreamResponse -> {
+//            if (clientResponse.ended()) {
+//                context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
+//                return;
+//            }
+//
+//            clientResponse.setStatusCode(upstreamResponse.statusCode());
+//            upstreamResponse.headers().forEach(header -> {
+//                clientResponse.putHeader(header.getKey(), header.getValue());
+//            });
+//
+//            if (clientResponse.isChunked() || needChunked(upstreamResponse))
+//                clientResponse.setChunked(true);
+//
+//            upstreamResponse.exceptionHandler(e -> {
+//                context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.<Boolean>failedFuture(e));
+//                upstreamResponse.handler(null);
+//                try {
+//                    upstream.end();
+//                } catch (Exception ue) {
+//                    logger.debug("exception occur when upstream :", e);
+//                }
+//
+//            });
+//
+//            upstreamResponse.endHandler(end -> {
+//                if (hasPostProcessor) {
+//                    context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
+//                    context.next();
+//                    return;
+//                }
+//
+//                clientResponse.end();
+//            });
+//
+//            Handler transfer = new Handler() {
+//                @Override
+//                public void handle(Object data) {
+//                    clientResponse.write((Buffer) data);
+//                    if (clientResponse.writeQueueFull()) {
+//                        upstreamResponse.pause();
+//                        upstreamResponse.resume();
+//                        upstreamResponse.handler(this);
+//                    }
+//                }
+//            };
+//            upstreamResponse.handler(transfer);
+//
+//        });
 
-            if (clientResponse.isChunked() || needChunked(upstreamResponse))
-                clientResponse.setChunked(true);
-
-            upstreamResponse.exceptionHandler(e -> {
-                context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.<Boolean>failedFuture(e));
-                upstreamResponse.handler(null);
-                try {
-                    upstream.end();
-                } catch (Exception ue) {
-                    logger.debug("exception occur when upstream :", e);
-                }
-
-            });
-
-            upstreamResponse.endHandler(end -> {
-                if (hasPostProcessor) {
-                    context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
-                    context.next();
-                    return;
-                }
-
-                clientResponse.end();
-            });
-
-            Handler transfer = new Handler() {
-                @Override
-                public void handle(Object data) {
-                    clientResponse.write((Buffer) data);
-                    if (clientResponse.writeQueueFull()) {
-                        upstreamResponse.pause();
-                        upstreamResponse.resume();
-                        upstreamResponse.handler(this);
-                    }
-                }
-            };
-            upstreamResponse.handler(transfer);
-
-        });
-         */
 
         upstream.handler(upstreamResponse -> {
             if (clientResponse.ended()) {
@@ -339,8 +339,6 @@ public class UpstreamProxy extends Proxy {
 
             });
 
-            pump.start();
-
             upstreamResponse.endHandler(end -> {
                 if (hasPostProcessor) {
                     context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
@@ -350,6 +348,8 @@ public class UpstreamProxy extends Proxy {
 
                 clientResponse.end();
             });
+
+            pump.start();
 
         });
 
@@ -362,21 +362,15 @@ public class UpstreamProxy extends Proxy {
 //            });
 
         if (passBody != null) {
-            Buffer buffer = context.remove(ContextAttribute.CTX_REQ_BODY);
-            Handler result = res -> {
-                if (res != null)
-                    logger.debug("request:{} passbody error:", reqId, res);
-                else
-                    logger.debug("request:{} 透传 body 完成", reqId);
-
-                upstream.end();
-            };
             if (hasBody(clientRequest)) {
-                passBody.pass(clientRequest, upstream, result);
-            } else if (buffer != null && buffer.length() > 0) {
-                passBody.pass(clientMethod, buffer, upstream, result);
-            } else {
-                upstream.end();
+                passBody.pass(reqId, clientRequest, upstream);
+            } else{
+                Buffer buffer = context.remove(ContextAttribute.CTX_REQ_BODY);
+                if (buffer != null && buffer.length() > 0) {
+                    passBody.pass(reqId, clientMethod, buffer, upstream);
+                } else {
+                    upstream.end();
+                }
             }
         } else {
             upstream.end();

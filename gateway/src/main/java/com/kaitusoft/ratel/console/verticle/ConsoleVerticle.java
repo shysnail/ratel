@@ -11,7 +11,6 @@ import com.kaitusoft.ratel.util.StringUtils;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.*;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.impl.FileResolver;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -20,8 +19,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.*;
 import io.vertx.ext.web.sstore.ClusteredSessionStore;
 import io.vertx.ext.web.sstore.LocalSessionStore;
-import io.vertx.ext.web.templ.FreeMarkerTemplateEngine;
-import io.vertx.ext.web.templ.TemplateEngine;
+import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +89,7 @@ public class ConsoleVerticle extends AbstractVerticle {
         if(debug)
             System.setProperty("io.vertx.ext.web.TemplateEngine.disableCache", "true");
 
-        TemplateEngine engine = FreeMarkerTemplateEngine.create();
+        FreeMarkerTemplateEngine engine = FreeMarkerTemplateEngine.create(vertx);
         String tempRoot = getTemplateRoot();
         TemplateHandler tempHandler = TemplateHandler.create(engine, tempRoot, CONTENT_TYPE_HTML_UTF8);
         router.getWithRegex(".+\\.ftl").handler(tempHandler);

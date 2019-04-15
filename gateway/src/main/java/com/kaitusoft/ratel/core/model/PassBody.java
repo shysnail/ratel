@@ -69,22 +69,20 @@ public class PassBody {
 
     }
 
-    public void pass(HttpServerRequest clientRequest, HttpClientRequest upstreamRequest) {
-        pass(clientRequest, upstreamRequest, null);
+    public void pass(Object reqId, HttpMethod requestMethod, Buffer buffer, HttpClientRequest upstreamRequest) {
+        pass(reqId, requestMethod, buffer, upstreamRequest);
     }
 
-    public void pass(HttpMethod requestMethod, Buffer buffer, HttpClientRequest upstreamRequest) {
-        pass(requestMethod, buffer, upstreamRequest, null);
-    }
-
-    public void pass(HttpMethod requestMethod, Buffer buffer, WriteStream upstreamRequest, Handler<Object> result) {
+    public void pass(Object reqId, HttpMethod requestMethod, Buffer buffer, WriteStream upstreamRequest) {
         if (PassBodyOption.PassBodyType.ALL_HOLD.equals(passBodyType)) {
-            result.handle(null);
+            upstreamRequest.end();
+            logger.debug("api delivery none body ");
             return;
         }
 
         if (method != null && !inMethods(requestMethod)) {
-            result.handle(null);
+            upstreamRequest.end();
+            logger.debug("api don't delivery body : method not support {}", method);
             return;
         }
 
@@ -92,8 +90,7 @@ public class PassBody {
             buffer = Buffer.buffer(dataDecoder.decode(buffer));
         }
 
-        upstreamRequest.write(buffer);
-
+        upstreamRequest.write(buffer).end();
     }
 
 //    public void pass(HttpServerRequest clientRequest, HttpClientRequest upstreamRequest, Handler<Object> result) {
@@ -147,14 +144,16 @@ public class PassBody {
 //
 //    }
 
-    public void pass(HttpServerRequest clientRequest, HttpClientRequest upstreamRequest, Handler<Object> result) {
+    public void pass(Object reqId, HttpServerRequest clientRequest, HttpClientRequest upstreamRequest) {
         if (PassBodyOption.PassBodyType.ALL_HOLD.equals(passBodyType)) {
-            result.handle(null);
+            upstreamRequest.end();
+            logger.debug("api delivery none body ");
             return;
         }
 
         if (method != null && !inMethods(clientRequest.method())) {
-            result.handle(null);
+            upstreamRequest.end();
+            logger.debug("api don't delivery body : method not support {}", method);
             return;
         }
 
@@ -165,7 +164,7 @@ public class PassBody {
                     Buffer decoded = Buffer.buffer(dataDecoder.decode(buffer));
                     buffer = decoded;
                 }
-                pass(clientRequest.method(), buffer, upstreamRequest, result);
+                pass(reqId, clientRequest.method(), buffer, upstreamRequest);
             });
 
             return;
@@ -173,12 +172,11 @@ public class PassBody {
 
         upstreamRequest.setChunked(true);
         Pump upstreamPump = Pump.pump(clientRequest, upstreamRequest);
-        upstreamPump.start();
 
         clientRequest.exceptionHandler(e -> {
             upstreamPump.stop();
             upstreamRequest.end();
-            result.handle(e);
+            logger.debug("request:{} passbody error:", reqId, e);
         });
 
         /*
@@ -186,8 +184,10 @@ public class PassBody {
          */
         clientRequest.endHandler(end -> {
             upstreamRequest.end();
-            result.handle(null);
+            logger.debug("request:{} 透传 body 完成", reqId);
         });
+
+        upstreamPump.start();
 
     }
 
