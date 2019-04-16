@@ -66,7 +66,6 @@ public class PassBody {
         }
 
         return method;
-
     }
 
     public void pass(Object reqId, HttpMethod requestMethod, Buffer buffer, HttpClientRequest upstreamRequest) {
