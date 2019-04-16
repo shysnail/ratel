@@ -24,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author frog.w
@@ -196,29 +198,38 @@ public class ConsoleVerticle extends AbstractVerticle {
     }
 
     private void wrapContext(RoutingContext context){
-        context.put("name", Configuration.OFFICIAL_NAME);
+        Map<String, Object> data = new HashMap<>();
+        data.put("name", Configuration.OFFICIAL_NAME);
         User user = context.session().get(ContextAttribute.SESSION_USER);
         if(user != null){
             JsonObject principal = user.principal();
-            context.put("curUser", principal);
+            data.put("curUser", principal);
         }
 
         if(this.getVertx().isClustered()){
-            context.put("cluster", true);
+            data.put("cluster", true);
         }
 
         String domain = Configuration.DOMAIN;
         if(StringUtils.isEmpty(domain))
             domain = "//" + context.request().host();
 
-        context.put("domain", domain);
+        data.put("domain", domain);
 
         String path = context.request().path();
 
         int pageSplit = path.lastIndexOf('/');
 //        String page = path.substring(1, path.indexOf(".")) + ".html";
         String page = path.substring(1);
-        context.put("uri", page);
+        data.put("uri", page);
+
+        // in 3.6+
+        context.put("context", data);
+
+        //in < 3.6
+//        data.forEach((k, v) -> {
+//            context.put(k, v);
+//        });
     }
 
     private void htmlRender(RoutingContext context){

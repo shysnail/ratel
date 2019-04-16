@@ -145,8 +145,8 @@ public class UpstreamProxy extends Proxy {
         final String reqId = context.get(ContextAttribute.CTX_REQ_ID).toString();
 
         wsClient.closeHandler(close -> {
-            logger.error("ws request:{},  close!", reqId);
-            wsClient.frameHandler(null);
+            logger.warn("ws request:{},  close!", reqId);
+//            wsClient.frameHandler(null);
             WebSocket ws = context.remove(ContextAttribute.CTX_REQ_WS);
             if(ws != null)
                 ws.frameHandler(null);
@@ -158,6 +158,8 @@ public class UpstreamProxy extends Proxy {
             WebSocket ws = context.remove(ContextAttribute.CTX_REQ_WS);
             if(ws != null)
                 ws.frameHandler(null);
+
+//            wsClient.close();
         });
 
         wsClient.frameHandler(frame -> {
@@ -334,7 +336,7 @@ public class UpstreamProxy extends Proxy {
                 try {
                     upstream.end();
                 } catch (Exception ue) {
-                    logger.debug("exception occur when upstream :", e);
+                    logger.warn("exception occur when upstream :", e);
                 }
 
             });
