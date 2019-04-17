@@ -38,7 +38,7 @@
                 <db.password>123456</db.password>
                 <cluster.port>56789</cluster.port>
                 <zkhosts>localhost:2181</zkhosts>
-                <jmx>-Djava.rmi.server.hostname=0.0.0.0 -Dcom.sun.management.jmxremote.port=8990 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false \</jmx>
+                <jmx>-Djava.rmi.server.hostname=0.0.0.0 -Dcom.sun.management.jmxremote.port=8990 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false</jmx>
             </properties>
         </profile>
 
