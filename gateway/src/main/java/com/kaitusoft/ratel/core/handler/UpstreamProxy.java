@@ -7,6 +7,8 @@ import com.kaitusoft.ratel.core.model.Target;
 import com.kaitusoft.ratel.core.model.option.ProxyOption;
 import com.kaitusoft.ratel.core.model.option.UpstreamOption;
 import com.kaitusoft.ratel.util.StringUtils;
+import com.sun.org.apache.bcel.internal.generic.RET;
+import com.sun.org.apache.regexp.internal.RE;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -19,6 +21,9 @@ import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author frog.w
@@ -35,6 +40,8 @@ public class UpstreamProxy extends Proxy {
     private HttpClient httpClient;
     private UpstreamOption upstreamOption;
     private PassBody passBody;
+
+    private static final Map<String, Object> RETRY_TARGETS = new ConcurrentHashMap<>();
 
     public UpstreamProxy(Api api, ProxyOption option) {
         super(api, option);
@@ -413,8 +420,15 @@ public class UpstreamProxy extends Proxy {
      * @param clientMethod
      * @param target
      */
-    private void tryReconnectTask(Target currentTarget, Vertx vertx, HttpMethod clientMethod, String target) {
+    private synchronized void tryReconnectTask(Target currentTarget, Vertx vertx, HttpMethod clientMethod, String target) {
         logger.warn("retry connect target {}:{}", clientMethod, target);
+        if(RETRY_TARGETS.get(target) != null){
+            logger.debug("target {}:{} retring", clientMethod, target);
+            return;
+        }
+
+        RETRY_TARGETS.put(target, 1);
+
         Handler retryTask = new Handler() {
             @Override
             public void handle(Object event) {
@@ -428,6 +442,7 @@ public class UpstreamProxy extends Proxy {
     private void doReconnect(Target currentTarget, Vertx vertx, HttpMethod clientMethod, String target, Handler task){
         httpClient.requestAbs(clientMethod, target).setTimeout(upstreamOption.getTimeout()).handler(response -> {
             int statusCode = response.statusCode();
+            RETRY_TARGETS.remove(target);
             if (statusCode != 200) {
                 logger.warn("app:{}, api:{} , 失败接口已连接，返回码非 200，{}", api.getApp().getName(), api.getPath(), statusCode);
             } else {
@@ -435,6 +450,7 @@ public class UpstreamProxy extends Proxy {
             }
             proxyPolicy.rebirth(currentTarget);
         }).exceptionHandler(e -> {
+            RETRY_TARGETS.remove(target);
             logger.error("app:{}, api:{} , 失败接口已连接", api.getApp().getName(), api.getPath(), e);
             if(task != null)
                 vertx.setTimer(HOST_CHECK_TASK_INTERVAL, task);

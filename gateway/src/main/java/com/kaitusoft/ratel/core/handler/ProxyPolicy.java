@@ -41,21 +41,20 @@ public abstract class ProxyPolicy {
     protected void init() {
     }
 
-    protected void dead(String target) {
-        if (StringUtils.isEmpty(target))
+    protected synchronized void dead(String target) {
+        if (StringUtils.isEmpty(target) || targets.length == 0)
             return;
 
-        Target t = null;
         Target[] newTargets = new Target[targets.length - 1];
-        for (int i = 0, j = 0; i < targets.length; i++, j++) {
+        for (int i = 0, j = 0; i < targets.length; i++) {
             if (targets[i].getUrl().equals(target)) {
-                t = targets[i];
-                deadTargets.add(t);
+                deadTargets.add(targets[i]);
                 i++;
                 continue;
             }
 
             newTargets[j] = targets[i];
+            j++;
         }
 
         targets = newTargets;
@@ -75,7 +74,7 @@ public abstract class ProxyPolicy {
         rebirth(target.getUrl());
     }
 
-    public void rebirth(String host) {
+    public synchronized void rebirth(String host) {
         if (StringUtils.isEmpty(host))
             return;
 
