@@ -255,10 +255,14 @@ public class Api {
         httpClientOptions.setConnectTimeout(upstreamOption.getTimeout());
         httpClientOptions.setIdleTimeout(upstreamOption.getMaxIdleTimeout());
         httpClientOptions.setMaxWaitQueueSize(upstreamOption.getMaxWaitQueueSize());
-        httpClientOptions.setPipelining(true);
+        if(upstreamOption.isKeepAlive()) {
+            httpClientOptions.setPipelining(true);
+            //        httpClientOptions.setPipeliningLimit(5);
+        }else{
+            httpClientOptions.setPipelining(false);
+        }
         //not verify host
         httpClientOptions.setVerifyHost(false);
-//        httpClientOptions.setPipeliningLimit(5);
         httpClientOptions.setTcpFastOpen(true);
         httpClientOptions.setTcpNoDelay(true);
         httpClientOptions.setTcpQuickAck(true);
