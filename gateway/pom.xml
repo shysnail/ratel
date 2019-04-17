@@ -92,13 +92,13 @@
                     <repositoryName>lib</repositoryName>
                     <programs>
                         <program>
-                            <mainClass>${mainClass} > ../logs/ratel.out 2>&amp;1 &lt; /dev/null </mainClass>
+                            <mainClass>${mainClass} > $BASEDIR/logs/ratel.out 2>&amp;1 &lt; /dev/null </mainClass>
                             <name>start</name>
                             <jvmSettings>
                                 <extraArguments>
                                     <extraArgument>-server</extraArgument>
                                     <extraArgument>-Dfile.encoding=UTF-8</extraArgument>
-                                    <extraArgument>-Dvertx.cacheDirBase=../temp/file-cache</extraArgument>
+                                    <extraArgument>-Dvertx.cacheDirBase=$BASEDIR/temp/file-cache</extraArgument>
                                     <!--调整内存大小-->
                                     <extraArgument>-Xmx2G</extraArgument>
                                     <extraArgument>-Xms2G</extraArgument>
