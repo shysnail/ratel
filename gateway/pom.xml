@@ -93,10 +93,11 @@
                     <programs>
                         <program>
                             <mainClass>${mainClass}</mainClass>
-                            <name>ratel</name>
+                            <name>start</name>
                             <jvmSettings>
                                 <extraArguments>
                                     <extraArgument>-server</extraArgument>
+                                    <extraArgument>-Dapp.name="ratel"</extraArgument>
                                     <extraArgument>-Dfile.encoding=UTF-8</extraArgument>
                                     <extraArgument>-Dvertx.cacheDirBase=../temp/file-cache</extraArgument>
                                     <!--调整内存大小-->
