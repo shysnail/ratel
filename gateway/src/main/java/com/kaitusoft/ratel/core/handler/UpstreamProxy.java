@@ -119,9 +119,9 @@ public class UpstreamProxy extends Proxy {
 
         String url = api.assemble(clientRequest, target, prefix, upstreamOption.isPassQueryString());
 
-        HttpMethod clientMethod = upstreamOption.getMethodForward();
-        if (clientMethod == null)
-            clientMethod = clientRequest.method();
+        HttpMethod upstreamMethod = upstreamOption.getMethodForward();
+        if (upstreamMethod == null)
+            upstreamMethod = clientRequest.method();
 
         if (clientHeaders.contains(HttpHeaders.UPGRADE, HttpHeaders.WEBSOCKET, true)) {
 
@@ -146,7 +146,7 @@ public class UpstreamProxy extends Proxy {
 
             doWsUpstream(readStream, ws, context);
         } else {
-            doUpstream(target, clientMethod, url, clientHeaders, clientRequest, context);
+            doUpstream(target, upstreamMethod, url, clientHeaders, clientRequest, context);
         }
     }
 
@@ -227,10 +227,10 @@ public class UpstreamProxy extends Proxy {
     }
 
 
-    private void doUpstream(Target currentTarget, HttpMethod clientMethod, String target, MultiMap clientHeaders, HttpServerRequest clientRequest, RoutingContext context) {
+    private void doUpstream(Target currentTarget, HttpMethod upstreamMethod, String target, MultiMap clientHeaders, HttpServerRequest clientRequest, RoutingContext context) {
         final String reqId = context.get(ContextAttribute.CTX_REQ_ID).toString();
-        logger.debug("request:{} -> {}:{}", reqId, clientMethod, target);
-        HttpClientRequest upstream = httpClient.requestAbs(clientMethod, target).setTimeout(upstreamOption.getTimeout());
+        logger.debug("request:{} -> upstream to {}:{}", reqId, upstreamMethod, target);
+        HttpClientRequest upstream = httpClient.requestAbs(upstreamMethod, target).setTimeout(upstreamOption.getTimeout());
         upstream.setFollowRedirects(true);
 
         //如果不去host，会出现意想不到的情况，因为host到了目标服务器后会根据host分发
@@ -253,13 +253,13 @@ public class UpstreamProxy extends Proxy {
              */
             if (errCount < upstreamOption.getRetry()) {
                 context.put(ContextAttribute.CTX_FAIL_COUNT, errCount + 1);
-                doUpstream(currentTarget, clientMethod, target, clientHeaders, clientRequest, context);
+                doUpstream(currentTarget, upstreamMethod, target, clientHeaders, clientRequest, context);
                 return;
             } else {
                 //接口需标记为异常，重试其它目标
                 proxyPolicy.dead(currentTarget);
                 doUpstream(context, clientRequest, clientHeaders);
-                tryReconnectTask(currentTarget, context.vertx(), clientMethod, target);
+                tryReconnectTask(currentTarget, context.vertx(), upstreamMethod, target);
             }
 
             if (hasPostProcessor) {
@@ -345,7 +345,7 @@ public class UpstreamProxy extends Proxy {
                 try {
                     upstream.end();
                 } catch (Exception ue) {
-                    logger.warn("exception occur when upstream :", e);
+                    logger.warn("exception occur when upstream, request:{}", reqId, ue);
                 }
 
             });
@@ -361,6 +361,7 @@ public class UpstreamProxy extends Proxy {
             });
 
             pump.start();
+
 
         });
 
@@ -378,7 +379,7 @@ public class UpstreamProxy extends Proxy {
             } else{
                 Buffer buffer = context.remove(ContextAttribute.CTX_REQ_BODY);
                 if (buffer != null && buffer.length() > 0) {
-                    passBody.pass(reqId, clientMethod, buffer, upstream);
+                    passBody.pass(reqId, upstreamMethod, buffer, upstream);
                 } else {
                     upstream.end();
                 }
@@ -419,13 +420,13 @@ public class UpstreamProxy extends Proxy {
      * 此方法缺点明显，重试一次后，如果仍旧失败，仍需重试
      * @param currentTarget
      * @param vertx
-     * @param clientMethod
+     * @param upstreamMethod
      * @param target
      */
-    private synchronized void tryReconnectTask(Target currentTarget, Vertx vertx, HttpMethod clientMethod, String target) {
-        logger.warn("retry connect target {}:{}", clientMethod, target);
+    private synchronized void tryReconnectTask(Target currentTarget, Vertx vertx, HttpMethod upstreamMethod, String target) {
+        logger.warn("retry connect target {}:{}", upstreamMethod, target);
         if(RETRY_TARGETS.get(target) != null){
-            logger.debug("target {}:{} retring", clientMethod, target);
+            logger.debug("target {}:{} retring", upstreamMethod, target);
             return;
         }
 
@@ -434,26 +435,26 @@ public class UpstreamProxy extends Proxy {
         Handler retryTask = new Handler() {
             @Override
             public void handle(Object event) {
-                doReconnect(currentTarget, vertx, clientMethod, target, this);
+                doReconnect(currentTarget, vertx, upstreamMethod, target, this);
             }
         };
 
         vertx.setTimer(HOST_CHECK_TASK_INTERVAL, retryTask);
     }
 
-    private void doReconnect(Target currentTarget, Vertx vertx, HttpMethod clientMethod, String target, Handler task){
-        httpClient.requestAbs(clientMethod, target).setTimeout(upstreamOption.getTimeout()).handler(response -> {
+    private void doReconnect(Target currentTarget, Vertx vertx, HttpMethod upstreamMethod, String target, Handler task){
+        httpClient.requestAbs(upstreamMethod, target).setTimeout(upstreamOption.getTimeout()).handler(response -> {
             int statusCode = response.statusCode();
             RETRY_TARGETS.remove(target);
             if (statusCode != 200) {
-                logger.warn("app:{}, api:{} , 失败接口已连接，返回码非 200，{}", api.getApp().getName(), api.getPath(), statusCode);
+                logger.warn("app:{}, api:{} , 失败接口:{}:{} 已连接，返回码非 200，{}", api.getApp().getName(), api.getPath(), upstreamMethod, target, statusCode);
             } else {
-                logger.warn("app:{}, api:{} , 失败接口已连接", api.getApp().getName(), api.getPath());
+                logger.warn("app:{}, api:{} , 失败接口:{}:{} 已连接", api.getApp().getName(), api.getPath(), upstreamMethod, target);
             }
             proxyPolicy.rebirth(currentTarget);
         }).exceptionHandler(e -> {
             RETRY_TARGETS.remove(target);
-            logger.error("app:{}, api:{} , 失败接口已连接", api.getApp().getName(), api.getPath(), e);
+            logger.error("app:{}, api:{} , 失败接口:{}:{} 尝试连接出错", api.getApp().getName(), api.getPath(), upstreamMethod, target, e);
             if(task != null)
                 vertx.setTimer(HOST_CHECK_TASK_INTERVAL, task);
         }).end();

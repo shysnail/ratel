@@ -322,14 +322,14 @@
                             <label class="form-label col-xs-3">keepalive保持:</label>
                             <div class="formControls col-xs-5 ">
                                 <div class="check-box">
-                                    <input type="checkbox" name="upstreamOption.keepAlive" checked/>
+                                    <input type="checkbox" id="upstreamOption_keepAlive" name="upstreamOption.keepAlive" checked/>
                                 </div>
                             </div>
                         </div>
                         <div class="row cl">
                             <label class="form-label col-xs-3">keepalive保持时长(秒):</label>
                             <div class="formControls col-xs-2">
-                                <input type="text" class="input-text" name="upstreamOption.keepAliveTimeout"
+                                <input type="text" class="input-text" id="upstreamOption_keepAliveTimeout" name="upstreamOption.keepAliveTimeout"
                                        value="60"/>
                             </div>
                         </div>
@@ -1328,6 +1328,15 @@
                 $(":checkbox[name=methods]").attr('disabled', true);
             } else {
                 $(":checkbox[name=methods]").attr('disabled', false);
+            }
+        });
+
+        $("#upstreamOption_keepAlive").click(function () {
+            var checked = $(this).prop('checked');
+            if (this.checked) {
+                $("#upstreamOption_keepAliveTimeout").attr('disabled', true);
+            } else {
+                $("#upstreamOption_keepAliveTimeout").attr('disabled', false);
             }
         });
 

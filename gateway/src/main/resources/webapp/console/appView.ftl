@@ -520,7 +520,7 @@
                 $('#upstreamOption\\.maxHeaderSize').text(upstreamOption.maxHeaderSize < 0 ? '不限' : upstreamOption.maxHeaderSize);
                 $('#upstreamOption\\.maxPoolSize').text(upstreamOption.maxPoolSize);
                 $('#upstreamOption\\.keepAlive').text(upstreamOption.keepAlive ? ('是，保持' + upstreamOption.keepAliveTimeout + '秒' ) : '否');
-                $('#upstreamOption\\.maxIdleTimeout').text(upstreamOption.maxIdleTimeout + '秒');
+                $('#upstreamOption\\.maxIdleTimeout').text(upstreamOption.maxIdleTimeout?(upstreamOption.maxIdleTimeout + '秒') : "不清理闲置连接");
                 $('#upstreamOption\\.maxWaitQueueSize').text(upstreamOption.maxWaitQueueSize);
 
                 var appendHeaders = upstreamOption.appendHeaders;

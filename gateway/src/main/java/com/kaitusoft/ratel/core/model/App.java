@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *          write description here
  */
 @Data
-@ToString
+@ToString(exclude={"apis"})
 @NoArgsConstructor
 public class App {
     public static final int RUNNING = 1;

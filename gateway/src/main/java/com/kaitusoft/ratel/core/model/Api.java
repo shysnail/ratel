@@ -24,7 +24,7 @@ import java.util.Set;
  *          write description here
  */
 @Data
-@ToString
+@ToString(exclude = {"app"})
 @NoArgsConstructor
 public class Api {
 
@@ -256,7 +256,9 @@ public class Api {
         httpClientOptions.setIdleTimeout(upstreamOption.getMaxIdleTimeout());
         httpClientOptions.setMaxWaitQueueSize(upstreamOption.getMaxWaitQueueSize());
         httpClientOptions.setPipelining(true);
-        httpClientOptions.setPipeliningLimit(5);
+        //not verify host
+        httpClientOptions.setVerifyHost(false);
+//        httpClientOptions.setPipeliningLimit(5);
         httpClientOptions.setTcpFastOpen(true);
         httpClientOptions.setTcpNoDelay(true);
         httpClientOptions.setTcpQuickAck(true);
