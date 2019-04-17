@@ -150,11 +150,6 @@
                         </div>
                     </div>
                     <div class="row cl">
-                        <label class="form-label col-xs-3">keepalive保持时长(秒):</label>
-                        <div class="formControls col-xs-8" id="upstreamOption.keepAliveTimeout">
-                        </div>
-                    </div>
-                    <div class="row cl">
                         <label class="form-label col-xs-3">连接最大闲置时长:</label>
                         <div class="formControls col-xs-8" id="upstreamOption.maxIdleTimeout">
                         </div>
