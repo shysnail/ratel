@@ -100,8 +100,10 @@ public class UpstreamProxy extends Proxy {
         }catch(Exception e){
             logger.error("no available upstream target", e);
         }
-        if(target == null)
+        if(target == null){
+            logger.warn("no available upstream target for request:{}", context.get(ContextAttribute.CTX_REQ_ID).toString());
             return;
+        }
 
         String prefix = context.currentRoute().getPath();
 

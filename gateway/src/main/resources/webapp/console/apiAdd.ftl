@@ -175,7 +175,7 @@
                                         <div id="upstreamOption_maxPoolSize"></div>
                                     </div>
                                     <div class="formControls col-xs-3">
-                                        推荐为cpu可用核心数+1
+                                        如果这个应用经常应对高并发场景，这个值可以设置稍微大一点。可以理解为同时连接的数量
                                     </div>
                                 </div>
                             </div>
@@ -1383,7 +1383,7 @@
         $("#upstreamOption_maxPoolSize").Huispinner({
             value: 5,
             minValue: 1,
-            maxValue: 99,
+            maxValue: 65535,
             dis: 1
         });
 
