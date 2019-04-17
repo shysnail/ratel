@@ -320,10 +320,13 @@
                         </div>
                         <div class="row cl">
                             <label class="form-label col-xs-3">keepalive保持:</label>
-                            <div class="formControls col-xs-5 ">
+                            <div class="formControls col-xs-3 ">
                                 <div class="check-box">
                                     <input type="checkbox" id="upstreamOption_keepAlive" name="upstreamOption.keepAlive" checked/>
                                 </div>
+                            </div>
+                            <div class="formControls col-xs-5">
+                                如果这个应用经常应对稳定并发场景，推荐开启；如果经常应对瞬间并发，推荐关闭。
                             </div>
                         </div>
                         <div class="row cl">
@@ -1088,7 +1091,7 @@
             upstreamOption.maxContentLength = $('input:text[name=upstreamOption\\.maxContentLength]').val();
             upstreamOption.maxInitialLineLength = $('input:text[name=upstreamOption\\.maxInitialLineLength]').val();
             upstreamOption.maxHeaderSize = $('input:text[name=upstreamOption\\.maxHeaderSize]').val();
-            upstreamOption.keepAlive = $('input:text[name=upstreamOption\\.keepAlive]').val();
+            upstreamOption.keepAlive = $(':checkbox[name=upstreamOption\\.keepAlive]').prop('checked');
             upstreamOption.keepAliveTimeout = $('input:text[name=upstreamOption\\.keepAliveTimeout]').val();
             upstreamOption.maxIdleTimeout = $('input:text[name=upstreamOption\\.maxIdleTimeout]').val();
             upstreamOption.maxWaitQueueSize = $('input:text[name=upstreamOption\\.maxWaitQueueSize]').val();
@@ -1331,9 +1334,9 @@
             }
         });
 
-        $("#upstreamOption_keepAlive").click(function () {
+        $("#upstreamOption_keepAlive").change(function () {
             var checked = $(this).prop('checked');
-            if (this.checked) {
+            if (checked) {
                 $("#upstreamOption_keepAliveTimeout").attr('disabled', true);
             } else {
                 $("#upstreamOption_keepAliveTimeout").attr('disabled', false);

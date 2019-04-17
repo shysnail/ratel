@@ -123,19 +123,6 @@
                 <div class="e-p-i-normal panel panel-default mt-20">
                     <div class="e-p-i-h panel-header">反向代理服务设置<b style="float:right;margin-right: 10px">+</b></div>
                     <div class="e-p-i-b panel-body">
-                        <!--<div class="row cl">-->
-                        <!--<label class="form-label col-xs-3">转发线程池类型:</label>-->
-                        <!--<div class="formControls col-xs-8">-->
-                        <!--<div class="radio-box">-->
-                        <!--<input type="radio" id="upstreamOption.threadType-1" name="upstreamOption.threadType" value="APP" checked>-->
-                        <!--<label for="upstreamOption.threadType-1">整个应用公用线程池</label>-->
-                        <!--</div>-->
-                        <!--<div class="check-box">-->
-                        <!--<input type="radio" id="upstreamOption.threadType-2" name="upstreamOption.threadType" value="API">-->
-                        <!--<label for="upstreamOption.threadType-2">接口自用线程池</label>-->
-                        <!--</div>-->
-                        <!--</div>-->
-                        <!--</div>-->
                         <div class="row cl">
                             <label class="form-label col-xs-3">超时时长:</label>
                             <div class="formControls col-xs-8">
@@ -219,16 +206,19 @@
                             <div class="formControls col-xs-3">
                                 <div id="upstreamOption_maxPoolSize"></div>
                             </div>
-                            <div class="formControls col-xs-3">
+                            <div class="formControls col-xs-5">
                                 如果这个应用经常应对高并发场景，这个值可以设置稍微大一点。可以理解为同时连接的数量
                             </div>
                         </div>
                         <div class="row cl">
                             <label class="form-label col-xs-3">keepalive保持:</label>
-                            <div class="formControls col-xs-5">
+                            <div class="formControls col-xs-3">
                                 <div class="check-box">
                                     <input type="checkbox" id="upstreamOption_keepAlive" name="upstreamOption.keepAlive" checked/>
                                 </div>
+                            </div>
+                            <div class="formControls col-xs-5">
+                                如果这个应用经常应对稳定并发场景，推荐开启；如果经常应对瞬间并发，推荐关闭。
                             </div>
                         </div>
                         <div class="row cl">
@@ -848,12 +838,11 @@
                     $('#passBody_methods').show();
                 }
 
-                $('input:text[name=upstreamOption\\.threadType]').val(upstreamOption.threadType);
                 $('input:text[name=upstreamOption\\.maxContentLength]').val(upstreamOption.maxContentLength);
                 $('input:text[name=upstreamOption\\.maxInitialLineLength]').val(upstreamOption.maxInitialLineLength);
                 $('input:text[name=upstreamOption\\.maxHeaderSize]').val(upstreamOption.maxHeaderSize);
                 $("#upstreamOption_maxPoolSize").find(":input").val(upstreamOption.maxPoolSize);
-                $('input:text[name=upstreamOption\\.keepAlive]').prop('checked', upstreamOption.keepAlive);
+                $(':checkbox[name=upstreamOption\\.keepAlive]').prop('checked', upstreamOption.keepAlive);
                 $('input:text[name=upstreamOption\\.keepAliveTimeout]').val(upstreamOption.keepAliveTimeout);
                 $('input:text[name=upstreamOption\\.maxIdleTimeout]').val(upstreamOption.maxIdleTimeout);
                 $('input:text[name=upstreamOption\\.maxWaitQueueSize]').val(upstreamOption.maxWaitQueueSize);
@@ -1013,13 +1002,14 @@
         }
         upstreamOption.timeout = $('input:text[name=upstreamOption\\.timeout]').val();
         upstreamOption.retry = $('input:text[name=upstreamOption\\.retry]').val();
-        upstreamOption.threadType = $('input:text[name=upstreamOption\\.threadType]').val();
         upstreamOption.maxContentLength = $('input:text[name=upstreamOption\\.maxContentLength]').val();
         upstreamOption.maxInitialLineLength = $('input:text[name=upstreamOption\\.maxInitialLineLength]').val();
         upstreamOption.maxHeaderSize = $('input:text[name=upstreamOption\\.maxHeaderSize]').val();
         upstreamOption.maxPoolSize = $("#upstreamOption_maxPoolSize").find(":input").val();
-        upstreamOption.keepAlive = $('input:text[name=upstreamOption\\.keepAlive]').prop('checked');
-        upstreamOption.keepAliveTimeout = $('input:text[name=upstreamOption\\.keepAliveTimeout]').val();
+        upstreamOption.keepAlive = $(':checkbox[name=upstreamOption\\.keepAlive]').prop("checked");
+        alert(upstreamOption.keepAlive);
+        if(upstreamOption.keepAlive)
+            upstreamOption.keepAliveTimeout = $('input:text[name=upstreamOption\\.keepAliveTimeout]').val();
         upstreamOption.maxIdleTimeout = $('input:text[name=upstreamOption\\.maxIdleTimeout]').val();
         upstreamOption.maxWaitQueueSize = $('input:text[name=upstreamOption\\.maxWaitQueueSize]').val();
 
@@ -1257,9 +1247,9 @@
             }
         });
 
-        $("#upstreamOption_keepAlive").click(function () {
+        $("#upstreamOption_keepAlive").change(function () {
             var checked = $(this).prop('checked');
-            if (this.checked) {
+            if (checked) {
                 $("#upstreamOption_keepAliveTimeout").attr('disabled', true);
             } else {
                 $("#upstreamOption_keepAliveTimeout").attr('disabled', false);
