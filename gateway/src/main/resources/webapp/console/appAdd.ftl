@@ -1007,7 +1007,7 @@
         upstreamOption.maxHeaderSize = $('input:text[name=upstreamOption\\.maxHeaderSize]').val();
         upstreamOption.maxPoolSize = $("#upstreamOption_maxPoolSize").find(":input").val();
         upstreamOption.keepAlive = $(':checkbox[name=upstreamOption\\.keepAlive]').prop("checked");
-        alert(upstreamOption.keepAlive);
+
         if(upstreamOption.keepAlive)
             upstreamOption.keepAliveTimeout = $('input:text[name=upstreamOption\\.keepAliveTimeout]').val();
         upstreamOption.maxIdleTimeout = $('input:text[name=upstreamOption\\.maxIdleTimeout]').val();
