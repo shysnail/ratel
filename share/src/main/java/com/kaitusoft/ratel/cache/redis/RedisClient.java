@@ -56,7 +56,14 @@ public abstract class RedisClient <T> {
 
 
     public T getResource(){
-        return pool.getResource();
+        T t = null;
+        try{
+            t = pool.getResource();
+        }catch (Exception e){
+            logger.error("borrow resource error:", e);
+        }
+
+        return t;
     }
 
 

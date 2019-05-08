@@ -10,17 +10,18 @@ import com.kaitusoft.ratel.handler.AbstractPostHandler;
 import com.kaitusoft.ratel.handler.AbstractPreHandler;
 import com.kaitusoft.ratel.util.ResourceUtil;
 import com.kaitusoft.ratel.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author frog.w
@@ -30,6 +31,8 @@ import java.util.Set;
  */
 
 public class Env {
+
+    private static final Logger logger = LoggerFactory.getLogger(Env.class);
 
     public static Set<Group> groups = new HashSet<>();
 
@@ -61,14 +64,59 @@ public class Env {
 
     }
 
-    public static void loadCustomInstance() {
-        ClassLoader myClassLoader = configExtendClassLoader();
-        if (myClassLoader != null)
-            loadExtendInstance(myClassLoader);
+    public static void loadCustomInstance() throws Exception {
+
+        Collection<Class<?>> allClasses = getAllExtendClass();
+        logger.debug("got {} classes", allClasses.size());
+        loadExtendInstance(allClasses);
     }
 
-    private static void loadExtendInstance(ClassLoader extendClassLoader) {
-        List<Class<?>> extendAuths = ResourceUtil.getSubClasses(extendClassLoader, AbstractAuthProcessor.class);
+    private static Collection<Class<?>> getAllExtendClass() throws Exception {
+        ClassLoader current = Thread.currentThread().getContextClassLoader();
+        String homeDir = System.getProperty("app.home");
+        if(StringUtils.isEmpty(homeDir))
+            homeDir = current.getResource("").getPath();
+        File home = new File(homeDir);
+        String extendDir = homeDir + File.separator + "ext";
+        File extend = new File(extendDir);
+        if(!extend.exists() || !extend.isDirectory()){
+            extend = home;
+        }
+
+        if (!home.exists())
+            return new ArrayList<>(0);
+
+        logger.info("find extend instance in dir:{}", extend.getPath());
+
+        Set<File> files = ResourceUtil.findFile(extend, ".jar", true);
+        logger.debug("got {} jars", files.size());
+
+        ClassLoader myClassLoader = createClassLoader(files, current);
+//        if (myClassLoader != null)
+
+        Collection<Class<?>> allClasses = ResourceUtil.getClassesFromJars(files, myClassLoader);
+
+        Set<File> classFiles = ResourceUtil.findFile(home, ".class", true);
+        for(File classFile : classFiles){
+            try {
+                allClasses.add(ResourceUtil.loadFileAsClass(myClassLoader, classFile.getPath(), extend));
+            } catch (Throwable throwable) {
+                logger.warn("load class error:{}", classFile.getPath(), throwable);
+            }
+        }
+
+        return allClasses;
+    }
+
+    private static Collection<Class<?>> getAllLoadedClasses() throws NoSuchFieldException, IllegalAccessException {
+        Field f = ClassLoader.class.getDeclaredField("classes");
+        f.setAccessible(true);
+        Vector classes=(Vector)f.get(Thread.currentThread().getContextClassLoader());
+        return classes;
+    }
+
+    private static void loadExtendInstance(Collection<Class<?>> allClasses) {
+        List<Class<?>> extendAuths = ResourceUtil.getSubClasses(AbstractAuthProcessor.class, allClasses);
         extendAuths.forEach((clazz) -> {
             boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
             if (isAbstract)
@@ -86,7 +134,7 @@ public class Env {
             }
         });
 
-        List<Class<?>> extendPreHandlers = ResourceUtil.getSubClasses(extendClassLoader, AbstractPreHandler.class);
+        List<Class<?>> extendPreHandlers = ResourceUtil.getSubClasses(AbstractPreHandler.class, allClasses);
         extendPreHandlers.forEach((clazz) -> {
             boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
             if (isAbstract)
@@ -104,7 +152,7 @@ public class Env {
             }
         });
 
-        List<Class<?>> extendPostHandlers = ResourceUtil.getSubClasses(extendClassLoader, AbstractPostHandler.class);
+        List<Class<?>> extendPostHandlers = ResourceUtil.getSubClasses(AbstractPostHandler.class, allClasses);
         extendPostHandlers.forEach((clazz) -> {
             boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
             if (isAbstract)
@@ -125,24 +173,26 @@ public class Env {
     }
 
 
-    private static ClassLoader configExtendClassLoader() {
-        String homeDir = System.getProperty("user.dir");
-        File home = new File(homeDir);
-        if (!home.exists())
-            return null;
-
-        Set<File> files = ResourceUtil.findFile(home, ".jar", true);
-
-        ClassLoader extendClassLoader = createClassLoader(files, Thread.currentThread().getContextClassLoader());
-        return extendClassLoader;
-    }
+//    private static ClassLoader configExtendClassLoader() {
+//        ClassLoader current = Thread.currentThread().getContextClassLoader();
+//        String homeDir = current.getResource("").getPath();
+//        File home = new File(homeDir);
+//        home = home.getParentFile();
+//        if (!home.exists())
+//            return null;
+//
+//        Set<File> files = ResourceUtil.findFile(home, ".jar", true);
+//        logger.debug("got {} jar files in dir {} and its' children dirs", files.size(), home);
+//        ClassLoader extendClassLoader = createClassLoader(files, current);
+//        return extendClassLoader;
+//    }
 
     private static ClassLoader createClassLoader(Set<File> files, ClassLoader parent) {
         Set<URL> set = new HashSet<>();
 
         files.forEach((file) -> {
             try {
-                set.add(buildClassLoaderUrl(file));
+                set.add(file.toURI().toURL());
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -158,11 +208,22 @@ public class Env {
         });
     }
 
-    private static URL buildClassLoaderUrl(File file) throws MalformedURLException {
-        String url = "file:" + file.getPath();
-        URL classUrl = new URL(url);
-        return classUrl;
-    }
+//    private static URL buildClassLoaderUrl(File file) throws MalformedURLException {
+//        String path = "";
+//        String filePath = file.getPath();
+//        String fileName = file.getName().toLowerCase();
+//        logger.debug("file : {}" ,filePath);
+//        if(fileName.endsWith(".jar")) {
+////            path = "file://" + filePath + "!/";
+//            return file.toURI().toURL();
+//        } else if(fileName.endsWith(".class")) {
+////            path = "class://" + filePath;
+//            return file.toURI().toURL();
+//        }
+//        URL classUrl = new URL(path);
+//        return classUrl;
+////        return file.toURI().toURL();
+//    }
 
 
     public static boolean isCommander(){

@@ -139,7 +139,12 @@ public class SystemVerticle extends AbstractVerticle {
 //        initRetryTask();
 
         Future.<Void>future(initEnv -> {
-            Env.loadCustomInstance();
+            try {
+                Env.loadCustomInstance();
+            } catch (Exception e) {
+                logger.warn("load extend instance error: {}", e.getMessage(), e);
+            }
+            initEnv.complete();
         });
     }
 

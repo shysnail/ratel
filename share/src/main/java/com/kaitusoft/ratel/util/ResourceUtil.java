@@ -1,5 +1,8 @@
 package com.kaitusoft.ratel.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -16,6 +19,7 @@ import java.util.jar.JarFile;
  */
 public class ResourceUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(ResourceUtil.class);
     /**
      * 获得根目录如果在jar中运行获得相对路径,反则返回当前线程运行的根目录
      *
@@ -76,9 +80,6 @@ public class ResourceUtil {
         Set<File> found = new HashSet<>();
         findTypeFilesInDir(dir, ext, found, recursion);
 
-//        File[] result = new File[found.size()];
-//        found.toArray(result);
-
         return found;
     }
 
@@ -101,11 +102,12 @@ public class ResourceUtil {
 
     }
 
-    public static List<Class<?>> getSubClasses(ClassLoader classLoader , Class baseClass){
+
+    public static List<Class<?>> getSubClasses(Class baseClass, Collection<Class<?>> classes){
         List<Class<?>> list = new ArrayList<>();
         try {
-            List<Class<?>> classes = getClasses(classLoader);
             for(Class clazz : classes){
+
                 if (baseClass.isAssignableFrom(clazz)) {
                     if (!baseClass.equals(clazz)) {
                         // 自身并不加进去
@@ -119,30 +121,11 @@ public class ResourceUtil {
         return list;
     }
 
-    public static List<Class<?>> getClasses(ClassLoader classLoader) throws Exception {
-        if (classLoader == null)
-            classLoader = Thread.currentThread().getContextClassLoader();
-
-        Enumeration<URL> resources = classLoader.getResources("");
-        List<Class<?>> classes = new ArrayList<Class<?>>();
-
-        while (resources.hasMoreElements()) {
-            URL resource = resources.nextElement();
-
-            String protocol = resource.getProtocol();
-
-            if ("file".equals(protocol)) {
-                File file = new File(resource.getFile());
-                classes.addAll(findClasses(file, file.getPath(),""));
-            } else if ("jar".equals(protocol)) {
-                System.out.println("jar类型的扫描");
-                String jarpath = resource.getPath();
-                jarpath = jarpath.replace("file:/", "");
-                jarpath = jarpath.substring(0, jarpath.indexOf("!"));
-                return getClasssFromJarFile(jarpath, "");
-            }
+    public static List<Class<?>> getClassesFromJars(Collection<File> jarFiles, ClassLoader classLoader) throws Exception{
+        List<Class<?>> classes = new LinkedList<>();
+        for(File jar : jarFiles){
+            classes.addAll(getClasssFromJarFile(classLoader, jar.getPath(), null));
         }
-
         return classes;
     }
 
@@ -150,17 +133,20 @@ public class ResourceUtil {
     /**
      * 从jar文件中读取指定目录下面的所有的class文件
      *
-     * @param jarPaht  jar文件存放的位置
-     * @param filePaht 指定的文件目录
+     * @param jarPath  jar文件存放的位置
+     * @param packagePre 指定的包前缀
      * @return 所有的的class的对象
      */
-    public static List<Class<?>> getClasssFromJarFile(String jarPaht,
-                                                      String filePaht) {
+    protected static List<Class<?>> getClasssFromJarFile(ClassLoader classLoader, String jarPath, String packagePre) throws Exception {
+        ClassLoader useClassLoader = classLoader;
+        if(useClassLoader == null)
+            useClassLoader = Thread.currentThread().getContextClassLoader();
+
         List<Class<?>> clazzs = new ArrayList<Class<?>>();
 
         JarFile jarFile = null;
         try {
-            jarFile = new JarFile(jarPaht);
+            jarFile = new JarFile(jarPath);
 
             List<JarEntry> jarEntryList = new ArrayList<JarEntry>();
 
@@ -168,23 +154,25 @@ public class ResourceUtil {
             while (ee.hasMoreElements()) {
                 JarEntry entry = (JarEntry) ee.nextElement();
                 // 过滤我们出满足我们需求的东西
-                if (entry.getName().startsWith(filePaht)
-                        && entry.getName().endsWith(".class")) {
+                String entryName = entry.getName();
+                if (entryName.endsWith(".class") && (StringUtils.isEmpty(packagePre) || entryName.startsWith(packagePre))) {
                     jarEntryList.add(entry);
                 }
             }
             for (JarEntry entry : jarEntryList) {
-                String className = entry.getName().replace('/', '.');
-                className = className.substring(0, className.length() - 6);
-
                 try {
-                    clazzs.add(Thread.currentThread().getContextClassLoader()
-                            .loadClass(className));
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
+                    if(logger.isDebugEnabled() && entry.getName().indexOf("FactoryBean") >= 0)
+                        logger.error("jar:{}, class:{}", jarPath, entry.getName());
+                    if(entry.getName().startsWith("org/hyperic"))
+                        continue;
+                    clazzs.add(loadFileAsClass(useClassLoader, entry.getName()));
+                } catch (Throwable t) {
+//                    logger.debug("load class error, class:{}, jar:{}", entry.getName(), jarPath, t);
                 }
             }
         } catch (IOException e1) {
+            logger.error("load class error, jar:{}", jarPath, e1);
+            throw new Exception("jar:" + jarPath);
         } finally {
             if (null != jarFile) {
                 try {
@@ -198,29 +186,28 @@ public class ResourceUtil {
     }
 
 
-    private static List<Class<?>> findClasses(File directory, String root, String packageName)
-            throws ClassNotFoundException {
-        List<Class<?>> classes = new ArrayList<Class<?>>();
+    public static Class<?> loadFileAsClass(ClassLoader classLoader, String fileName) throws ClassNotFoundException, Throwable {
+        return loadFileAsClass(classLoader, fileName, null);
+    }
 
-        if (!directory.exists()) {
-            return classes;
-        }
+    /**
+     *
+     * @param classLoader
+     * @param fileName 文件名
+     * @param prefix -- 路径前缀，需要剔除
+     * @return
+     * @throws ClassNotFoundException
+     */
+    public static Class<?> loadFileAsClass(ClassLoader classLoader, String fileName, File prefix) throws ClassNotFoundException, Throwable {
+        if(prefix != null)
+            fileName = fileName.substring(prefix.getPath().length() + 1);
+        fileName = fileName.substring(0, fileName.length() - 6);
+        String className = fileName.replace('/', '.');
+        return classLoader.loadClass(className);
+    }
 
-        File[] files = directory.listFiles();
-        for (File file : files) {
-            if (file.isDirectory()) {
-                classes.addAll(findClasses(file, root,
-                        packageName));
-            } else if (file.getName().endsWith(".class")) {
-                int length = file.getPath().length();
-                String className = file.getPath().substring(root.length() + 1, length - 6);
-                className = className.replaceAll("\\\\", ".").replaceAll("\\/", ".");
-
-                Class clazz = Class.forName(className);
-                classes.add(clazz);
-            }
-        }
-        return classes;
+    public static Class<?> loadClass(ClassLoader classLoader, String className) throws ClassNotFoundException, Throwable {
+        return classLoader.loadClass(className);
     }
 
 //

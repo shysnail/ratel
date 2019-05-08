@@ -503,7 +503,7 @@
                         <div class="row cl">
                             <label class="form-label col-xs-3">用法:</label>
                             <div class="formControls col-xs-8">
-                                <p class="textarea" id="auth.usage" placeholder=""></p>
+                                <p class="textarea" style="overflow-y: scroll" id="auth.usage" placeholder=""></p>
                             </div>
                         </div>
                         <div class="row cl">
@@ -634,7 +634,7 @@
                         <div class="row cl">
                             <label class="form-label col-xs-3">用法:</label>
                             <div class="formControls col-xs-8">
-                                <p class="textarea" name="preHandler.usage" id="preHandler.usage" placeholder=""></p>
+                                <p class="textarea" style="overflow-y: scroll" name="preHandler.usage" id="preHandler.usage" placeholder=""></p>
                             </div>
                         </div>
                     </div>
@@ -668,7 +668,7 @@
                             <div class="row cl">
                                 <label class="form-label col-xs-3">用法:</label>
                                 <div class="formControls col-xs-8">
-                                    <p class="textarea" id="postHandler.usage" placeholder=""></p>
+                                    <p class="textarea" style="overflow-y: scroll" id="postHandler.usage" placeholder=""></p>
                                 </div>
                             </div>
                         </div>

@@ -84,7 +84,7 @@ public class MainVerticle extends AbstractVerticle {
                         deplyed.add(res.result());
                         logger.debug("system verticle deployed!");
                     } else {
-                        logger.error("system verticle deployed failed!", res.cause());
+                        logger.error("system verticle deployed failed! msg:{}", res.cause().getMessage(), res.cause());
                     }
 
                     sysInfo.complete();

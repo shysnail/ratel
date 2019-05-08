@@ -587,7 +587,7 @@
                         <div class="row cl">
                             <label class="form-label col-xs-3">用法:</label>
                             <div class="formControls col-xs-8">
-                                <p class="textarea" id="auth.usage" placeholder=""></p>
+                                <p class="textarea" style="overflow-y: scroll" id="auth.usage" placeholder=""></p>
                             </div>
                         </div>
                         <div class="row cl">
@@ -649,7 +649,7 @@
                         <div class="row cl">
                             <label class="form-label col-xs-3">用法:</label>
                             <div class="formControls col-xs-8">
-                                <p class="textarea" id="preHandler.usage" placeholder=""></p>
+                                <p class="textarea" style="overflow-y: scroll" id="preHandler.usage" placeholder=""></p>
                             </div>
                         </div>
 
@@ -687,7 +687,7 @@
                             <div class="row cl">
                                 <label class="form-label col-xs-3">用法:</label>
                                 <div class="formControls col-xs-8">
-                                    <p class="textarea" id="postHandler.usage" placeholder=""></p>
+                                    <p class="textarea" style="overflow-y: scroll" id="postHandler.usage" placeholder=""></p>
                                 </div>
                             </div>
                         </div>
@@ -1252,6 +1252,7 @@
             },
             error: function (err) {
                 $.Huimodalalert(err.responseText, 2000);
+                $('#waitModal').modal('hide');
             }
         });
 
@@ -1274,6 +1275,7 @@
                 var avauths = "";
                 for (var i = 0; auths != undefined && i < auths.length; i++) {
                     var auth = auths[i];
+
                     authUsage[auth.instance] = auth.usage;
                     avauths += "<option value='" + auth.instance + "'>" + auth.instance + "</option>";
                     if (i == 0) {
@@ -1397,6 +1399,21 @@
             minValue: 1,
             maxValue: 65535,
             dis: 1
+        });
+
+        $('#auth_instance').change(function () {
+            var instance = $(this).val();
+            $('#auth\\.usage').html(authUsage[instance]);
+        });
+
+        $('#preHandler_instance').change(function () {
+            var instance = $(this).val();
+            $('#preHandler\\.usage').html(preHandlerUsage[instance]);
+        });
+
+        $('#postHandler_instance').change(function () {
+            var instance = $(this).val();
+            $('#postHandler\\.usage').html(postHandlerUsage[instance]);
         });
 
         loadEnv();
