@@ -1056,7 +1056,9 @@
                 targets.push(target);
             })
             if (targets.length < 1) {
-                $.Huimodalalert('必须指定转发目标url！', 2000);
+                $.Huimodalalert('必须指定转发目标url！', 2000, function(){
+                    $('#waitModal').modal('hide');
+                });
                 return;
             }
             upstreamOption.targets = targets;
@@ -1067,7 +1069,9 @@
             redirectOption.url = $('#upstreamOption_REDIRECT').find(":input[name=redirectOption\\.url]").val();
             redirectOption.passQueryString = $('#upstreamOption_REDIRECT').find(":checkbox[name=redirectOption\\.passQueryString]").prop('checked');
             if (redirectOption.url == undefined || $.trim(redirectOption.url) == '') {
-                $.Huimodalalert('必须指定重定向目标 url！', 2000);
+                $.Huimodalalert('必须指定重定向目标 url！', 2000, function(){
+                    $('#waitModal').modal('hide');
+                });
                 return;
             }
         } else if (proxyType == 'ECHO') {
@@ -1251,8 +1255,9 @@
                 });
             },
             error: function (err) {
-                $.Huimodalalert(err.responseText, 2000);
-                $('#waitModal').modal('hide');
+                $.Huimodalalert(err.responseText, 2000, function(){
+                    $('#waitModal').modal('hide');
+                });
             }
         });
 
