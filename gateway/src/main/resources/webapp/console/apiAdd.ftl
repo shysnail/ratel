@@ -297,28 +297,28 @@
                                 <input type="checkbox" name="passBody.option" value="OTHER"/>&nbsp;OTHER
                             </div>
                         </div>
-                        <div class="row cl">
+                        <div class="row cl proxy_sets">
                             <label class="form-label col-xs-3">最大内容长度:</label>
                             <div class="formControls col-xs-2">
                                 <input type="text" class="input-text" name="upstreamOption.maxContentLength"
                                        placeholder="-1为不限制" value="-1"/>
                             </div>
                         </div>
-                        <div class="row cl">
+                        <div class="row cl proxy_sets">
                             <label class="form-label col-xs-3">url最大请求参数长度:</label>
                             <div class="formControls col-xs-2">
                                 <input type="text" class="input-text" name="upstreamOption.maxInitialLineLength"
                                        placeholder="-1为不限制" value="4096"/>
                             </div>
                         </div>
-                        <div class="row cl">
+                        <div class="row cl proxy_sets">
                             <label class="form-label col-xs-3">最大请求头:</label>
                             <div class="formControls col-xs-2">
                                 <input type="text" class="input-text" name="upstreamOption.maxHeaderSize"
                                        placeholder="-1为不限制" value="8192"/>
                             </div>
                         </div>
-                        <div class="row cl">
+                        <div class="row cl proxy_sets">
                             <label class="form-label col-xs-3">keepalive保持:</label>
                             <div class="formControls col-xs-3 ">
                                 <div class="check-box">
@@ -326,10 +326,11 @@
                                 </div>
                             </div>
                             <div class="formControls col-xs-5">
-                                如果这个应用经常应对稳定并发场景，推荐开启；如果经常应对瞬间并发，推荐关闭。
+                                如果使用应用线程池，这个选项无效。
+                                如果经常应对瞬间并发，推荐开启；保持时长视瞬间持续时长而定:保持时长>=并发持续时长.
                             </div>
                         </div>
-                        <div class="row cl">
+                        <div class="row cl proxy_sets">
                             <label class="form-label col-xs-3">keepalive保持时长(秒):</label>
                             <div class="formControls col-xs-2">
                                 <input type="text" class="input-text" id="upstreamOption_keepAliveTimeout" name="upstreamOption.keepAliveTimeout"
@@ -337,14 +338,14 @@
                             </div>
                         </div>
 
-                        <div class="row cl">
+                        <div class="row cl proxy_sets">
                             <label class="form-label col-xs-3">连接最大闲置时长:</label>
                             <div class="formControls col-xs-2">
                                 <input type="text" class="input-text" name="upstreamOption.maxIdleTimeout"
                                        placeholder="-1为不限制" value="5000"/>
                             </div>
                         </div>
-                        <div class="row cl">
+                        <div class="row cl proxy_sets">
                             <label class="form-label col-xs-3">拥堵时等待队列最大大小:</label>
                             <div class="formControls col-xs-2">
                                 <input type="text" class="input-text" name="upstreamOption.maxWaitQueueSize"
@@ -1365,8 +1366,10 @@
         $(":radio[name=upstreamOption\\.threadType]").click(function () {
             if ($(this).val() == 'APP') {
                 $("#upstream_threadpool").hide();
+                $(".proxy_sets").hide();
             } else {
                 $("#upstream_threadpool").show();
+                $(".proxy_sets").show();
             }
         });
 
