@@ -269,6 +269,9 @@ public class Api {
         httpClientOptions.setTcpNoDelay(true);
         httpClientOptions.setTcpQuickAck(true);
 
+        httpClientOptions.setReuseAddress(true);
+        httpClientOptions.setReusePort(true);
+
         return httpClientOptions;
     }
 
