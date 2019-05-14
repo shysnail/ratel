@@ -250,8 +250,9 @@ public class Api {
         httpClientOptions.setMaxPoolSize(upstreamOption.getMaxPoolSize());
         httpClientOptions.setMaxInitialLineLength(upstreamOption.getMaxInitialLineLength());
         httpClientOptions.setMaxHeaderSize(upstreamOption.getMaxHeaderSize());
-        httpClientOptions.setKeepAliveTimeout(upstreamOption.getKeepAliveTimeout());
         httpClientOptions.setKeepAlive(upstreamOption.isKeepAlive());
+        if(httpClientOptions.isKeepAlive())
+            httpClientOptions.setKeepAliveTimeout(upstreamOption.getKeepAliveTimeout());
         httpClientOptions.setConnectTimeout(upstreamOption.getTimeout());
         httpClientOptions.setIdleTimeout(upstreamOption.getMaxIdleTimeout());
         httpClientOptions.setMaxWaitQueueSize(upstreamOption.getMaxWaitQueueSize());

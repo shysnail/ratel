@@ -1250,9 +1250,9 @@
         $("#upstreamOption_keepAlive").change(function () {
             var checked = $(this).prop('checked');
             if (checked) {
-                $("#upstreamOption_keepAliveTimeout").attr('disabled', true);
-            } else {
                 $("#upstreamOption_keepAliveTimeout").attr('disabled', false);
+            } else {
+                $("#upstreamOption_keepAliveTimeout").attr('disabled', true);
             }
         });
 
