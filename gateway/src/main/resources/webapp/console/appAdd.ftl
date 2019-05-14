@@ -843,7 +843,11 @@
                 $('input:text[name=upstreamOption\\.maxHeaderSize]').val(upstreamOption.maxHeaderSize);
                 $("#upstreamOption_maxPoolSize").find(":input").val(upstreamOption.maxPoolSize);
                 $(':checkbox[name=upstreamOption\\.keepAlive]').prop('checked', upstreamOption.keepAlive);
-                $('input:text[name=upstreamOption\\.keepAliveTimeout]').val(upstreamOption.keepAliveTimeout);
+                if(upstreamOption.keepAlive)
+                    $('input:text[name=upstreamOption\\.keepAliveTimeout]').val(upstreamOption.keepAliveTimeout);
+                else{
+                    $('input:text[name=upstreamOption\\.keepAliveTimeout]').attr('disabled', true);
+                }
                 $('input:text[name=upstreamOption\\.maxIdleTimeout]').val(upstreamOption.maxIdleTimeout);
                 $('input:text[name=upstreamOption\\.maxWaitQueueSize]').val(upstreamOption.maxWaitQueueSize);
 

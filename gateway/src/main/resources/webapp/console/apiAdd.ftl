@@ -833,7 +833,11 @@
                     $('input:text[name=upstreamOption\\.maxInitialLineLength]').val(upstream.maxInitialLineLength);
                     $('input:text[name=upstreamOption\\.maxHeaderSize]').val(upstream.maxHeaderSize);
                     $('input:checkbox[name=upstreamOption\\.keepAlive]').prop('checked', upstream.keepAlive);
-                    $('input:text[name=upstreamOption\\.keepAliveTimeout]').val(upstream.keepAliveTimeout);
+                    if(upstream.keepAlive)
+                        $('input:text[name=upstreamOption\\.keepAliveTimeout]').val(upstream.keepAliveTimeout);
+                    else
+                        $('input:text[name=upstreamOption\\.keepAliveTimeout]').attr('disabled', true);
+
                     $('input:text[name=upstreamOption\\.maxIdleTimeout]').val(upstream.maxIdleTimeout);
                     $('input:text[name=upstreamOption\\.maxWaitQueueSize]').val(upstream.maxWaitQueueSize);
 
