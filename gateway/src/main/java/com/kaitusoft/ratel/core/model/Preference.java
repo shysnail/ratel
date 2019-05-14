@@ -46,6 +46,10 @@ public class Preference {
 
     private Processor accessLimit;
 
+    private Processor xssFilter;
+
+    private Processor sqlFilter;
+
     private AbstractAuthProcessor auth;
 
     private ExtendableProcessor[] preProcessors;

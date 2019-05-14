@@ -198,32 +198,6 @@ public class UpstreamProxy extends Proxy {
             });
         });
 
-//        wsClient.handler(read -> {
-//            logger.error("ws request-{}: {}", reqId, read.length());
-//
-//            WebSocket upstreamWs = context.get(ContextAttribute.CTX_REQ_WS);
-//            if (upstreamWs != null) {
-//                upstreamWs.write(read);
-//            }
-//
-//            wsUpstream.handler(ws -> {
-//                context.put(ContextAttribute.CTX_REQ_WS, ws);
-//                ws.exceptionHandler(error -> {
-//                    context.remove(ContextAttribute.CTX_REQ_WS);
-//                });
-//
-//                ws.handler(data -> {
-//                    logger.error("ws response-{}: {}", reqId, data.length());
-//                    wsClient.write(data);
-//                    if (wsClient.writeQueueFull()) {
-//                        ws.pause();
-//                        ws.resume();
-//                    }
-//                });
-//
-//                ws.write(read);
-//            });
-//        });
     }
 
 
@@ -271,58 +245,6 @@ public class UpstreamProxy extends Proxy {
             clientResponse.setStatusCode(HttpResponseStatus.BAD_GATEWAY.code()).end(e.toString());
         });
 
-
-//        upstream.handler(upstreamResponse -> {
-//            if (clientResponse.ended()) {
-//                context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
-//                return;
-//            }
-//
-//            clientResponse.setStatusCode(upstreamResponse.statusCode());
-//            upstreamResponse.headers().forEach(header -> {
-//                clientResponse.putHeader(header.getKey(), header.getValue());
-//            });
-//
-//            if (clientResponse.isChunked() || needChunked(upstreamResponse))
-//                clientResponse.setChunked(true);
-//
-//            upstreamResponse.exceptionHandler(e -> {
-//                context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.<Boolean>failedFuture(e));
-//                upstreamResponse.handler(null);
-//                try {
-//                    upstream.end();
-//                } catch (Exception ue) {
-//                    logger.debug("exception occur when upstream :", e);
-//                }
-//
-//            });
-//
-//            upstreamResponse.endHandler(end -> {
-//                if (hasPostProcessor) {
-//                    context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
-//                    context.next();
-//                    return;
-//                }
-//
-//                clientResponse.end();
-//            });
-//
-//            Handler transfer = new Handler() {
-//                @Override
-//                public void handle(Object data) {
-//                    clientResponse.write((Buffer) data);
-//                    if (clientResponse.writeQueueFull()) {
-//                        upstreamResponse.pause();
-//                        upstreamResponse.resume();
-//                        upstreamResponse.handler(this);
-//                    }
-//                }
-//            };
-//            upstreamResponse.handler(transfer);
-//
-//        });
-
-
         upstream.handler(upstreamResponse -> {
             if (clientResponse.ended()) {
                 context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
@@ -365,14 +287,6 @@ public class UpstreamProxy extends Proxy {
 
         });
 
-//            upstream.endHandler(end -> {
-//                if(logger.isDebugEnabled()){
-//                    upstream.headers().forEach((entry) -> {
-//                        logger.debug("request:{}, upstream header:{} -> {}", reqId.toString(), entry.getKey(), entry.getValue());
-//                    });
-//                }
-//            });
-
         if (passBody != null) {
             if (hasBody(clientRequest)) {
                 passBody.pass(reqId, clientRequest, upstream);
@@ -387,7 +301,6 @@ public class UpstreamProxy extends Proxy {
         } else {
             upstream.end();
         }
-
 
     }
 

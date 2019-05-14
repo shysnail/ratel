@@ -28,6 +28,8 @@ public class AppExtendOption {
 
     private UpstreamOption upstreamOption;
 
+    private SecurityOption securityOption;
+
     private String blowSetting;
 
     public String toJsonString() {

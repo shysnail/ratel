@@ -22,4 +22,6 @@ public class ApiExtendOption {
     private RedirectOption redirectOption;
 
     private EchoOption echoOption;
+
+    private SecurityOption securityOption;
 }

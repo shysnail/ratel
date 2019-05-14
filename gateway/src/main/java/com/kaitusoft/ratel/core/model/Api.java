@@ -166,7 +166,7 @@ public class Api {
             return passQueryString ? appendQueryString(realUrl, requestUri.substring(requestPath.length())) : target.getUrl();
         }
 
-        String requestPrefix = new String(prefix);
+        String requestPrefix = prefix;
         boolean appendRelative = false;
         if(targetWildcardTag) {
             appendRelative = true;
@@ -223,6 +223,12 @@ public class Api {
         return real.append(appendPath).toString();
     }
 
+    /**
+     * 需要判断是否开启xss过滤，然后相应的处理参数
+     * @param origin
+     * @param queryString
+     * @return
+     */
     private String appendQueryString(String origin, String queryString) {
         if (StringUtils.isEmpty(queryString))
             return origin;

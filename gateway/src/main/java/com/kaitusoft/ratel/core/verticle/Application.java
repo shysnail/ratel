@@ -253,11 +253,11 @@ public class Application extends AbstractVerticle {
         message.reply(idArray.length);
     }
 
-    private Route newRoute(Api path, Preference preference, Router router) {
+    private Route newRoute(Api path, HttpMethod[] methods, Router router) {
         Route route = router.route();
         mount(route, path);
-        if (preference.getMethod() != null && preference.getMethod().length > 0) {
-            for (HttpMethod method : preference.getMethod()) {
+        if (methods != null && methods.length > 0) {
+            for (HttpMethod method : methods) {
                 route.method(method);
             }
         }
@@ -268,22 +268,30 @@ public class Application extends AbstractVerticle {
         List<Route> routes = new ArrayList<>();
 
         Preference preference = path.getPreference();
+        HttpMethod[] routeMethods = preference.getMethod();
 
-        Route initRoute = newRoute(path, preference, router);
+        Route initRoute = newRoute(path, routeMethods, router);
         initRoute.handler(new SystemHandler(vertx, app, path));
         routes.add(initRoute);
 
         Processor limit = preference.getAccessLimit();
         if (limit != null) {
-            Route route = newRoute(path, preference, router);
+            Route route = newRoute(path, routeMethods, router);
             route.handler(limit);
             routes.add(route);
         }
 
         Processor auth = preference.getAuth();
         if (auth != null) {
-            Route route = newRoute(path, preference, router);
+            Route route = newRoute(path, routeMethods, router);
             route.handler(auth);
+            routes.add(route);
+        }
+
+        Processor sqlFilter = preference.getSqlFilter();
+        if(sqlFilter != null){
+            Route route = newRoute(path, routeMethods, router);
+            route.handler(sqlFilter);
             routes.add(route);
         }
 
@@ -294,20 +302,20 @@ public class Application extends AbstractVerticle {
         Processor[] preProcessors = preference.getPreProcessors();
         if (preProcessors != null && preProcessors.length == 0) {
             for (Processor pro : preProcessors) {
-                Route route = newRoute(path, preference, router);
+                Route route = newRoute(path, routeMethods, router);
                 route.handler(pro);
                 routes.add(route);
             }
         }
 
-        Route proxy = newRoute(path, preference, router);
+        Route proxy = newRoute(path, routeMethods, router);
         proxy.handler(path.getProxy());
         routes.add(proxy);
 
         Processor[] postProcessors = preference.getPostProcessors();
         if (postProcessors != null && postProcessors.length == 0) {
             for (Processor pro : postProcessors) {
-                Route route = newRoute(path, preference, router);
+                Route route = newRoute(path, routeMethods, router);
                 route.handler(pro);
                 routes.add(route);
             }
