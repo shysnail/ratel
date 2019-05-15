@@ -58,9 +58,10 @@ public class ApiAction extends BaseAction {
 
                     apiJson.remove("running");
                     String id = apiJson.getInteger("id").toString();
-                    if (runningApis != null) {
-                        if (runningApis.contains(id))
-                            apiJson.put("running", 1);
+                    if (runningApis != null && runningApis.contains(id)) {
+                        apiJson.put("running", 1);
+                    }else{
+                        apiJson.put("running", 0);
                     }
 
                 });
@@ -573,7 +574,7 @@ public class ApiAction extends BaseAction {
                     JsonObject success = result.getJsonObject(appId);
                     if(!success.getBoolean("success", false)){
                         allSuccess = false;
-                        reason += apiId + ":" + success.getString("reason");
+                        reason += " api id:" + apiId + ", " + success.getString("reason");
                     }
                 }
 
@@ -607,7 +608,7 @@ public class ApiAction extends BaseAction {
         List<Future> futures = new ArrayList<>();
         for(String apiId : ids){
             futures.add(Future.future(future -> {
-                action(vertx, appId, id, App.PAUSED, new int[]{App.STOPPED, App.PAUSED}, Event.PAUSE_API, res -> {
+                action(vertx, appId, apiId, App.PAUSED, new int[]{App.STOPPED, App.PAUSED}, Event.PAUSE_API, res -> {
                     JsonObject success = new JsonObject();
                     if (res.succeeded()) {
                         JsonObject obj = (JsonObject) res.result();
@@ -743,21 +744,23 @@ public class ApiAction extends BaseAction {
         //获取api，看其状态
         vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.GET_APP_API), id, api -> {
             if (api.succeeded()) {
+
                 JsonObject apiJson = api.result().body();
-                int originStat = apiJson.getInteger("running");
-                boolean stop = false;
-                for(int i = 0; stopStatus != null && i < stopStatus.length; i ++){
-                    if(originStat == stopStatus[i]){
-                        stop = true;
-                        break;
-                    }
-                }
-                if (stop) {
-                    resultData.put("success", false);
-                    resultData.put("reason", "当前状态无法进行此操作");
-                    handler.handle(Future.succeededFuture(resultData));
-                    return;
-                }
+
+//                int originStat = apiJson.getInteger("running");
+//                boolean stop = false;
+//                for(int i = 0; stopStatus != null && i < stopStatus.length; i ++){
+//                    if(originStat == stopStatus[i]){
+//                        stop = true;
+//                        break;
+//                    }
+//                }
+//                if (stop) {
+//                    resultData.put("success", false);
+//                    resultData.put("reason", "当前状态无法进行此操作");
+//                    handler.handle(Future.succeededFuture(resultData));
+//                    return;
+//                }
 
                 JsonObject updates = new JsonObject();
                 updates.put("appId", appId);
@@ -766,8 +769,8 @@ public class ApiAction extends BaseAction {
                 prop.put("running", targetStatus);
                 updates.put("prop", prop);
 
-                vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.UPDATE_API_PROP), updates, apiUpdate -> {
-                    if (apiUpdate.succeeded()) {
+//                vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.UPDATE_API_PROP), updates, apiUpdate -> {
+//                    if (apiUpdate.succeeded()) {
                         //修改状态后，通知集群启动api
                         //首先拿到现在集群api所属组的所有节点
                         //然后统计所有的节点的响应
@@ -790,7 +793,7 @@ public class ApiAction extends BaseAction {
                             }
                             ClusterVerticle.clusterMessage.<JsonObject>send(toNodes, Event.formatAddress(sendAddress), body, clusterReply -> {
                                 if (clusterReply.succeeded()) {
-                                    logger.debug("节点暂停，api暂停");
+                                    logger.debug("目标节点已执行，api:{}->{}", id, targetStatus);
                                     JsonObject reply = clusterReply.result();
 
                                     resultData.put("success", true);
@@ -800,22 +803,23 @@ public class ApiAction extends BaseAction {
 
                                     handler.handle(Future.succeededFuture(resultData));
                                 } else {
-                                    prop.put("running", originStat);
-                                    vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.UPDATE_API_PROP), updates, rollback -> {
-                                        logger.debug("api action->{}, 所有节点均失败", targetStatus);
-
-                                        handler.handle(Future.failedFuture(clusterReply.cause().getMessage()));
-                                    });
+                                    logger.debug("节点 api:{}->{} 操作失败", id, targetStatus);
+//                                    prop.put("running", originStat);
+//                                    vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.UPDATE_API_PROP), updates, rollback -> {
+//                                        logger.debug("api action->{}, 所有节点均失败", targetStatus);
+//
+//                                        handler.handle(Future.failedFuture(clusterReply.cause().getMessage()));
+//                                    });
                                 }
                             });
                         });
 
-                    } else {
-                        logger.info("api action->{}, app:{} - api:{} -> failed!", targetStatus, appId, id, apiUpdate.cause());
-
-                        handler.handle(Future.failedFuture(apiUpdate.cause().getMessage()));
-                    }
-                });
+//                    } else {
+//                        logger.info("api action->{}, app:{} - api:{} -> failed!", targetStatus, appId, id, apiUpdate.cause());
+//
+//                        handler.handle(Future.failedFuture(apiUpdate.cause().getMessage()));
+//                    }
+//                });
 
             }else{
                 logger.info("api action->{}, app:{} - api:{} -> failed!", targetStatus, appId, id, api.cause());

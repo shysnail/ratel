@@ -65,7 +65,6 @@ public class Env {
     }
 
     public static void loadCustomInstance() throws Exception {
-
         Collection<Class<?>> allClasses = getAllExtendClass();
         logger.debug("got {} classes", allClasses.size());
         loadExtendInstance(allClasses);
