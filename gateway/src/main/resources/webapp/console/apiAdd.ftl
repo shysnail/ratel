@@ -70,6 +70,16 @@
                         <input type="checkbox" name="methods" value="OTHER"/>&nbsp;OTHER
                     </div>
                 </div>
+                <div class="row cl">
+                    <label class="form-label col-xs-3">自动启动:</label>
+                    <div class="formControls skin-minimal col-xs-3">
+                        <input type="checkbox" id="autoRun"/>
+                    </div>
+                    <div class="form-label col-xs-5">
+                        如开启自动启动，则所属应用启动时，该api自动运行。否则，需要手动启动<br/>
+                        变更此项设定，下次所属应用重启时生效
+                    </div>
+                </div>
 
                 <div class="e-p-i-normal panel panel-default mt-20">
                     <div class="e-p-i-h panel-header cl">服务类型设定<b style="float:right;margin-right: 10px">+</b></div>
@@ -782,6 +792,7 @@
                 $('#name').val(api.name);
                 $('#path').val(api.path);
                 $('#vhost').val(api.vhost);
+                $('#autoRun').attr('checked', api.running==1?true:false);
                 var extendOption = JSON.parse(api.parameter);
                 var preference = extendOption.preferenceOption;
                 var method = preference.method;
@@ -1017,7 +1028,7 @@
         api.path = $('#path').val();
         api.vhost = $('#vhost').val();
         api.appId = appId;
-
+        api.running=$('#autoRun').prop('checked')?1:0;
         var parameter = {};
         api.extendOption = parameter;
         var preference = {};

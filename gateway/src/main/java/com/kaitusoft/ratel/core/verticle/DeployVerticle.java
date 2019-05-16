@@ -419,20 +419,27 @@ public class DeployVerticle extends AbstractVerticle {
                 int apiTotalNum = array.size();
                 array.forEach(obj -> {
                     JsonObject apiJson = (JsonObject) obj;
-                    startAppApi(id, apiJson, res -> {
-                        if (res.succeeded()) {
-                            success.incrementAndGet();
-                        } else {
-                            fail.incrementAndGet();
-                        }
+                    //设定为自动运行，则启动
+                    if(apiJson.getInteger("running") == 1) {
+                        startAppApi(id, apiJson, res -> {
+                            if (res.succeeded()) {
+                                success.incrementAndGet();
+                            } else {
+                                fail.incrementAndGet();
+                            }
 
-                        //所有的api都发布了
-                        if ((success.get() + fail.get()) == apiTotalNum) {
-                            result.put("success", success.get());
-                            result.put("fail", fail.get());
-                            handler.handle(Future.succeededFuture(result));
-                        }
-                    });
+                            //所有的api都发布了
+                            if ((success.get() + fail.get()) == apiTotalNum) {
+                                result.put("success", success.get());
+                                result.put("fail", fail.get());
+                                handler.handle(Future.succeededFuture(result));
+                            }
+                        });
+                    }else{
+                        //不自动运行，直接返回
+                        success.incrementAndGet();
+                        logger.debug("app:{} -> api:{} 不自动运行", id, apiJson.getValue("id"));
+                    }
                 });
             } else {
                 logger.error("启动所有api时，获取 app:{} 所有api 出错", id, reply.cause());
