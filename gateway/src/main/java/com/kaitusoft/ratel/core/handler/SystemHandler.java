@@ -58,7 +58,7 @@ public class SystemHandler extends Processor {
         if (app.getProtocol() == ProtocolEnum.HTTP_HTTPS) {
             action.put("https", context.request().isSSL());
         }
-        vertx.eventBus().<JsonObject>send(ClusterVerticle.myNodeId + Event.ACTION_REQUEST, action);
+        vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.ACTION_REQUEST), action);
 
         //  如果需要记录日志，需先记录初始化信息
         context.put(ContextAttribute.CTX_ATTR_START, System.currentTimeMillis());
@@ -84,7 +84,7 @@ public class SystemHandler extends Processor {
         }
 
         request.exceptionHandler(exceptionHandler -> {
-            vertx.eventBus().<JsonObject>send(ClusterVerticle.myNodeId + Event.ACTION_REQUEST_ERROR, action);
+            vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.ACTION_REQUEST_ERROR), action);
 
 //                appStatus.requestFail(path.getId(), context.request().uri(), true);
             //如果需要记录处理日志，在此处记录
@@ -99,13 +99,13 @@ public class SystemHandler extends Processor {
             action.put("duration", System.currentTimeMillis() - (long) context.get(ContextAttribute.CTX_ATTR_START));
             if (context.get(ContextAttribute.CTX_ATTR_FAIL) != null) {
                 logger.warn("请求未通过检验");
-                vertx.eventBus().<JsonObject>send(ClusterVerticle.myNodeId + Event.ACTION_REQUEST_FAIL, action);
+                vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.ACTION_REQUEST_FAIL), action);
 //                    appStatus.requestFail(path.getId(), context.request().uri());
             } else {
                 Long upstreamStart = context.get(ContextAttribute.CTX_ATTR_UPSTREAM_START);
                 if (upstreamStart != null)
                     action.put("requestTime", System.currentTimeMillis() - upstreamStart.longValue());
-                vertx.eventBus().<JsonObject>send(ClusterVerticle.myNodeId + Event.ACTION_REQUEST_DONE, action);
+                vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.ACTION_REQUEST_DONE), action);
 //                    appStatus.requestDone(path.getId(), context.request().uri());
             }
 

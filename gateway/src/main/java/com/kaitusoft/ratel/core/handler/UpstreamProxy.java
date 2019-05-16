@@ -124,10 +124,10 @@ public class UpstreamProxy extends Proxy {
             upstreamMethod = clientRequest.method();
 
         if (clientHeaders.contains(HttpHeaders.UPGRADE, HttpHeaders.WEBSOCKET, true)) {
-
             ServerWebSocket ws = clientRequest.upgrade();
             final String reqId = context.get(ContextAttribute.CTX_REQ_ID).toString();
             logger.debug("request:{}, ws request", reqId);
+
             if (logger.isDebugEnabled()) {
                 ws.headers().forEach((entry) -> {
                     logger.debug("request:{}, ws header:{} -> {}", reqId.toString(), entry.getKey(), entry.getValue());

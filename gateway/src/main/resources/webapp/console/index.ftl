@@ -106,7 +106,7 @@
             dataType: 'json',
             success: function (data) {
                 if(processData(data))
-                $.Huimodalalert('应用已删除！', 1000, function () {
+                $.Huimodalalert('应用已删除！', 1500, function () {
                     window.location = window.location;
                 });
             },
@@ -135,7 +135,7 @@
             dataType: 'json',
             success: function (data) {
                 if(processData(data))
-                $.Huimodalalert(data.data, 1000, function () {
+                $.Huimodalalert(data.data, 1500, function () {
                     if(data.success){
                         window.location = window.location;
                     }
