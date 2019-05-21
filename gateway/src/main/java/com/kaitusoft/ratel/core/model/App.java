@@ -2,6 +2,7 @@ package com.kaitusoft.ratel.core.model;
 
 import com.kaitusoft.ratel.Result;
 import com.kaitusoft.ratel.core.common.ProtocolEnum;
+import com.kaitusoft.ratel.core.model.option.AccessLogOption;
 import com.kaitusoft.ratel.core.model.option.AppExtendOption;
 import com.kaitusoft.ratel.core.model.option.SessionOption;
 import com.kaitusoft.ratel.core.model.option.UpstreamOption;
@@ -60,6 +61,8 @@ public class App {
     private UpstreamOption proxyOption;
 
     private Blow blowSetting;
+
+    private AccessLog accessLog;
 
     private Map<Integer, Api> apis = new HashMap<>(16, 1.0f);
 
@@ -123,6 +126,11 @@ public class App {
             blowSetting = new Blow();
 
 
+        AccessLogOption accessLogOption = extendOption.getAccessLogOption();
+        if(accessLogOption != null){
+            accessLog = new AccessLog(this, accessLogOption.getFormat(), accessLogOption.getSavePath());
+        }
+
     }
 
     public void addDeployApi(Api api){
@@ -137,6 +145,10 @@ public class App {
         return apis.get(id);
     }
 
+
+    public void stop(){
+        accessLog.destroy();
+    }
 
     public boolean equals(Object another) {
         if (another instanceof App)

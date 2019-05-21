@@ -165,6 +165,7 @@ public class Application extends AbstractVerticle {
 
     public void stop() throws Exception {
 //        appStatus.unDeploy();
+        app.stop();
         vertx.eventBus().<Integer>send(Event.formatInternalAddress(Event.ACTION_APP_UNDEPLOYED), app.getId());
 
         if(httpClient != null)

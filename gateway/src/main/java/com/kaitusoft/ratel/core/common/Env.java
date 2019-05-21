@@ -42,6 +42,7 @@ public class Env {
 
     public static Set<ExtendInstance> postHandlers = new HashSet<>();
 
+    public static String HOME = System.getProperty("app.home");;
 
     static {
         AbstractAuthProcessor defaultAuth = new DemoAuth();
@@ -72,11 +73,11 @@ public class Env {
 
     private static Collection<Class<?>> getAllExtendClass() throws Exception {
         ClassLoader current = Thread.currentThread().getContextClassLoader();
-        String homeDir = System.getProperty("app.home");
-        if(StringUtils.isEmpty(homeDir))
-            homeDir = current.getResource("").getPath();
-        File home = new File(homeDir);
-        String extendDir = homeDir + File.separator + "ext";
+
+        if(StringUtils.isEmpty(HOME))
+            HOME = current.getResource("").getPath();
+        File home = new File(HOME);
+        String extendDir = HOME + File.separator + "ext";
         File extend = new File(extendDir);
         if(!extend.exists() || !extend.isDirectory()){
             extend = home;

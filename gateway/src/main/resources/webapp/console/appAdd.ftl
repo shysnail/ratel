@@ -278,6 +278,24 @@
                     </div>
                 </div>
 
+                <div class="e-p-i-normal panel panel-default mt-20">
+                    <div class="e-p-i-h panel-header">访问日志<b style="float:right;margin-right: 10px">+</b></div>
+                    <div class="e-p-i-b panel-body">
+                        <div class="row cl">
+                            <label class="form-label col-xs-3">日志格式<a href='javascript:void(0)'><i id="logHelp" class='iconfont icon-tixing' title='帮助'></i></a>:</label>
+                            <div class="formControls col-xs-8">
+                                <input type="text" class="input-text" name="accessLogOption.format" placeholder="[$time_local] $method:$uri $request_time $status $http_referer $http_User-Agent" />
+                            </div>
+                        </div>
+                        <div class="row cl">
+                            <label class="form-label col-xs-3">存储路径:</label>
+                            <div class="formControls col-xs-8">
+                                <input type="text" class="input-text" name="accessLogOption.savePath" placeholder="logs/access.log"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="e-p-i panel panel-default mt-20">
                     <div class="panel-header cl">
                         <label class="col-xs-3 text-l pl-5">静态WEB服务</label>
@@ -863,6 +881,12 @@
                     }
                 }
 
+                var accessLogOption = extendOption.accessLogOption;
+                if(accessLogOption){
+                    $(":input[name=accessLogOption\\.format]").val(accessLogOption.format);
+                    $(":input[name=accessLogOption\\.savePath]").val(accessLogOption.savePath);
+                }
+
                 var sessionOption = extendOption.sessionOption;
                 if (sessionOption != undefined) {
                     $('#openSession').click();
@@ -1040,6 +1064,15 @@
                 }
             }
         });
+
+        var accessLogOption={};
+        var accFormat = $(":input[name=accessLogOption\\.format]").val();
+        var accPath=$(":input[name=accessLogOption\\.savePath]").val();
+        if(accFormat && $.trim(accFormat) != '')
+            accessLogOption.format = accFormat;
+        if(accPath && $.trim(accPath) != '')
+            accessLogOption.savePath = accPath;
+        extendOption.accessLogOption = accessLogOption;
 
         if ($('#openStaticServer').prop('checked')) {
             preference.staticServer = true;
@@ -1302,6 +1335,20 @@
         });
 
         loadEnv();
+
+        var logHelpHtml= 'remote_addr -- 上游端点地址</br> uri  -- full request，include args</br>'
+        +'path -- request path，no args</br> method -- request method</br>'
+        +'args -- 请求中的参数，querystring段</br> scheme -- http|https'
+        +'time_local|time_gmt|time_utc</br> http_{header_name}'
+        +'cookie_{cookie_name}</br> request_time 收到客户端第一个字节，到最后一个字节发送回客户端，中间的时长'
+        +'request_length  请求头和请求体大小</br> status -- response code'
+        +'bytes_sent </br> body_bytes_sent </br>upstream_addr';
+        $('#logHelp').attr("data-content", logHelpHtml);
+        $('#logHelp').attr("data-toggle", 'popover');
+        $('#logHelp').attr("data-placement", 'right');
+        $('#logHelp').popover({
+            html:true
+        });
 
         appId = getParameter('id');
         if (appId != undefined) {

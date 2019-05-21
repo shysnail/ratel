@@ -34,38 +34,54 @@
         <span class="c-999 en">&gt;</span><span class="c-666">节点状态</span>
     </nav>
 
-    <#if cluster??>
-    <div id="search_bar" class="pd-20">
-        <div class="row cl">
-            <label class="form-label col-xs-2 text-r">节点:</label>
-            <div class="formControls col-xs-4">
-                <select id="node" name="node" size="1" class="input-text">
+    <div class="Hui-article pd-20">
+        <div class="cl row pd-10">
+            <span>已运行</span>
+            <span id="day_show">0天</span>
+            <strong id="hour_show">0时</strong>
+            <strong id="minute_show">0分</strong>
+            <strong id="second_show">0秒</strong>
+        </div>
 
-                </select>
+        <div id="search_bar">
+            <div class="row cl">
+            <#if cluster??>
+                <label class="form-label col-xs-1">节点:</label>
+                <div class="formControls col-xs-4">
+                    <select id="node" name="node" size="1" class="input-text">
+
+                    </select>
+                </div>
+            </#if>
+                <label class="form-label col-xs-1">应用:</label>
+                <div class="formControls col-xs-4">
+                    <select id="app" name="app" size="1" class="input-text">
+
+                    </select>
+                </div>
+            </div>
+
+            <div class="row cl mt-10 mb-10 text-c">
+                <button class="btn btn-primary radius" type="button" onclick="submit();">查 看</button>
             </div>
         </div>
 
+        <div class="cl row mt-30">
+            <div id="request" class="col-xs-5 h300"></div>
+            <div class="col-xs-1"></div>
+            <div id="request_time" class="col-xs-5 h300" style="display: none;"></div>
+        </div>
+
+        <div class="cl row mt-30">
+            <div id="memory" class="col-xs-5 h300"></div>
+            <div class="col-xs-1"></div>
+            <div id="cpu" class="col-xs-5 h300"></div>
+        </div>
+        <!--<div id="base" class="col-xs-5 h300"></div>-->
+        <div class="cl row mt-30">
+            <div id="netio" class="col-xs-5 h300"></div>
+        </div>
     </div>
-    </#if>
-
-    <div class="cl row pd-10">
-        <span>已运行</span>
-        <span id="day_show">0天</span>
-        <strong id="hour_show">0时</strong>
-        <strong id="minute_show">0分</strong>
-        <strong id="second_show">0秒</strong>
-    </div>
-
-
-    <div id="request" class="col-xs-5 h300 mt-30"></div>
-    <div id="request_time" class="col-xs-5 h300 ml-40 mt-30" style="display: none;"></div>
-
-    <div id="memory" class="col-xs-5 h300 mt-30"></div>
-    <div id="cpu" class="col-xs-5 h300 ml-40 mt-30"></div>
-
-    <!--<div id="base" class="col-xs-5 h300"></div>-->
-    <div id="netio" class="col-xs-5 h300 mt-30"></div>
-
 </section>
 <script type="text/javascript" src="js/map.js"></script>
 <script type="text/javascript" src="js/echarts.common.min.js"></script>
@@ -91,7 +107,6 @@
             intDiff++;
         }, 1000);
     }
-
 
     var x = new Array();
     //x=['周一','周二','周三','周四','周五','周六','周日']

@@ -129,6 +129,10 @@ public class DeployVerticle extends AbstractVerticle {
 
     private void runOnStart(Message<Void> message) {
         vertx.eventBus().<JsonArray>send(Event.formatInternalAddress(Event.FIND_ALL_APP), null, reply -> {
+            if(!reply.succeeded()){
+                logger.error("find all app error", reply.cause());
+                return;
+            }
             List<Future> allFuture = new ArrayList<>();
             JsonArray array = reply.result().body();
             final AtomicInteger successNum = new AtomicInteger(0);

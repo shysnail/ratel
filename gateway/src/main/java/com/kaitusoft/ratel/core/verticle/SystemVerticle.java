@@ -1,5 +1,6 @@
 package com.kaitusoft.ratel.core.verticle;
 
+import com.kaitusoft.ratel.ContextAttribute;
 import com.kaitusoft.ratel.cluster.ClusterVerticle;
 import com.kaitusoft.ratel.core.common.Env;
 import com.kaitusoft.ratel.core.common.Event;
@@ -98,7 +99,8 @@ public class SystemVerticle extends AbstractVerticle {
         });
 
         vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.ACTION_REQUEST), newRequest -> {
-            JsonObject action = (JsonObject) newRequest.body();
+            String body = (String) newRequest.body();
+            JsonObject action = new JsonObject(body);
             int appId = action.getInteger("app");
             AppStatus appStatus = appStatusMap.get(appId);
             if (appStatus == null)
@@ -107,31 +109,34 @@ public class SystemVerticle extends AbstractVerticle {
             appStatus.request(action.getBoolean("https", false), appId, action.getString("uri"));
         });
         vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.ACTION_REQUEST_DONE), requestDone -> {
-            JsonObject action = (JsonObject) requestDone.body();
+            String body = (String) requestDone.body();
+            JsonObject action = new JsonObject(body);
             int appId = action.getInteger("app");
             AppStatus appStatus = appStatusMap.get(appId);
             if (appStatus == null)
                 return;
 
-            appStatus.requestDone(appId, action.getString("uri"));
+            appStatus.requestDone(appId, action.getString(ContextAttribute.CTX_REQ_URI));
         });
         vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.ACTION_REQUEST_FAIL), requestFail -> {
-            JsonObject action = (JsonObject) requestFail.body();
+            String body = (String) requestFail.body();
+            JsonObject action = new JsonObject(body);
             int appId = action.getInteger("app");
             AppStatus appStatus = appStatusMap.get(appId);
             if (appStatus == null)
                 return;
 
-            appStatus.requestFail(appId, action.getString("uri"));
+            appStatus.requestFail(appId, action.getString(ContextAttribute.CTX_REQ_URI));
         });
         vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.ACTION_REQUEST_ERROR), requestError -> {
-            JsonObject action = (JsonObject) requestError.body();
+            String body = (String) requestError.body();
+            JsonObject action = new JsonObject(body);
             int appId = action.getInteger("app");
             AppStatus appStatus = appStatusMap.get(appId);
             if (appStatus == null)
                 return;
 
-            appStatus.requestFail(appId, action.getString("uri"), true);
+            appStatus.requestFail(appId, action.getString(ContextAttribute.CTX_REQ_URI), true);
         });
 
         initMonitor();

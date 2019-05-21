@@ -15,6 +15,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
@@ -50,26 +51,35 @@ public class SystemHandler extends Processor {
         HttpServerRequest request = context.request();
 
         JsonObject action = new JsonObject();
-        action.put("app", app.getId());
-        action.put("path", path.getId());
-        String uri = context.request().uri();
-        action.put("uri", uri);
+//        action.put("app", app.getId());
+//        action.put("path", path.getId());
+//        action.put(ContextAttribute.CTX_REQ_URI, uri);
+//
+//        if (app.getProtocol() == ProtocolEnum.HTTP_HTTPS) {
+//            action.put("https", context.request().isSSL());
+//        }
 
-        if (app.getProtocol() == ProtocolEnum.HTTP_HTTPS) {
-            action.put("https", context.request().isSSL());
-        }
-        vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.ACTION_REQUEST), action);
 
         //  如果需要记录日志，需先记录初始化信息
-        context.put(ContextAttribute.CTX_ATTR_START, System.currentTimeMillis());
+        context.put(ContextAttribute.CTX_REQ_START, System.currentTimeMillis());
 
         context.put(ContextAttribute.CTX_ATTR_PATH_ID, path.getId());
         context.put(ContextAttribute.CTX_ATTR_APP, app.getId());
         context.put(ContextAttribute.CTX_ATTR_PATH, path.getPath());
+        String uri = request.uri();
+        context.put(ContextAttribute.CTX_REQ_URI, uri);
+        if (app.getProtocol() == ProtocolEnum.HTTP_HTTPS) {
+            context.put(ContextAttribute.CTX_REQ_SCHEMA, context.request().isSSL() ? "https" : "http");
+        }
+        vertx.eventBus().send(Event.formatInternalAddress(Event.ACTION_REQUEST), Json.encode(context.data()));
+
         final String reqId = StringUtils.uniqueId();
         context.put(ContextAttribute.CTX_REQ_ID, reqId);
+        context.put(ContextAttribute.CTX_REQ_METHOD, request.method().name());
+        context.put(ContextAttribute.CTX_TIME_LOCAL, System.currentTimeMillis());
+        context.put(ContextAttribute.CTX_REMOTE_ADDR, request.remoteAddress().host());
 
-        logger.debug("new request:{} -> url: {}....", reqId, context.request().absoluteURI());
+        logger.debug("new request:{} -> url: {}", reqId, uri);
 
         if(path.isPause()){
             logger.debug("接口:{}-{}-{} 暂停服务", path.getId(), path.getPath(), uri);
@@ -84,39 +94,66 @@ public class SystemHandler extends Processor {
         }
 
         request.exceptionHandler(exceptionHandler -> {
-            vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.ACTION_REQUEST_ERROR), action);
-
-//                appStatus.requestFail(path.getId(), context.request().uri(), true);
             //如果需要记录处理日志，在此处记录
             logger.debug("app-{} request-{} end", app.getId(), uri);
 
             if (badGateway != null) {
                 response.setStatusCode(HttpResponseStatus.BAD_GATEWAY.code()).end(badGateway);
+            }else{
+                response.end();
             }
+
+            vertx.eventBus().send(Event.formatInternalAddress(Event.ACTION_REQUEST_ERROR), Json.encode(context.data()));
+        });
+
+        response.headersEndHandler(handle -> {
+//            if(response.isChunked())
+                context.put(ContextAttribute.CTX_RES_SENT_HEAD, response.bytesWritten());
         });
 
         response.endHandler(endHandler -> {
-            action.put("duration", System.currentTimeMillis() - (long) context.get(ContextAttribute.CTX_ATTR_START));
+            int requestTime = (int) (System.currentTimeMillis() - (long) context.get(ContextAttribute.CTX_REQ_START));
+
+            context.put(ContextAttribute.CTX_REQ_TIME, requestTime);
+            context.put(ContextAttribute.STATUS, response.getStatusCode());
+
+            context.put(ContextAttribute.CTX_RES_SENT, response.bytesWritten());
+            //chunked 需计算实际写出数量去掉head长度
+            long bodyLen = 0;
+            if(response.isChunked()){
+                long headLen = context.get(ContextAttribute.CTX_RES_SENT_HEAD);
+                bodyLen = response.bytesWritten() - headLen;
+            }else{
+                String bodyLenStr = response.headers().get(HttpHeaders.CONTENT_LENGTH);
+                bodyLen = bodyLenStr == null ? -1 : Long.parseLong(bodyLenStr);
+                if(bodyLen < 0){
+                    long headLen = context.get(ContextAttribute.CTX_RES_SENT_HEAD);
+                    bodyLen = response.bytesWritten() - headLen;
+                }
+            }
+
+            context.put(ContextAttribute.CTX_RES_SENT_BODY, bodyLen);
+
             if (context.get(ContextAttribute.CTX_ATTR_FAIL) != null) {
-                logger.warn("请求未通过检验");
-                vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.ACTION_REQUEST_FAIL), action);
-//                    appStatus.requestFail(path.getId(), context.request().uri());
+                logger.warn("请求失败:{}", response.getStatusCode());
+                vertx.eventBus().send(Event.formatInternalAddress(Event.ACTION_REQUEST_FAIL), Json.encode(context.data()));
             } else {
-                Long upstreamStart = context.get(ContextAttribute.CTX_ATTR_UPSTREAM_START);
+                Long upstreamStart = context.get(ContextAttribute.CTX_UPSTREAM_START);
                 if (upstreamStart != null)
-                    action.put("requestTime", System.currentTimeMillis() - upstreamStart.longValue());
-                vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.ACTION_REQUEST_DONE), action);
-//                    appStatus.requestDone(path.getId(), context.request().uri());
+                    context.put(ContextAttribute.CTX_UPSTREAM_TIME, System.currentTimeMillis() - upstreamStart.longValue());
+
+                vertx.eventBus().send(Event.formatInternalAddress(Event.ACTION_REQUEST_DONE), Json.encode(context.data()));
             }
 
             //如果需要记录处理日志，在此处记录
             logger.debug("request:{} end, app:{}, code : {}", reqId, app.getId(), response.getStatusCode());
 
+            app.getAccessLog().log(context);
+
         });
 
         response.putHeader(HttpHeaders.SERVER, Configuration.OFFICIAL_NAME);
         response.putHeader(HttpHeaders.DATE, StringUtils.getRfc822DateFormat(new Date()));
-
 
         context.next();
     }

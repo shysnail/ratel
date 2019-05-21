@@ -30,6 +30,8 @@ public class AppExtendOption {
 
     private SecurityOption securityOption;
 
+    private AccessLogOption accessLogOption = new AccessLogOption();
+
     private String blowSetting;
 
     public String toJsonString() {

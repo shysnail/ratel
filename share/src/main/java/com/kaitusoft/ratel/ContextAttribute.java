@@ -8,23 +8,39 @@ package com.kaitusoft.ratel;
  */
 public class ContextAttribute {
 
-    public static final String CTX_REQ_ID = "ctx.req.id";
-    public static final String CTX_REQ_BODY = "ctx.req.body";
-
-    public static final String CTX_REQ_WS = "ctx.req.ws";
-
-    public static final String CTX_FAIL_COUNT = "ctx.fail.count";
-
+    public static final String CTX_ATTR_FAIL_COUNT = "ctx.fail.count";
     public static final String CTX_ATTR_FAIL = "ctx.attr.fail";
 
-    public static final String CTX_ATTR_START = "ctx.attr.start";
-    public static final String CTX_ATTR_UPSTREAM = "ctx.attr.upstream";
-    public static final String CTX_ATTR_UPSTREAM_START = "ctx.attr.upstream.start";
-    public static final String CTX_ATTR_UPSTREAM_END = "ctx.attr.upstream.end";
+    public static final String CTX_ATTR_PATH_ID = "path.id";
+    public static final String CTX_ATTR_APP = "app";
+    public static final String CTX_ATTR_PATH = "path";
 
-    public static final String CTX_ATTR_PATH_ID = "ctx.attr.path.id";
-    public static final String CTX_ATTR_APP = "ctx.attr.app";
-    public static final String CTX_ATTR_PATH = "ctx.attr.path";
+    public static final String CTX_REQ_ID = "request_id";
+    public static final String CTX_REQ_BODY = "request_body";
+    public static final String CTX_REQ_METHOD = "method";
+
+    public static final String CTX_TIME_LOCAL = "time_local";
+    public static final String CTX_REMOTE_ADDR = "remote_addr";
+
+    public static final String CTX_REQ_WS = "request_ws";
+
+    public static final String CTX_REQ_START = "request_start_time";
+    public static final String CTX_REQ_TIME = "request_time";
+    public static final String CTX_REQ_URI = "uri";
+    public static final String CTX_REQ_SCHEMA = "schema";
+
+
+    public static final String CTX_UPSTREAM = "upstream_";
+    public static final String CTX_UPSTREAM_ADDR = "upstream_addr";
+
+    public static final String CTX_UPSTREAM_START = "upstream_start_time";
+    public static final String CTX_UPSTREAM_TIME = "upstream_time";
+
+    public static final String STATUS = "status";
+    public static final String CTX_RES_SENT = "bytes_sent";
+    public static final String CTX_RES_SENT_HEAD = "head_bytes_sent";
+    public static final String CTX_RES_SENT_BODY = "body_bytes_sent";
+
 
 
     public static final String SESSION_USER = "session.user";

@@ -68,10 +68,6 @@ public class PassBody {
         return method;
     }
 
-    public void pass(Object reqId, HttpMethod requestMethod, Buffer buffer, HttpClientRequest upstreamRequest) {
-        pass(reqId, requestMethod, buffer, upstreamRequest);
-    }
-
     public void pass(Object reqId, HttpMethod requestMethod, Buffer buffer, WriteStream upstreamRequest) {
         if (PassBodyOption.PassBodyType.ALL_HOLD.equals(passBodyType)) {
             upstreamRequest.end();

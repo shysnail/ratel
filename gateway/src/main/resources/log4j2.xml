@@ -14,6 +14,15 @@
                     pattern="%highlight{%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %class.%L - %msg%n}{FATAL=Bright Red, ERROR=Bright Magenta, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Black, TRACE=Bright White}"/>
         </Console>
 
+        <!--<RollingFile name="accessLog" append="true">-->
+            <!--<PatternLayout-->
+                    <!--pattern="%msg%n"/>-->
+            <!--<Policies>-->
+                <!--<TimeBasedTriggeringPolicy/>-->
+                <!--<SizeBasedTriggeringPolicy size="2048 MB"/>-->
+            <!--</Policies>-->
+        <!--</RollingFile>-->
+
         <RollingFile name="errorLog" append="true"
                      fileName="${LOG_HOME}/error.${date:yyyy-MM-dd}.log"
                      filePattern="${LOG_HOME}/${date:yyyy-MM-dd}/error.%d{yyyy-MM-dd}-%i.log"
@@ -70,5 +79,8 @@
             <appender-ref ref="errorLog"/>
             <appender-ref ref="Console"/>
         </asyncRoot>
+        <asyncLogger name="com.kaitusoft.ratel.core.model.AccessLog" level="ALL">
+            <!--<appender-ref ref="accessLog"/>-->
+        </asyncLogger>
     </Loggers>
 </Configuration>

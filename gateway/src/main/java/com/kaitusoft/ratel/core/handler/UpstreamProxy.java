@@ -65,7 +65,7 @@ public class UpstreamProxy extends Proxy {
 
         logger.debug("prepare upstream request:{}...", context.get(ContextAttribute.CTX_REQ_ID).toString());
 
-        context.put(ContextAttribute.CTX_ATTR_UPSTREAM_START, System.currentTimeMillis());
+        context.put(ContextAttribute.CTX_UPSTREAM_START, System.currentTimeMillis());
 
         // 用户发起的请求，真正到达网关的请求
         HttpServerRequest clientRequest = context.request();
@@ -203,6 +203,7 @@ public class UpstreamProxy extends Proxy {
 
     private void doUpstream(Target currentTarget, HttpMethod upstreamMethod, String target, MultiMap clientHeaders, HttpServerRequest clientRequest, RoutingContext context) {
         final String reqId = context.get(ContextAttribute.CTX_REQ_ID).toString();
+        context.put(ContextAttribute.CTX_UPSTREAM_ADDR, currentTarget.getHost());
         logger.debug("request:{} -> upstream to {}:{}", reqId, upstreamMethod, target);
         HttpClientRequest upstream = httpClient.requestAbs(upstreamMethod, target).setTimeout(upstreamOption.getTimeout());
         upstream.setFollowRedirects(true);
@@ -212,7 +213,7 @@ public class UpstreamProxy extends Proxy {
 
         HttpServerResponse clientResponse = context.response();
         upstream.exceptionHandler(e -> {
-            Integer errCount = context.get(ContextAttribute.CTX_FAIL_COUNT);
+            Integer errCount = context.get(ContextAttribute.CTX_ATTR_FAIL_COUNT);
             if (errCount == null)
                 errCount = 0;
 
@@ -226,7 +227,7 @@ public class UpstreamProxy extends Proxy {
              * 当前转发目标 重试次数
              */
             if (errCount < upstreamOption.getRetry()) {
-                context.put(ContextAttribute.CTX_FAIL_COUNT, errCount + 1);
+                context.put(ContextAttribute.CTX_ATTR_FAIL_COUNT, errCount + 1);
                 doUpstream(currentTarget, upstreamMethod, target, clientHeaders, clientRequest, context);
                 return;
             } else {
@@ -237,7 +238,7 @@ public class UpstreamProxy extends Proxy {
             }
 
             if (hasPostProcessor) {
-                context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.<Boolean>failedFuture(e));
+                context.put(ContextAttribute.CTX_UPSTREAM, Future.<Boolean>failedFuture(e));
                 context.next();
                 return;
             }
@@ -247,7 +248,7 @@ public class UpstreamProxy extends Proxy {
 
         upstream.handler(upstreamResponse -> {
             if (clientResponse.ended()) {
-                context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
+                context.put(ContextAttribute.CTX_UPSTREAM, Future.succeededFuture(true));
                 return;
             }
 
@@ -262,7 +263,8 @@ public class UpstreamProxy extends Proxy {
             Pump pump = Pump.pump(upstreamResponse, clientResponse);
 
             upstreamResponse.exceptionHandler(e -> {
-                context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.<Boolean>failedFuture(e));
+                logger.error("got excepiton", e);
+                context.put(ContextAttribute.CTX_UPSTREAM, Future.<Boolean>failedFuture(e));
                 pump.stop();
                 try {
                     upstream.end();
@@ -274,7 +276,7 @@ public class UpstreamProxy extends Proxy {
 
             upstreamResponse.endHandler(end -> {
                 if (hasPostProcessor) {
-                    context.put(ContextAttribute.CTX_ATTR_UPSTREAM, Future.succeededFuture(true));
+                    context.put(ContextAttribute.CTX_UPSTREAM, Future.succeededFuture(true));
                     context.next();
                     return;
                 }

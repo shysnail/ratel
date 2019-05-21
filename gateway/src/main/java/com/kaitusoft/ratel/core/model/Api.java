@@ -108,6 +108,10 @@ public class Api {
         return running == App.PAUSED;
     }
 
+    public void stop(){
+
+    }
+
     /**
      * 分析路径，
      * 1.先判断是否使用了 通配规则 :param ，并提取出通配元素

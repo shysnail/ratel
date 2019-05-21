@@ -178,6 +178,22 @@
                 </div>
             </div>
 
+            <div class="e-p-i panel panel-default mt-20" id="accessLogOption_panel">
+                <div class="e-p-i-h panel-header">访问日志</div>
+                <div class="e-p-i-b panel-body">
+                    <div class="row cl">
+                        <label class="form-label col-xs-3">日志格式:</label>
+                        <div class="formControls col-xs-8" id="accessLogOption.format">
+                        </div>
+                    </div>
+                    <div class="row cl">
+                        <label class="form-label col-xs-3">存储路径:</label>
+                        <div class="formControls col-xs-8" id="accessLogOption.savePath">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="e-p-i panel panel-default mt-20" id="staticServer">
                 <div class="panel-header cl">静态WEB服务</div>
                 <div class="e-p-i-b panel-body">
@@ -537,6 +553,10 @@
                     $('#openSession\\.interval').text(sessionOption.interval + '秒');
                     $('#openSession\\.name').text(sessionOption.name);
                 }
+
+                var accessLogOption = extendOption.accessLogOption;
+                $('#accessLogOption\\.format').text(accessLogOption.format);
+                $('#accessLogOption\\.savePath').text(accessLogOption.savePath);
 
                 var preferenceOption = extendOption.preferenceOption;
 
