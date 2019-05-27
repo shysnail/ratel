@@ -50,16 +50,6 @@ public class SystemHandler extends Processor {
         HttpServerResponse response = context.response();
         HttpServerRequest request = context.request();
 
-        JsonObject action = new JsonObject();
-//        action.put("app", app.getId());
-//        action.put("path", path.getId());
-//        action.put(ContextAttribute.CTX_REQ_URI, uri);
-//
-//        if (app.getProtocol() == ProtocolEnum.HTTP_HTTPS) {
-//            action.put("https", context.request().isSSL());
-//        }
-
-
         //  如果需要记录日志，需先记录初始化信息
         context.put(ContextAttribute.CTX_REQ_START, System.currentTimeMillis());
 
