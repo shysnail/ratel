@@ -271,29 +271,23 @@ public class Application extends AbstractVerticle {
         Preference preference = path.getPreference();
         HttpMethod[] routeMethods = preference.getMethod();
 
-        Route initRoute = newRoute(path, routeMethods, router);
-        initRoute.handler(new SystemHandler(vertx, app, path));
-        routes.add(initRoute);
+        Route route = newRoute(path, routeMethods, router);
+        route.handler(new SystemHandler(vertx, app, path));
+        routes.add(route);
 
         Processor limit = preference.getAccessLimit();
         if (limit != null) {
-            Route route = newRoute(path, routeMethods, router);
             route.handler(limit);
-            routes.add(route);
         }
 
         Processor auth = preference.getAuth();
         if (auth != null) {
-            Route route = newRoute(path, routeMethods, router);
             route.handler(auth);
-            routes.add(route);
         }
 
         Processor sqlFilter = preference.getSqlFilter();
         if(sqlFilter != null){
-            Route route = newRoute(path, routeMethods, router);
             route.handler(sqlFilter);
-            routes.add(route);
         }
 
         if (!StringUtils.isEmpty(preference.getDocRoot())) {
@@ -303,9 +297,7 @@ public class Application extends AbstractVerticle {
         Processor[] preProcessors = preference.getPreProcessors();
         if (preProcessors != null && preProcessors.length == 0) {
             for (Processor pro : preProcessors) {
-                Route route = newRoute(path, routeMethods, router);
                 route.handler(pro);
-                routes.add(route);
             }
         }
 
@@ -316,9 +308,7 @@ public class Application extends AbstractVerticle {
         Processor[] postProcessors = preference.getPostProcessors();
         if (postProcessors != null && postProcessors.length == 0) {
             for (Processor pro : postProcessors) {
-                Route route = newRoute(path, routeMethods, router);
                 route.handler(pro);
-                routes.add(route);
             }
         }
 
@@ -377,12 +367,13 @@ public class Application extends AbstractVerticle {
         else
             refRouter = httpRouter = Router.router(vertx);
 
-        refRouter.route().handler((context) -> {
+        Route baseRoute = refRouter.route();
+        baseRoute.handler((context) -> {
             hostFilter(context, app.getVhost());
         });
 
         if (this.ipBlanklist != null && this.ipBlanklist.length > 0)
-            refRouter.route().handler(new IpFilterHandler(this.ipBlanklist));
+            baseRoute.handler(new IpFilterHandler(this.ipBlanklist));
 
         /**
          * 设置服务选项，如上传路径，请求体大小
@@ -401,10 +392,10 @@ public class Application extends AbstractVerticle {
             SessionHandler sessionHandler = SessionHandler.create(sessionStore);
             sessionHandler.setSessionCookieName(sessionOption.getName());
             sessionHandler.setSessionTimeout(sessionOption.getInterval() * 1000);
-            refRouter.route().handler(CookieHandler.create()).handler(sessionHandler);
+            baseRoute.handler(CookieHandler.create()).handler(sessionHandler);
         }
 
-        refRouter.route().handler((context) -> {
+        baseRoute.handler((context) -> {
             HttpServerRequest request = context.request();
             if (request.method().equals(HttpMethod.POST) || request.method().equals(HttpMethod.PUT)) {
 //                if(sessionOption != null && vertx.isClustered())
@@ -432,19 +423,24 @@ public class Application extends AbstractVerticle {
                 corsHandler.allowedMethods(crossDomain.getAllowedMethods());
             }
             corsHandler.maxAgeSeconds(crossDomain.getMaxAgeSeconds());
-            refRouter.route().handler(corsHandler);
+            baseRoute.handler(corsHandler);
         }
 
         //挂载静态目录
         if (!StringUtils.isEmpty(app.getPreference().getDocRoot())) {
-            refRouter.route().handler(StaticHandler.create(app.getPreference().getDocRoot()).setCachingEnabled(true));
+            baseRoute.handler(StaticHandler.create(app.getPreference().getDocRoot()).setCachingEnabled(true));
         }
 
-        routingCommonStatus();
+        routingCommonStatus(baseRoute);
 
-        if (vertx.isNativeTransportEnabled()) {
-            serverOptions.setTcpFastOpen(true).setTcpCork(true).setTcpQuickAck(true).setReusePort(true);
-        }
+        baseRoute.failureHandler(fail -> {
+            fail.next();
+        });
+
+        refRouter.route().order(99999).handler(notfound -> {
+            HttpServerResponse response = notfound.response();
+            response.setStatusCode(HttpResponseStatus.NOT_FOUND.code()).end("not found");
+        });
 
         // 创建https服务器
         if (ssl) {
@@ -471,22 +467,14 @@ public class Application extends AbstractVerticle {
 
         }
 
-        refRouter.route().order(99999).handler(notfound -> {
-            HttpServerResponse response = notfound.response();
-            response.setStatusCode(HttpResponseStatus.NOT_FOUND.code()).end("not found");
-        });
+        if (vertx.isNativeTransportEnabled()) {
+            serverOptions.setTcpFastOpen(true).setTcpCork(true).setTcpQuickAck(true).setReusePort(true);
+        }
 
         try {
             HttpServer server = vertx.createHttpServer(serverOptions);
 
-            server.requestHandler(refRouter::accept);
-
-//            server.websocketHandler(ws -> {
-//                logger.debug("ws connect: {}", ws.textHandlerID());
-//                ws.frameHandler(frame -> {
-//                    logger.debug("ws data: {}", frame.textData());
-//                });
-//            });
+            server.requestHandler(refRouter::handle);
 
             server.listen(serverOptions.getPort(), startResult -> {
                 if (startResult.succeeded()) {
@@ -546,8 +534,9 @@ public class Application extends AbstractVerticle {
 
     /**
      * 给404。500等等常规响应做路由配置
+     * @param baseRoute
      */
-    private void routingCommonStatus() {
+    private void routingCommonStatus(Route baseRoute) {
 
     }
 
