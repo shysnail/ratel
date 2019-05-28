@@ -109,16 +109,17 @@ public class SystemHandler extends Processor {
 
             context.put(ContextAttribute.CTX_RES_SENT, response.bytesWritten());
             //chunked 需计算实际写出数量去掉head长度
-            long bodyLen = 0;
-            if(response.isChunked()){
-                long headLen = context.get(ContextAttribute.CTX_RES_SENT_HEAD);
-                bodyLen = response.bytesWritten() - headLen;
-            }else{
-                String bodyLenStr = response.headers().get(HttpHeaders.CONTENT_LENGTH);
-                bodyLen = bodyLenStr == null ? -1 : Long.parseLong(bodyLenStr);
-                if(bodyLen < 0){
-                    long headLen = context.get(ContextAttribute.CTX_RES_SENT_HEAD);
+            long bodyLen = -1;
+            String bodyLenStr = response.headers().get(HttpHeaders.CONTENT_LENGTH);
+            bodyLen = bodyLenStr == null ? -1 : Long.parseLong(bodyLenStr);
+
+            if(bodyLen < 0){
+                Long headLen = context.get(ContextAttribute.CTX_RES_SENT_HEAD);
+                if(headLen != null)
                     bodyLen = response.bytesWritten() - headLen;
+                else {
+                    bodyLen = response.bytesWritten();
+                    logger.warn(" head length unknown");
                 }
             }
 
