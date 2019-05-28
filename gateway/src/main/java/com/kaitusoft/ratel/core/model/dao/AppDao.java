@@ -177,29 +177,35 @@ public class AppDao extends BaseDao{
                 int count = ((Number) value).intValue();
                 int countName = ((Number) valueName).intValue();
                 if (count > 0) {
-                    logger.error("端口已被占用:{}", port);
-                    message.fail(StatusCode.SYS_ERROR, "端口已被占用");
+                    /*
+                 * 启用端口合并，vhost和路径区分请求，此处调整为非阻塞
+                 * 2019-05-27
+                 */
+                    logger.info("使用已存在端口:{}", port);
+//                    message.fail(StatusCode.SYS_ERROR, "端口已被占用");
                 } else if (countName > 0) {
                     logger.error("应用名字重复:{}", name);
                     message.fail(StatusCode.SYS_ERROR, "应用名字重复：" + name);
-                } else {
-                    JsonArray params = new JsonArray();
-                    params.add(name);
-                    params.add(app.getProtocol().toString());
-                    params.add(port);
-                    params.add(app.getDeployGroup() == null ? 0 : app.getDeployGroup());
-                    params.add(app.getDescription());
-                    params.add(app.getParameter());
-                    jdbcClient.updateWithParams(SQL_APP_ADD, params, addRes -> {
-                        if (addRes.succeeded()) {
-                            logger.debug("addApp:{} -> ok", app);
-                            message.reply(addRes.result().getUpdated());
-                        } else {
-                            logger.error("addApp:{} -> failed", app);
-                            message.fail(StatusCode.SYS_ERROR, addRes.cause().toString());
-                        }
-                    });
+                    return;
                 }
+
+                JsonArray params = new JsonArray();
+                params.add(name);
+                params.add(app.getProtocol().toString());
+                params.add(port);
+                params.add(app.getDeployGroup() == null ? 0 : app.getDeployGroup());
+                params.add(app.getDescription());
+                params.add(app.getParameter());
+                jdbcClient.updateWithParams(SQL_APP_ADD, params, addRes -> {
+                    if (addRes.succeeded()) {
+                        logger.debug("addApp:{} -> ok", app);
+                        message.reply(addRes.result().getUpdated());
+                    } else {
+                        logger.error("addApp:{} -> failed", app);
+                        message.fail(StatusCode.SYS_ERROR, addRes.cause().toString());
+                    }
+                });
+
             });
 
         } catch (Exception e) {
@@ -222,31 +228,37 @@ public class AppDao extends BaseDao{
                 Object valueName = res.result().getResults().get(1).getValue(0);
                 int count = ((Number) value).intValue();
                 int countName = ((Number) valueName).intValue();
+                /*
+                 * 启用端口合并，vhost和路径区分请求，此处调整为非阻塞
+                 * 2019-05-27
+                 */
                 if (count > 0) {
-                    logger.error("端口已被占用:{}", port);
-                    message.fail(StatusCode.SYS_ERROR, "端口已被占用");
+                    logger.info("使用已有端口:{}", port);
+//                    message.fail(StatusCode.SYS_ERROR, "端口已被占用");
                 } else if (countName > 0) {
                     logger.error("应用名字重复:{}", name);
                     message.fail(StatusCode.SYS_ERROR, "应用名字重复：" + name);
-                } else {
-                    JsonArray params = new JsonArray();
-                    params.add(name);
-                    params.add(app.getProtocol().toString());
-                    params.add(port);
-                    params.add(app.getDeployGroup() == null ? 0 : app.getDeployGroup());
-                    params.add(app.getDescription());
-                    params.add(app.getParameter());
-                    params.add(app.getId());
-                    jdbcClient.updateWithParams(SQL_APP_UPDATE, params, addRes -> {
-                        if (addRes.succeeded()) {
-                            logger.debug("updateApp:{} -> ok", app);
-                            message.reply(addRes.result().getUpdated());
-                        } else {
-                            logger.error("updateApp:{} -> failed", app);
-                            message.fail(StatusCode.SYS_ERROR, addRes.cause().toString());
-                        }
-                    });
+                    return;
                 }
+
+                JsonArray params = new JsonArray();
+                params.add(name);
+                params.add(app.getProtocol().toString());
+                params.add(port);
+                params.add(app.getDeployGroup() == null ? 0 : app.getDeployGroup());
+                params.add(app.getDescription());
+                params.add(app.getParameter());
+                params.add(app.getId());
+                jdbcClient.updateWithParams(SQL_APP_UPDATE, params, addRes -> {
+                    if (addRes.succeeded()) {
+                        logger.debug("updateApp:{} -> ok", app);
+                        message.reply(addRes.result().getUpdated());
+                    } else {
+                        logger.error("updateApp:{} -> failed", app);
+                        message.fail(StatusCode.SYS_ERROR, addRes.cause().toString());
+                    }
+                });
+
             });
         } catch (Exception e) {
             logger.error("updateApp:{} -> failed", message.body(), e);

@@ -72,11 +72,11 @@
                 </div>
                 <div class="row cl">
                     <label class="form-label col-xs-3">自动启动:</label>
-                    <div class="formControls skin-minimal col-xs-3">
+                    <div class="formControls skin-minimal col-xs-1">
                         <input type="checkbox" id="autoRun"/>
                     </div>
-                    <div class="form-label col-xs-5">
-                        如开启自动启动，则所属应用启动时，该api自动运行。否则，需要手动启动<br/>
+                    <div class="col-xs-7 text-l">
+                        如开启自动启动，则所属应用启动时，该api自动运行。否则，需要手动启动
                         变更此项设定，下次所属应用重启时生效
                     </div>
                 </div>

@@ -87,6 +87,21 @@ public class Event {
     public static final String RESUME_API = "r:g:api.rerun";
 
 
+    public static final String START_APP_ACT = "r:g:a.start.act";
+
+    public static final String RESTART_APP_ACT = "r:g:a.restart.act";
+
+    public static final String STOP_APP_ACT = "r:g:a.stop.act";
+
+    public static final String START_API_ACT = "r:g:api.start.act";
+
+    public static final String RESTART_API_ACT = "r:g:api.restart.act";
+
+    public static final String STOP_API_ACT = "r:g:api.stop.act";
+
+    public static final String PAUSE_API_ACT = "r:g:api.pause.act";
+    public static final String RESUME_API_ACT = "r:g:api.rerun.act";
+
     public static final String APP_STATUS = "r:g:a.status";
     public static final String API_STATUS = "r:g:api.status";
 

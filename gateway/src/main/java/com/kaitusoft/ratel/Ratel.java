@@ -68,7 +68,7 @@ public class Ratel {
                 System.exit(-2);
             }
 
-            logger.info("{} start up in {} s, mode:{}, version:{}, cluster:{}", config.getName(), String.format("%.2f", (System.currentTimeMillis()-startTime)/1000.0), config.getMode(), config.getVersion(), vertx.isClustered());
+            logger.info("{} Startup in {} s, mode:{}, version:{}, cluster:{}", config.getName(), String.format("%.2f", (System.currentTimeMillis()-startTime)/1000.0), config.getMode(), config.getVersion(), vertx.isClustered());
             shutdownHook = new ShutdownHook();
             Runtime.getRuntime().addShutdownHook(shutdownHook);
         });

@@ -29,10 +29,10 @@ public class ApiDao extends BaseDao{
     private static final String SQL_API_ALL = "select * from api where app_id=?";
     private static final String SQL_API_COND = "select * from api where 1=1 ";
     private static final String SQL_API_GET = "select * from api where id=?";
-    private static final String SQL_API_ADD = "insert into api(app_id, name, path, parameter, vhost)" +
+    private static final String SQL_API_ADD = "insert into api(app_id, name, path, parameter, running)" +
             " values(?,?,?,?,?)";
     private static final String SQL_API_COUNT_EXISTS = "select count(1) from api where app_id=? and name=? and id!=? union all select count(1) from api where app_id=? and path=? and id!=?";
-    private static final String SQL_API_UPDATE = "update api set name=?, path=?, parameter=?, vhost=? where id=? and app_id=?";
+    private static final String SQL_API_UPDATE = "update api set name=?, path=?, parameter=?, running=? where id=? and app_id=?";
     private static final String SQL_API_DELETE = "delete from api where id in (?)";
 
     public void findApis(Message<String> message) {
@@ -159,8 +159,9 @@ public class ApiDao extends BaseDao{
         ApiOption api = message.body();
         String name = api.getName();
         String path = api.getPath();
-        String vhost = api.getVhost();
+//        String vhost = api.getVhost();
         int appId = api.getAppId();
+        int running = api.getRunning();
         jdbcClient.queryWithParams(SQL_API_COUNT_EXISTS, new JsonArray().add(appId).add(name).add(-1).add(appId).add(path).add(-1), res -> {
             Object value = res.result().getResults().get(0).getValue(0);
             Object valueName = res.result().getResults().get(1).getValue(0);
@@ -178,7 +179,7 @@ public class ApiDao extends BaseDao{
                 params.add(name);
                 params.add(path);
                 params.add(api.getParameter());
-                params.add(vhost);
+                params.add(running);
                 jdbcClient.updateWithParams(SQL_API_ADD, params, addRes -> {
                     if (addRes.succeeded()) {
                         logger.debug("app:{} - addApi:{} -> ok", appId, path);
@@ -197,7 +198,8 @@ public class ApiDao extends BaseDao{
         ApiOption api = message.body();
         String name = api.getName();
         String path = api.getPath();
-        String vhost = api.getVhost();
+//        String vhost = api.getVhost();
+        int running = api.getRunning();
         int appId = api.getAppId();
         int id = api.getId();
         jdbcClient.queryWithParams(SQL_API_COUNT_EXISTS, new JsonArray().add(appId).add(name).add(id).add(appId).add(path).add(id), res -> {
@@ -216,7 +218,7 @@ public class ApiDao extends BaseDao{
                 params.add(name);
                 params.add(path);
                 params.add(api.getParameter());
-                params.add(vhost);
+                params.add(running);
                 params.add(id);
                 params.add(appId);
                 jdbcClient.updateWithParams(SQL_API_UPDATE, params, addRes -> {

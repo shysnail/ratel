@@ -4,6 +4,8 @@ import com.kaitusoft.ratel.Result;
 import com.kaitusoft.ratel.handler.Processor;
 import io.vertx.ext.web.RoutingContext;
 
+import java.util.List;
+
 /**
  * @author frog.w
  * @version 1.0.0, 2018/9/6
@@ -20,31 +22,16 @@ public class IpFilterHandler extends Processor {
         this.blacklist = blacklist;
     }
 
-//    @Override
-//    public void handle(RoutingContext context) {
-//
-//        if(blacklist == null || blacklist.length == 0) {
-//            context.next();
-//            return;
-//        }
-//
-//
-//        String host = context.request().remoteAddress().host();
-//        if (!inBlacklist(host)) {
-//            context.next();
-//            return;
-//
-//        }
-//
-//        super.sendAndEnd(context.response(), failReturn);
-//    }
+    public IpFilterHandler(List<String> ips){
+        blacklist = new String[ips.size()];
+        ips.toArray(blacklist);
+    }
 
     @Override
     protected boolean preCheck(RoutingContext context) {
         if (blacklist == null || blacklist.length == 0) {
             return true;
         }
-
 
         String host = context.request().remoteAddress().host();
         if (!inBlacklist(host)) {

@@ -57,7 +57,7 @@
                     <div class="formControls col-xs-8" id="port">
                     </div>
                 </div>
-                <div class="row cl" style="display: none;">
+                <div class="row cl">
                     <label class="form-label col-xs-3">vhost:</label>
                     <div class="formControls col-xs-8" id="vhost">
                     </div>

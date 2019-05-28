@@ -8,14 +8,19 @@ import com.kaitusoft.ratel.core.model.option.SessionOption;
 import com.kaitusoft.ratel.core.model.option.UpstreamOption;
 import com.kaitusoft.ratel.core.model.po.AppOption;
 import com.kaitusoft.ratel.util.StringUtils;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Route;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -65,6 +70,8 @@ public class App {
     private AccessLog accessLog;
 
     private Map<Integer, Api> apis = new HashMap<>(16, 1.0f);
+
+    private Map<Integer, List<Route>> apiRoutes = new HashMap<>();
 
     private Map<Integer, Result> customResult = null; //new ConcurrentHashMap<>(8, 1.0f, 4);
 
@@ -133,12 +140,42 @@ public class App {
 
     }
 
-    public void addDeployApi(Api api){
+    public synchronized HttpClient getHttpClient(HttpClientOptions options) {
+        if (httpClient == null)
+            httpClient = Vertx.vertx().createHttpClient(options);
+        return httpClient;
+    }
+
+    public void addDeployApi(Api api, List<Route> routes){
         apis.put(api.getId(), api);
+        apiRoutes.put(api.getId(), routes);
     }
 
     public void unDeployApi(Integer id){
         apis.remove(id);
+
+        List<Route> routes = apiRoutes.get(id);
+        if (routes == null)
+            return;
+        routes.forEach(route -> {
+            route.disable();
+            route.remove();
+        });
+    }
+
+    public void unDeployAllApi(){
+        apis.clear();
+        apiRoutes.forEach((k, v) -> {
+            List<Route> routes = apiRoutes.get(k);
+            if (routes == null)
+                return;
+            routes.forEach(route -> {
+                route.disable();
+                route.remove();
+            });
+        });
+
+        apiRoutes.clear();
     }
 
     public Api getDeployApi(Integer id){
@@ -151,7 +188,7 @@ public class App {
     }
 
     public boolean equals(Object another) {
-        if (another instanceof App)
+        if (!(another instanceof App))
             return false;
 
         App that = (App) another;
@@ -159,4 +196,7 @@ public class App {
     }
 
 
+    public int hashCode(){
+        return this.id.hashCode();
+    }
 }

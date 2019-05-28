@@ -28,8 +28,25 @@ public class DeployVerticle extends AbstractVerticle {
     public static final Map<String, Set<String>> RUNNING_APIS = new ConcurrentHashMap<>();
     private static final Logger logger = LoggerFactory.getLogger(DeployVerticle.class);
 
+    private String serverId;
+
     @Override
-    public void start() throws Exception {
+    public void start(Future<Void> startFuture) throws Exception {
+
+        vertx.deployVerticle(ServerVerticle.class, new DeploymentOptions(), res -> {
+            if (res.succeeded()) {
+                serverId = res.result();
+                logger.debug("Server :{}  deployed!", serverId);
+                registerConsumers();
+                startFuture.complete();
+            } else {
+                startFuture.fail(res.cause());
+                logger.error("Server deployed failed!", res.cause());
+            }
+        });
+    }
+
+    private void registerConsumers() {
         vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.RUN_ON_START), this::runOnStart);
         vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.START_APP), this::startApp);
         vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.RESTART_APP), this::restartApp);
@@ -49,16 +66,10 @@ public class DeployVerticle extends AbstractVerticle {
     @Override
     public void stop() throws Exception {
         logger.info("stop deploy verticle");
-        undeployAllApps();
-        super.stop();
-    }
-
-    private void undeployAllApps(){
-        DEPLOY_APP.forEach((k, v) -> {
-            vertx.undeploy(v);
-        });
         DEPLOY_APP.clear();
         RUNNING_APIS.clear();
+        vertx.undeploy(serverId);
+        super.stop();
     }
 
     private void appStatus(Message<Void> message) {
@@ -180,21 +191,17 @@ public class DeployVerticle extends AbstractVerticle {
 
     protected void stopApp(Message<String> message) {
         String appId = message.body();
+//        String deployId = DEPLOY_APP.get(appId);
 
-        String deployId = DEPLOY_APP.get(appId);
-        vertx.undeploy(deployId, result -> {
-            if (result.succeeded()) {
+        vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.STOP_APP_ACT), appId, reply -> {
+            if (reply.succeeded()) {
                 DEPLOY_APP.remove(appId);
-                RUNNING_APIS.remove(appId);
-
-                //设置api状态为停止
-
                 message.reply(1);
-                logger.info("停止app: {} -> ok");
             } else {
-                logger.error("停止app: {} -> failed!", appId, result.cause());
-                message.fail(StatusCode.SYS_ERROR, result.cause().getMessage());
+                logger.error("stop app:{} -> failed", appId, reply.cause());
+                message.fail(StatusCode.SYS_ERROR, reply.cause().getMessage());
             }
+
         });
     }
 
@@ -203,7 +210,7 @@ public class DeployVerticle extends AbstractVerticle {
         String appId = param.getString("appId");
         String apiIds = param.getString("id");
 
-        vertx.eventBus().send(Event.formatInternalAddress(Event.STOP_API, appId), apiIds, reply -> {
+        vertx.eventBus().send(Event.formatInternalAddress(Event.STOP_API_ACT), param, reply -> {
             if (reply.succeeded()) {
                 Set apis = RUNNING_APIS.get(appId);
                 String[] apiIdArray = apiIds.split(",");
@@ -228,7 +235,7 @@ public class DeployVerticle extends AbstractVerticle {
         String appId = param.getString("appId");
         String apiIds = param.getString("id");
 
-        vertx.eventBus().send(Event.formatInternalAddress(Event.PAUSE_API, appId), apiIds, reply -> {
+        vertx.eventBus().send(Event.formatInternalAddress(Event.PAUSE_API_ACT), param, reply -> {
             if (reply.succeeded()) {
 //                Set apis = RUNNING_APIS.get(appId);
 //                String[] apiIdArray = apiIds.split(",");
@@ -253,7 +260,7 @@ public class DeployVerticle extends AbstractVerticle {
         String appId = param.getString("appId");
         String apiIds = param.getString("id");
 
-        vertx.eventBus().send(Event.formatInternalAddress(Event.RESUME_API, appId), apiIds, reply -> {
+        vertx.eventBus().send(Event.formatInternalAddress(Event.RESUME_API_ACT), param, reply -> {
             if (reply.succeeded()) {
 //                Set apis = RUNNING_APIS.get(appId);
 //                String[] apiIdArray = apiIds.split(",");
@@ -276,7 +283,7 @@ public class DeployVerticle extends AbstractVerticle {
         String appId = param.getString("appId");
         String apiIds = param.getString("id");
 
-        vertx.eventBus().send(Event.formatInternalAddress(Event.STOP_API, appId), apiIds, stop -> {
+        vertx.eventBus().send(Event.formatInternalAddress(Event.STOP_API_ACT), param, stop -> {
             if (stop.succeeded()) {
                 Set apis = RUNNING_APIS.get(appId);
                 String[] apiIdArray = apiIds.split(",");
@@ -369,6 +376,14 @@ public class DeployVerticle extends AbstractVerticle {
         });
     }
 
+
+    /**
+     * 单server多app情况下，需先判断server是否启动
+     * 如server未处于启动或者启动中，需启动server；如server已启动，deploy 所有api即可。
+     *
+     * @param object
+     * @param handler
+     */
     private void deploy(JsonObject object, Handler<AsyncResult<JsonObject>> handler) {
         DeploymentOptions options = new DeploymentOptions();
         AppOption appOption = object.mapTo(AppOption.class);
@@ -388,12 +403,11 @@ public class DeployVerticle extends AbstractVerticle {
         metricsOptions.setEnabled(true);
         vertxOptions.setMetricsOptions(metricsOptions);
 
-        vertx.deployVerticle(Application.class, new DeploymentOptions(options).setConfig(object), res -> {
+        vertx.eventBus().<Object>send(Event.formatInternalAddress(Event.START_APP_ACT), object, res-> {
             if (!res.succeeded()) {
                 logger.error("启动应用网关:{} -> failed! :", object.getString("name"), res.cause().getMessage());
             } else {
-                String deployId = res.result();
-                DEPLOY_APP.put(object.getInteger("id").toString(), deployId);
+                DEPLOY_APP.put(object.getInteger("id").toString(), res.result().body().toString());
                 startAppAllApi(object.getInteger("id"), deployApiResult -> {
                     if (deployApiResult.succeeded()) {
                         JsonObject result = deployApiResult.result();
@@ -442,7 +456,13 @@ public class DeployVerticle extends AbstractVerticle {
                     }else{
                         //不自动运行，直接返回
                         success.incrementAndGet();
-                        logger.debug("app:{} -> api:{} 不自动运行", id, apiJson.getValue("id"));
+                        logger.debug("app:{} -> api:{} 不自动运行，需手动启动", id, apiJson.getValue("id"));
+                        //所有的api都发布了
+                        if ((success.get() + fail.get()) == apiTotalNum) {
+                            result.put("success", success.get());
+                            result.put("fail", fail.get());
+                            handler.handle(Future.succeededFuture(result));
+                        }
                     }
                 });
             } else {
@@ -468,7 +488,7 @@ public class DeployVerticle extends AbstractVerticle {
             handler.handle(Future.succeededFuture());
             return;
         }
-        vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.START_API, appId), obj, apiReply -> {
+        vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.START_API_ACT), obj, apiReply -> {
             if (apiReply.succeeded()) {
                 Set<String> apis = RUNNING_APIS.get(appId.toString());
                 if (apis == null) {
