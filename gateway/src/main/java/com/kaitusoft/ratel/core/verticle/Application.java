@@ -368,9 +368,9 @@ public class Application extends AbstractVerticle {
             refRouter = httpRouter = Router.router(vertx);
 
         Route baseRoute = refRouter.route();
-        baseRoute.handler((context) -> {
-            hostFilter(context, app.getVhost());
-        });
+//        baseRoute.handler((context) -> {
+//            hostFilter(context, app.getVhost());
+//        });
 
         if (this.ipBlanklist != null && this.ipBlanklist.length > 0)
             baseRoute.handler(new IpFilterHandler(this.ipBlanklist));
