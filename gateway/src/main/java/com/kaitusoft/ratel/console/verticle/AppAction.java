@@ -8,6 +8,7 @@ import com.kaitusoft.ratel.core.model.App;
 import com.kaitusoft.ratel.core.model.po.AppOption;
 import com.kaitusoft.ratel.core.model.vo.Node;
 import com.kaitusoft.ratel.core.verticle.DeployVerticle;
+import com.kaitusoft.ratel.util.StringUtils;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -135,6 +136,10 @@ public class AppAction extends BaseAction {
 
         AppOption appOption = body.mapTo(AppOption.class);
 
+        if(StringUtils.isEmpty(appOption.getVhost())){
+            appOption.setVhost("*");
+        }
+
         logger.debug("got app : {}", body);
 
         HttpServerResponse response = context.response();
@@ -158,6 +163,9 @@ public class AppAction extends BaseAction {
         body.remove("extendOption");
         body.put("parameter", parameter.toString());
         AppOption appOption = body.mapTo(AppOption.class);
+        if(StringUtils.isEmpty(appOption.getVhost())){
+            appOption.setVhost("*");
+        }
         logger.debug("got app : {}", body);
         String appId = context.request().getParam("id");
         body.put("id", Integer.valueOf(appId));
