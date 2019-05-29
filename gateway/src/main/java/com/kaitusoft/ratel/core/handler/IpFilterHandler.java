@@ -22,7 +22,7 @@ public class IpFilterHandler extends Processor {
         this.blacklist = blacklist;
     }
 
-    public IpFilterHandler(List<String> ips){
+    public IpFilterHandler(List<String> ips) {
         blacklist = new String[ips.size()];
         ips.toArray(blacklist);
     }

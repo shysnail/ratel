@@ -67,7 +67,7 @@ public class AppAction extends BaseAction {
 
                 int gId = json.getInteger("deployGroup");
                 String append = gId + ",";
-                if(groupIds.indexOf(append) < 0)
+                if (groupIds.indexOf(append) < 0)
                     groupIds.append(append);
 
                 List<JsonObject> gNodes = tmp.get(gId);
@@ -191,7 +191,7 @@ public class AppAction extends BaseAction {
                 Future future = Future.future();
                 future.setHandler(pre -> {
                     JsonObject result = (JsonObject) future.result();
-                    if(result.getBoolean("success", false)) {
+                    if (result.getBoolean("success", false)) {
                         vertx.eventBus().<String>send(Event.formatInternalAddress(Event.DELETE_APP), id, reply -> {
                             if (reply.succeeded()) {
                                 logger.debug("删除APP:{} -> ok", id);
@@ -205,37 +205,37 @@ public class AppAction extends BaseAction {
                                 logger.error("删除APP:{} -> failed", id, error);
                             }
                         });
-                    }else{
+                    } else {
                         String reason = result.getString("reason");
                         response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON).end(Json.encode(new ExecuteResult(false, reason)));
                         logger.debug("未能删除应用", reason);
                     }
                 });
 
-                if(originStat != App.STOPPED){
+                if (originStat != App.STOPPED) {
                     JsonObject result = new JsonObject();
                     action(vertx, id, App.STOPPED, new int[]{App.STOPPED}, Event.STOP_APP, res -> {
-                        if(res.succeeded()){
+                        if (res.succeeded()) {
                             JsonObject obj = (JsonObject) res.result();
-                            if(obj == null){
+                            if (obj == null) {
                                 obj = new JsonObject();
                             }
 
-                            if(obj.getBoolean("success", false)){
+                            if (obj.getBoolean("success", false)) {
                                 result.put("success", true);
 
-                            }else{
+                            } else {
                                 result.put("reason", obj.getString("reason"));
 //                                future.complete(false);
                             }
-                        }else{
+                        } else {
                             result.put("reason", res.result());
 //                            future.complete(false);
                         }
                         future.complete(result);
                     });
                 }
-            }else{
+            } else {
                 logger.error("删除APP:{} -> failed， 获取应用信息出错", id, app.cause());
                 response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON).end(Json.encode(new ExecuteResult(false, app.cause().getMessage())));
             }
@@ -271,33 +271,32 @@ public class AppAction extends BaseAction {
         HttpServerResponse response = context.response();
 
         action(vertx, appId, App.RUNNING, new int[]{App.RUNNING}, Event.START_APP, res -> {
-            if(res.succeeded()){
+            if (res.succeeded()) {
                 JsonObject obj = (JsonObject) res.result();
-                if(obj == null){
+                if (obj == null) {
                     obj = new JsonObject();
                 }
 
                 ExecuteResult result = new ExecuteResult();
-                if(obj.getBoolean("success", false)){
-                    if(obj.getBoolean("fullSuccess", false)){
+                if (obj.getBoolean("success", false)) {
+                    if (obj.getBoolean("fullSuccess", false)) {
                         result.setData("所有节点均启动完毕");
-                    }else{
+                    } else {
                         result.setData("部分节点启动完毕");
                     }
-                }else{
+                } else {
                     result.setData(obj.getString("reason"));
                 }
 
                 response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .end(Json.encode(result));
-            }else{
+            } else {
                 response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                         .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .end(Json.encode(new ExecuteResult(false, res.result())));
             }
         });
     }
-
 
 
     protected synchronized void stop(RoutingContext context) {
@@ -307,26 +306,26 @@ public class AppAction extends BaseAction {
         HttpServerResponse response = context.response();
 
         action(vertx, appId, App.STOPPED, new int[]{App.STOPPED}, Event.STOP_APP, res -> {
-            if(res.succeeded()){
+            if (res.succeeded()) {
                 JsonObject obj = (JsonObject) res.result();
-                if(obj == null){
+                if (obj == null) {
                     obj = new JsonObject();
                 }
 
                 ExecuteResult result = new ExecuteResult();
-                if(obj.getBoolean("success", false)){
-                    if(obj.getBoolean("fullSuccess", false)){
+                if (obj.getBoolean("success", false)) {
+                    if (obj.getBoolean("fullSuccess", false)) {
                         result.setData("所有节点均停止完毕");
-                    }else{
+                    } else {
                         result.setData("部分节点停止完毕");
                     }
-                }else{
+                } else {
                     result.setData(obj.getString("reason"));
                 }
 
                 response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .end(Json.encode(result));
-            }else{
+            } else {
                 response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                         .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .end(Json.encode(new ExecuteResult(false, res.result())));
@@ -337,9 +336,10 @@ public class AppAction extends BaseAction {
     /**
      * 暂停
      * 暂时不可用，不提供App暂停的功能，
+     *
      * @param context
      */
-    protected void pause(RoutingContext context){
+    protected void pause(RoutingContext context) {
         Vertx vertx = context.vertx();
         String appId = context.request().getParam("id");
         logger.debug("暂停app:{}", appId);
@@ -357,8 +357,7 @@ public class AppAction extends BaseAction {
                 }
 
 
-
-            }else {
+            } else {
                 logger.error("停止APP:{} -> failed:", appId, app.cause());
                 response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                         .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
@@ -369,32 +368,32 @@ public class AppAction extends BaseAction {
         });
     }
 
-    protected void restart(RoutingContext context){
+    protected void restart(RoutingContext context) {
         Vertx vertx = context.vertx();
         String appId = context.request().getParam("id");
         logger.debug("重启app:{}", appId);
         HttpServerResponse response = context.response();
         action(vertx, appId, App.RUNNING, new int[]{App.PAUSED, App.STOPPED}, Event.RESTART_APP, res -> {
-            if(res.succeeded()){
+            if (res.succeeded()) {
                 JsonObject obj = (JsonObject) res.result();
-                if(obj == null){
+                if (obj == null) {
                     obj = new JsonObject();
                 }
 
                 ExecuteResult result = new ExecuteResult();
-                if(obj.getBoolean("success", false)){
-                    if(obj.getBoolean("fullSuccess", false)){
+                if (obj.getBoolean("success", false)) {
+                    if (obj.getBoolean("fullSuccess", false)) {
                         result.setData("所有节点均重启完毕");
-                    }else{
+                    } else {
                         result.setData("部分节点重启完毕");
                     }
-                }else{
+                } else {
                     result.setData(obj.getString("reason"));
                 }
 
                 response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .end(Json.encode(result));
-            }else{
+            } else {
                 response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                         .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .end(Json.encode(new ExecuteResult(false, res.result())));
@@ -402,7 +401,7 @@ public class AppAction extends BaseAction {
         });
     }
 
-    private void action(Vertx vertx, String appId, int targetStatus, int[] stopStatus, String sendAddress, Handler<AsyncResult> handler){
+    private void action(Vertx vertx, String appId, int targetStatus, int[] stopStatus, String sendAddress, Handler<AsyncResult> handler) {
         JsonObject resultData = new JsonObject();
         //获取app，看其状态
         vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.GET_APP), appId, app -> {
@@ -410,8 +409,8 @@ public class AppAction extends BaseAction {
                 JsonObject appJson = app.result().body();
                 int originStat = appJson.getInteger("running");
                 boolean stop = false;
-                for(int i = 0; stopStatus != null && i < stopStatus.length; i ++){
-                    if(originStat == stopStatus[i]){
+                for (int i = 0; stopStatus != null && i < stopStatus.length; i++) {
+                    if (originStat == stopStatus[i]) {
                         stop = true;
                         break;
                     }
@@ -448,7 +447,7 @@ public class AppAction extends BaseAction {
                             if (nodes.succeeded()) {
                                 JsonArray allNodes = nodes.result().body();
                                 allNodes.forEach(node -> {
-                                    if(((JsonObject) node).getBoolean("online", false))
+                                    if (((JsonObject) node).getBoolean("online", false))
                                         toNodes.add(((JsonObject) node).getString("nodeId"));
                                 });
                             }
@@ -493,7 +492,6 @@ public class AppAction extends BaseAction {
                 });
 
 
-
             } else {
                 logger.error("{}APP:{} -> failed:", targetStatus, appId, app.cause());
 //                response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
@@ -508,15 +506,16 @@ public class AppAction extends BaseAction {
     /**
      * 获取每个节点app运行状态
      * 存储在json数组中，每个元素数据格式为 appId:[badnodes,...]
+     *
      * @param context
      */
-    protected void allNodeStatus(RoutingContext context){
+    protected void allNodeStatus(RoutingContext context) {
         Vertx vertx = context.vertx();
         String appIds = context.request().getParam("appIds");
         String[] appIdArray = appIds.split(",");
         Map<String, Set<Node>> appUnhealthyNodes = new HashMap<>();
 
-        for(String appId : appIdArray){
+        for (String appId : appIdArray) {
             appUnhealthyNodes.put(appId, new HashSet());
         }
 
@@ -531,7 +530,7 @@ public class AppAction extends BaseAction {
                     int id = appJson.getInteger("id");
 
                     Set<Integer> appIdSet = appGroup.get(deployGroup);
-                    if(appIdSet == null){
+                    if (appIdSet == null) {
                         appIdSet = new HashSet();
                         appGroup.put(deployGroup, appIdSet);
                     }
@@ -547,7 +546,7 @@ public class AppAction extends BaseAction {
                             if (nodes.succeeded()) {
                                 JsonArray allNodes = nodes.result().body();
                                 allNodes.forEach(node -> {
-                                    if(!((JsonObject) node).getBoolean("online", false))
+                                    if (!((JsonObject) node).getBoolean("online", false))
                                         return;
                                     toNodes.add(((JsonObject) node).getString("nodeId"));
                                     ((JsonObject) node).remove("addTime");
@@ -581,7 +580,7 @@ public class AppAction extends BaseAction {
                                         String node = e.getKey();
                                         JsonObject data = (JsonObject) e.getValue();
                                         boolean nodeSuccess = data.getBoolean("success");
-                                        if(!nodeSuccess)
+                                        if (!nodeSuccess)
                                             return;
 
                                         Node tmpNode = new Node();
@@ -590,17 +589,17 @@ public class AppAction extends BaseAction {
                                         tmpNode.setGroupId(group.toString());
                                         allGroupNodes.remove(tmpNode);
                                         JsonArray nodeAppIds = data.getJsonArray("result");
-                                        for(String appId : appIdArray){
+                                        for (String appId : appIdArray) {
                                             boolean appRunInNode = false;
-                                            for(int i = 0; i < nodeAppIds.size(); i ++){
+                                            for (int i = 0; i < nodeAppIds.size(); i++) {
                                                 String nodeAppId = nodeAppIds.getString(i);
-                                                if(appId.equalsIgnoreCase(nodeAppId)){
+                                                if (appId.equalsIgnoreCase(nodeAppId)) {
                                                     appRunInNode = true;
                                                     break;
                                                 }
                                             }
 
-                                            if(!appRunInNode){
+                                            if (!appRunInNode) {
                                                 Set<Node> inNodes = appUnhealthyNodes.get(appId);
                                                 inNodes.add(tmpNode);
                                             }
@@ -612,7 +611,7 @@ public class AppAction extends BaseAction {
                              *有节点未返回数据，表示无法获取该节点app运行状态
                              * 需要把这一组节点对应的app，全部记录不健康节点
                              */
-                                if(allGroupNodes.size() > 0){
+                                if (allGroupNodes.size() > 0) {
                                     Set<Integer> appIdSets = appGroup.get(group);
                                     appIdSets.forEach(id -> {
                                         Set inNodes = appUnhealthyNodes.get(String.valueOf(id));
@@ -634,8 +633,8 @@ public class AppAction extends BaseAction {
                 CompositeFuture.all(allFuture).setHandler(res -> {
                     ExecuteResult result = new ExecuteResult();
                     JsonObject obj = new JsonObject();
-                    appUnhealthyNodes.forEach((k, v)->{
-                        if(v != null && v.size() > 0){
+                    appUnhealthyNodes.forEach((k, v) -> {
+                        if (v != null && v.size() > 0) {
                             obj.put(k, new JsonArray(new ArrayList(v)));
                         }
                     });
@@ -644,7 +643,7 @@ public class AppAction extends BaseAction {
                             .end(Json.encode(result));
                 });
 
-            }else{
+            } else {
                 logger.error("获取所有节点APP状态 -> failed:", app.cause());
                 response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                         .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)

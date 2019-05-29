@@ -19,13 +19,8 @@ import java.util.Map;
  *          <p>
  *          write description here
  */
-public class ApiDao extends BaseDao{
+public class ApiDao extends BaseDao {
     private static final Logger logger = LoggerFactory.getLogger(ApiDao.class);
-
-    public ApiDao(JDBCClient jdbcClient) {
-        super(jdbcClient);
-    }
-
     private static final String SQL_API_ALL = "select * from api where app_id=?";
     private static final String SQL_API_COND = "select * from api where 1=1 ";
     private static final String SQL_API_GET = "select * from api where id=?";
@@ -34,6 +29,14 @@ public class ApiDao extends BaseDao{
     private static final String SQL_API_COUNT_EXISTS = "select count(1) from api where app_id=? and name=? and id!=? union all select count(1) from api where app_id=? and path=? and id!=?";
     private static final String SQL_API_UPDATE = "update api set name=?, path=?, parameter=?, running=? where id=? and app_id=?";
     private static final String SQL_API_DELETE = "delete from api where id in (?)";
+    private static final String SQL_APP_API_GET = "select app.port, app.protocol, app.create_time as app_create_time, app.deploy_group, app.name as app_name, app.description ,\n" +
+            " app.parameter as app_parameter, app.vhost as app_vhost , app.running as app_running, api.* " +
+            " from app as app, api as api where api.id=? and api.app_id=app.id";
+    private static final String SQL_API_UPDATE_PROP = "update api set $CONDTIONS$ where id=? and app_id=?";
+
+    public ApiDao(JDBCClient jdbcClient) {
+        super(jdbcClient);
+    }
 
     public void findApis(Message<String> message) {
         Integer appId = Integer.parseInt(message.body());
@@ -122,10 +125,6 @@ public class ApiDao extends BaseDao{
         });
     }
 
-
-    private static final String SQL_APP_API_GET = "select app.port, app.protocol, app.create_time as app_create_time, app.deploy_group, app.name as app_name, app.description ,\n" +
-            " app.parameter as app_parameter, app.vhost as app_vhost , app.running as app_running, api.* " +
-            " from app as app, api as api where api.id=? and api.app_id=app.id";
     public void getAppApi(Message<String> message) {
         Integer id = Integer.parseInt(message.body());
         jdbcClient.queryWithParams(SQL_APP_API_GET, new JsonArray().add(id), res -> {
@@ -235,7 +234,6 @@ public class ApiDao extends BaseDao{
         });
     }
 
-    private static final String SQL_API_UPDATE_PROP = "update api set $CONDTIONS$ where id=? and app_id=?";
     public void updateApiProp(Message<JsonObject> message) {
         JsonObject params = message.body();
 
@@ -250,7 +248,7 @@ public class ApiDao extends BaseDao{
             sqlParams.add(entry.getValue());
 
         }
-        while (updates.charAt(updates.length() - 1) == ','){
+        while (updates.charAt(updates.length() - 1) == ',') {
             updates.deleteCharAt(updates.length() - 1);
         }
         sqlParams.add(apiId);

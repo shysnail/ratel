@@ -17,14 +17,21 @@ import java.util.List;
  *          <p>
  *          write description here
  */
-public class UserDao extends BaseDao{
+public class UserDao extends BaseDao {
     private static final Logger logger = LoggerFactory.getLogger(UserDao.class);
+    private static final String SQL_SYS_USER_GET = "select * from sys_user where account=?";
+    private static final String SQL_USER_FIND = "select * from sys_user where 1=1 ";
+    private static final String SQL_USER_COUNT_EXISTS = "select count(1) from sys_user where account=? and id!=?";
+    private static final String SQL_USER_ADD = "insert into sys_user(account, password, name, email, role, department)" +
+            " values(?,?,?,?,?,?)";
+    private static final String SQL_USER_UPDATE = "update sys_user set name=?, role=?, department=? where account=?";
+    private static final String SQL_USER_UPDATE_PASSWORD = "update sys_user set password=? where account=?";
+    private static final String SQL_USER_FROZEN = "update sys_user set is_locked_out=? where account=?";
 
     public UserDao(JDBCClient jdbcClient) {
         super(jdbcClient);
     }
 
-    private static final String SQL_SYS_USER_GET = "select * from sys_user where account=?";
     public void get(Message<String> message) {
         String username = message.body();
 
@@ -54,10 +61,9 @@ public class UserDao extends BaseDao{
         });
     }
 
-    private static final String SQL_USER_FIND = "select * from sys_user where 1=1 ";
-    public void find(Message<JsonObject> message){
+    public void find(Message<JsonObject> message) {
         jdbcClient.queryWithParams(SQL_USER_FIND, new JsonArray(), res -> {
-            if(res.succeeded()){
+            if (res.succeeded()) {
                 List<JsonObject> rows = res.result().getRows();
                 JsonArray jsonArray = new JsonArray(); //如果传递对象，需要另外实现编解码，所以懒省事用已有的支持的类型来交互
                 if (rows != null && rows.size() > 0) {
@@ -72,21 +78,18 @@ public class UserDao extends BaseDao{
                     });
                 }
                 message.reply(jsonArray);
-            }else{
+            } else {
                 logger.error("findUser: -> failed", res.cause());
                 message.fail(StatusCode.SYS_ERROR, res.cause().toString());
             }
         });
     }
 
-    private static final String SQL_USER_COUNT_EXISTS = "select count(1) from sys_user where account=? and id!=?";
-    private static final String SQL_USER_ADD = "insert into sys_user(account, password, name, email, role, department)" +
-            " values(?,?,?,?,?,?)";
     public void add(Message<JsonObject> message) {
         JsonObject data = message.body();
         String account = data.getString("account");
         String id = data.getString("id");
-        if(StringUtils.isEmpty(id))
+        if (StringUtils.isEmpty(id))
             id = "-1";
 
         jdbcClient.queryWithParams(SQL_USER_COUNT_EXISTS, new JsonArray().add(account).add(Integer.parseInt(id)), res -> {
@@ -96,7 +99,7 @@ public class UserDao extends BaseDao{
                 if (count > 0) {
                     logger.error("账号重复:{}", account);
                     message.fail(StatusCode.SYS_ERROR, "账号重复：" + account);
-                }else{
+                } else {
                     JsonArray params = new JsonArray();
                     params.add(account);
                     params.add(data.getString("password"));
@@ -122,12 +125,11 @@ public class UserDao extends BaseDao{
         });
     }
 
-    private static final String SQL_USER_UPDATE = "update sys_user set name=?, role=?, department=? where account=?";
     public void update(Message<JsonObject> message) {
         JsonObject data = message.body();
         String name = data.getString("name");
         String account = data.getString("account");
-        if(StringUtils.isEmpty(account)){
+        if (StringUtils.isEmpty(account)) {
             logger.error("缺少数据标识");
             message.fail(StatusCode.SYS_ERROR, "缺少数据标识");
             return;
@@ -149,13 +151,11 @@ public class UserDao extends BaseDao{
         });
     }
 
-
-    private static final String SQL_USER_UPDATE_PASSWORD = "update sys_user set password=? where account=?";
     public void updatePassword(Message<JsonObject> message) {
         JsonObject data = message.body();
         String password = data.getString("newPassword");
         String account = data.getString("account");
-        if(StringUtils.isEmpty(account)){
+        if (StringUtils.isEmpty(account)) {
             logger.error("缺少数据标识");
             message.fail(StatusCode.SYS_ERROR, "缺少数据标识");
             return;
@@ -172,13 +172,11 @@ public class UserDao extends BaseDao{
         });
     }
 
-
-    private static final String SQL_USER_FROZEN = "update sys_user set is_locked_out=? where account=?";
     public void frozen(Message<JsonObject> message) {
         JsonObject data = message.body();
         String account = data.getString("account");
         int lock = data.getInteger("lock");
-        if(StringUtils.isEmpty(account)){
+        if (StringUtils.isEmpty(account)) {
             logger.error("缺少数据标识");
             message.fail(StatusCode.SYS_ERROR, "缺少数据标识");
             return;

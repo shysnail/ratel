@@ -46,13 +46,13 @@ public class MainVerticle extends AbstractVerticle {
         JsonObject clusterConfig;
         JsonObject databaseConfig;
         JsonObject systemConfig;
-        if(configJson.isEmpty()){
+        if (configJson.isEmpty()) {
             config = Configuration.load();
             clusterConfig = config.getClusterOption();
             consoleConfig = config.getConsoleOption();
             databaseConfig = config.getDatabaseOption();
             systemConfig = config.getSystemOption();
-        }else{
+        } else {
             consoleConfig = configJson.getJsonObject("console");
             clusterConfig = configJson.getJsonObject("cluster");
             databaseConfig = configJson.getJsonObject("database");
@@ -123,10 +123,10 @@ public class MainVerticle extends AbstractVerticle {
                     init();
                     if (consolePort > 0) {
                         vertx.deployVerticle(ConsoleVerticle.class, new DeploymentOptions().setConfig(consoleConfig), console -> {
-                            if(console.succeeded()){
+                            if (console.succeeded()) {
                                 deplyed.add(console.result());
                                 logger.info("已启动控制台:{}", consolePort);
-                            }else{
+                            } else {
                                 logger.error("未能启动控制台", console.cause());
                             }
 
@@ -142,6 +142,7 @@ public class MainVerticle extends AbstractVerticle {
 
 
     }
+
     private void init() {
         vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.RUN_ON_START), null, reply -> {
             if (reply.succeeded()) {
@@ -151,7 +152,7 @@ public class MainVerticle extends AbstractVerticle {
             }
         });
 
-        if(vertx.isClustered()){
+        if (vertx.isClustered()) {
             vertx.eventBus().publish(Event.formatInternalAddress(Event.CLUSTER_NODE_ADD), new JsonObject().put("nodeId", ClusterVerticle.myNodeId).put("hostname", Configuration.hostname));
         }
     }

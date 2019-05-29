@@ -69,11 +69,11 @@ public class SystemHandler extends Processor {
 
         logger.debug("new request:{} -> url: {}", reqId, uri);
 
-        if(path.isPause()){
+        if (path.isPause()) {
             logger.debug("接口:{}-{}-{} 暂停服务", path.getId(), path.getPath(), uri);
             //暂停，返回应用暂不可达的信息
             Result result = app.getBlowSetting().getResult();
-            if(result != null)
+            if (result != null)
                 response.setStatusCode(result.getCode()).putHeader(HttpHeaders.CONTENT_TYPE, result.getContentType()).end(result.getContent().toString());
             else
                 response.setStatusCode(HttpResponseStatus.NOT_FOUND.code()).end("暂停提供服务");
@@ -86,7 +86,7 @@ public class SystemHandler extends Processor {
 
             if (badGateway != null) {
                 response.setStatusCode(HttpResponseStatus.BAD_GATEWAY.code()).end(badGateway);
-            }else{
+            } else {
                 response.end();
             }
 
@@ -95,7 +95,7 @@ public class SystemHandler extends Processor {
 
         response.headersEndHandler(handle -> {
 //            if(response.isChunked())
-                context.put(ContextAttribute.CTX_RES_SENT_HEAD, response.bytesWritten());
+            context.put(ContextAttribute.CTX_RES_SENT_HEAD, response.bytesWritten());
         });
 
         response.endHandler(endHandler -> {
@@ -110,13 +110,13 @@ public class SystemHandler extends Processor {
             String bodyLenStr = response.headers().get(HttpHeaders.CONTENT_LENGTH);
             bodyLen = bodyLenStr == null ? -1 : Long.parseLong(bodyLenStr);
 
-            if(bodyLen < 0){
+            if (bodyLen < 0) {
                 //chunked 需计算实际写出数量去掉head长度
                 Long headLen;
                 headLen = context.get(ContextAttribute.CTX_RES_SENT_HEAD);
-                if(headLen != null)
+                if (headLen != null)
                     bodyLen = response.bytesWritten() - headLen;
-                else{
+                else {
                     logger.warn("no response head");
                     bodyLen = response.bytesWritten();
                 }

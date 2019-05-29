@@ -46,9 +46,9 @@ public class GroupAction extends BaseAction {
                 if (nodes.succeeded()) {
                     JsonArray allNodes = nodes.result().body();
                     allNodes.forEach(nodeJson -> {
-                        Instant addTime = ((JsonObject)nodeJson).getInstant("addTime");
-                        ((JsonObject)nodeJson).remove("addTime");
-                        Node node = ((JsonObject)nodeJson).mapTo(Node.class);
+                        Instant addTime = ((JsonObject) nodeJson).getInstant("addTime");
+                        ((JsonObject) nodeJson).remove("addTime");
+                        Node node = ((JsonObject) nodeJson).mapTo(Node.class);
                         node.setAddTime(addTime);
                         String gId = node.getGroupId();
                         List tmpNodes = groupNodes.get(gId);
@@ -58,7 +58,7 @@ public class GroupAction extends BaseAction {
                         }
                         tmpNodes.add(node);
                     });
-                }else{
+                } else {
                     logger.error("从集群获取节点组信息出错:", nodes.cause());
                 }
 

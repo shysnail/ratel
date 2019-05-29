@@ -40,9 +40,9 @@ public class UserAction extends BaseAction {
             if (reply.succeeded()) {
                 JsonObject user = reply.result().body();
                 String rightPassword = (String) user.remove("password");
-                if(user.getBoolean("lockedOut")){
+                if (user.getBoolean("lockedOut")) {
                     response.putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end(Json.encode(new ExecuteResult(false, "您已被禁用，请联系管理员解除禁用")));
-                }else if(rightPassword.equalsIgnoreCase(password)){
+                } else if (rightPassword.equalsIgnoreCase(password)) {
                     //校验信息
                     logger.info("用户登录:{} -> ok", username);
                     User userSession = new User();
@@ -50,7 +50,7 @@ public class UserAction extends BaseAction {
                     context.session().put(ContextAttribute.SESSION_USER, userSession);
 
                     response.putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end(Json.encode(new ExecuteResult()));
-                }else{
+                } else {
                     response.putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end(Json.encode(new ExecuteResult(false, "用户名密码不匹配")));
                 }
 
@@ -63,7 +63,7 @@ public class UserAction extends BaseAction {
 
     }
 
-    protected void logout(RoutingContext context){
+    protected void logout(RoutingContext context) {
         context.session().remove(ContextAttribute.SESSION_USER);
         context.removeCookie(ContextAttribute.SESSION_USER);
 
@@ -77,11 +77,11 @@ public class UserAction extends BaseAction {
         }
     }
 
-    protected void find(RoutingContext context){
+    protected void find(RoutingContext context) {
         HttpServerResponse response = context.response();
 
         context.vertx().eventBus().<JsonArray>send(Event.formatInternalAddress(Event.USER_FIND), null, reply -> {
-            if(!reply.succeeded()){
+            if (!reply.succeeded()) {
                 logger.error("查找所有用户 -> failed!", reply.cause());
                 response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                         .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
@@ -100,18 +100,18 @@ public class UserAction extends BaseAction {
         });
     }
 
-    protected void get(RoutingContext context){
+    protected void get(RoutingContext context) {
         String account = context.request().getParam("account");
         logger.debug("got user : {}", account);
         HttpServerResponse response = context.response();
 
         context.vertx().eventBus().<JsonObject>send(Event.formatInternalAddress(Event.USER_GET), account, reply -> {
-            if(reply.succeeded()){
+            if (reply.succeeded()) {
                 JsonObject userJson = reply.result().body();
                 userJson.remove("password");
                 logger.debug("get用户 -> ok");
                 response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON).end(Json.encode(userJson));
-            }else{
+            } else {
                 String error = reply.cause().getMessage();
                 logger.error("get用户 -> failed", reply.cause());
                 response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end(error);
@@ -119,14 +119,14 @@ public class UserAction extends BaseAction {
         });
     }
 
-    protected void add(RoutingContext context){
+    protected void add(RoutingContext context) {
         JsonObject body = context.getBodyAsJson();
         logger.debug("got user : {}", body);
 
         HttpServerResponse response = context.response();
 
         String event = Event.USER_ADD;
-        if(body.getValue("id") != null && body.getValue("id").toString().length() > 0){
+        if (body.getValue("id") != null && body.getValue("id").toString().length() > 0) {
             event = Event.USER_UPDATE;
         }
 
@@ -143,7 +143,7 @@ public class UserAction extends BaseAction {
         });
     }
 
-    protected void changePassword(RoutingContext context){
+    protected void changePassword(RoutingContext context) {
         JsonObject body = context.getBodyAsJson();
         User userSession = context.session().get(ContextAttribute.SESSION_USER);
         JsonObject user = userSession.principal();
@@ -156,13 +156,13 @@ public class UserAction extends BaseAction {
 
         HttpServerResponse response = context.response();
 
-        if(StringUtils.isEmpty(newPassword)){
-            response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON).end(Json.encode(new ExecuteResult(false,"新密码不可为空")));
+        if (StringUtils.isEmpty(newPassword)) {
+            response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON).end(Json.encode(new ExecuteResult(false, "新密码不可为空")));
             return;
         }
 
-        if(!newPassword.equalsIgnoreCase(confirmPassword)){
-            response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON).end(Json.encode(new ExecuteResult(false,"两次输入的密码不相同")));
+        if (!newPassword.equalsIgnoreCase(confirmPassword)) {
+            response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON).end(Json.encode(new ExecuteResult(false, "两次输入的密码不相同")));
             return;
         }
 
@@ -171,8 +171,8 @@ public class UserAction extends BaseAction {
                 JsonObject userJson = res.result().body();
                 String rightPassword = userJson.getString("password");
 
-                if(StringUtils.isEmpty(originPassword) || !originPassword.equalsIgnoreCase(rightPassword)){
-                    response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON).end(Json.encode(new ExecuteResult(false,"旧密码不正确")));
+                if (StringUtils.isEmpty(originPassword) || !originPassword.equalsIgnoreCase(rightPassword)) {
+                    response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON).end(Json.encode(new ExecuteResult(false, "旧密码不正确")));
                     return;
                 }
 
@@ -188,7 +188,7 @@ public class UserAction extends BaseAction {
                         response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end(error);
                     }
                 });
-            }else{
+            } else {
                 String error = res.cause().getMessage();
                 logger.error("changePassword -> failed", res.cause());
                 response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end(error);
@@ -198,7 +198,7 @@ public class UserAction extends BaseAction {
     }
 
 
-    protected void frozen(RoutingContext context){
+    protected void frozen(RoutingContext context) {
         String account = context.request().getParam("account");
 
         logger.debug("got user : {}", account);
@@ -220,7 +220,7 @@ public class UserAction extends BaseAction {
         });
     }
 
-    protected void unFrozen(RoutingContext context){
+    protected void unFrozen(RoutingContext context) {
         String account = context.request().getParam("account");
 
         logger.debug("got user : {}", account);

@@ -19,31 +19,30 @@ import java.util.Map;
  *          <p>
  *          write description here
  */
-public class AppDao extends BaseDao{
+public class AppDao extends BaseDao {
 
     private static final Logger logger = LoggerFactory.getLogger(AppDao.class);
-
-    public AppDao(JDBCClient jdbcClient) {
-        super(jdbcClient);
-    }
-
-
     private static final String SQL_APP_ALL = "select * from app where 1=1 ";
     private static final String SQL_APP_GET = "select * from app where id=?";
     private static final String SQL_APP_ADD = "insert into app(name, protocol, port, deploy_group, description, parameter)" +
             " values(?,?,?,?,?,?)";
     private static final String SQL_APP_COUNT_EXISTS = "select count(1) from app where port=? and id!=? union all select count(1) from app where name=? and id!=?";
     private static final String SQL_APP_UPDATE = "update app set name=?, protocol=?, port=?, deploy_group=?, description=?, parameter=? where id=?";
-
     private static final String SQL_APP_DELETE = "delete from app where id=?";
+    private static final String SQL_APP_COND = "select * from app where 1=1 ";
+    private static final String SQL_APP_UPDATE_PROP = "update app set $CONDTIONS$ where id=?";
 
+
+    public AppDao(JDBCClient jdbcClient) {
+        super(jdbcClient);
+    }
 
     public void findApps(Message<String> message) {
         String ids = message.body();
         JsonArray sqlParam = new JsonArray();
         String sql = SQL_APP_ALL;
 
-        if(!StringUtils.isEmpty(ids)) {
+        if (!StringUtils.isEmpty(ids)) {
             String[] idArray = ids.split(",");
             StringBuilder placeholder = new StringBuilder();
             for (String id : idArray) {
@@ -77,9 +76,6 @@ public class AppDao extends BaseDao{
 
     }
 
-
-    private static final String SQL_APP_COND = "select * from app where 1=1 ";
-
     public void findAppsByCondition(Message<JsonObject> message) {
         JsonObject object = message.body();
         StringBuilder sql = new StringBuilder(SQL_APP_COND);
@@ -104,7 +100,7 @@ public class AppDao extends BaseDao{
         }
 
         String groupId = object.getString("deploy_group");
-        if(!StringUtils.isEmpty(groupId)){
+        if (!StringUtils.isEmpty(groupId)) {
             sql.append(" and deploy_group = ? ");
             params.add(groupId);
         }
@@ -267,8 +263,6 @@ public class AppDao extends BaseDao{
 
     }
 
-
-    private static final String SQL_APP_UPDATE_PROP = "update app set $CONDTIONS$ where id=?";
     public void updateAppProp(Message<JsonObject> message) {
         JsonObject params = message.body();
 
@@ -281,7 +275,7 @@ public class AppDao extends BaseDao{
             updates.append(entry.getKey() + "=?,");
             sqlParams.add(entry.getValue());
         }
-        while (updates.charAt(updates.length() - 1) == ','){
+        while (updates.charAt(updates.length() - 1) == ',') {
             updates.deleteCharAt(updates.length() - 1);
         }
         sqlParams.add(appId);

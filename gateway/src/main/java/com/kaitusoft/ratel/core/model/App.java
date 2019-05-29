@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  *          write description here
  */
 @Data
-@ToString(exclude={"apis"})
+@ToString(exclude = {"apis"})
 @NoArgsConstructor
 public class App {
     public static final int RUNNING = 1;
@@ -87,10 +87,10 @@ public class App {
         if (!StringUtils.isEmpty(option.getVhost()) && !"*".equals(option.getVhost().trim())) {
             vhost = option.getVhost().split(" ");
 
-            if(vhost != null && vhost.length > 0){
+            if (vhost != null && vhost.length > 0) {
                 regexs = new Pattern[vhost.length];
 
-                for(int i = 0; i < vhost.length; i ++){
+                for (int i = 0; i < vhost.length; i++) {
                     String vh = vhost[i];
                     regexs[i] = Pattern.compile("^" + vh.replaceAll("\\.", "\\\\.").replaceAll("[*]", "(.*?)") + "$", 2);
                 }
@@ -135,20 +135,20 @@ public class App {
             }
         }
 
-        if(!StringUtils.isEmpty(extendOption.getBlowSetting())){
+        if (!StringUtils.isEmpty(extendOption.getBlowSetting())) {
             try {
                 blowSetting = new JsonObject(extendOption.getBlowSetting()).mapTo(Blow.class);
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        if(blowSetting == null)
+        if (blowSetting == null)
             blowSetting = new Blow();
 
 
         AccessLogOption accessLogOption = extendOption.getAccessLogOption();
-        if(accessLogOption != null){
+        if (accessLogOption != null) {
             accessLog = new AccessLog(this, accessLogOption.getFormat(), accessLogOption.getSavePath());
         }
 
@@ -160,12 +160,12 @@ public class App {
         return httpClient;
     }
 
-    public void addDeployApi(Api api, List<Route> routes){
+    public void addDeployApi(Api api, List<Route> routes) {
         apis.put(api.getId(), api);
         apiRoutes.put(api.getId(), routes);
     }
 
-    public void unDeployApi(Integer id){
+    public void unDeployApi(Integer id) {
         apis.remove(id);
 
         List<Route> routes = apiRoutes.get(id);
@@ -177,7 +177,7 @@ public class App {
         });
     }
 
-    public void unDeployAllApi(){
+    public void unDeployAllApi() {
         apis.clear();
         apiRoutes.forEach((k, v) -> {
             List<Route> routes = apiRoutes.get(k);
@@ -192,17 +192,17 @@ public class App {
         apiRoutes.clear();
     }
 
-    public boolean match(String requestHost){
-        if(regexs == null)
+    public boolean match(String requestHost) {
+        if (regexs == null)
             return true;
 
         boolean match = false;
         String[] var4 = requestHost.split(":");
         int var5 = var4.length;
 
-        for(int var6 = 0; var6 < var5; ++var6) {
+        for (int var6 = 0; var6 < var5; ++var6) {
             String h = var4[var6];
-            if(matchAny(h)){
+            if (matchAny(h)) {
                 match = true;
                 break;
             }
@@ -211,9 +211,9 @@ public class App {
         return match;
     }
 
-    private boolean matchAny(String host){
-        for(Pattern regex : regexs){
-            if(regex.matcher(host).matches()) {
+    private boolean matchAny(String host) {
+        for (Pattern regex : regexs) {
+            if (regex.matcher(host).matches()) {
                 return true;
             }
         }
@@ -221,12 +221,12 @@ public class App {
         return false;
     }
 
-    public Api getDeployApi(Integer id){
+    public Api getDeployApi(Integer id) {
         return apis.get(id);
     }
 
 
-    public void stop(){
+    public void stop() {
         accessLog.destroy();
     }
 
@@ -239,7 +239,7 @@ public class App {
     }
 
 
-    public int hashCode(){
+    public int hashCode() {
         return this.id.hashCode();
     }
 }

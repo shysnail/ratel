@@ -4,7 +4,6 @@ import com.kaitusoft.ratel.core.common.Event;
 import com.kaitusoft.ratel.core.common.StatusCode;
 import com.kaitusoft.ratel.core.handler.IpFilterHandler;
 import com.kaitusoft.ratel.core.handler.SystemHandler;
-import com.kaitusoft.ratel.core.handler.VHostHandler;
 import com.kaitusoft.ratel.core.model.*;
 import com.kaitusoft.ratel.core.model.option.ProxyOption;
 import com.kaitusoft.ratel.core.model.option.SessionOption;
@@ -37,7 +36,6 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * @author frog.w
@@ -93,7 +91,7 @@ public class ServerVerticle extends AbstractVerticle {
         String[] idArray = ids.split(",");
         for (String id : idArray) {
             App app = getApp(Integer.parseInt(id));
-            if(app == null)
+            if (app == null)
                 continue;
             removeAppFromPort(app.getId());
             app.unDeployAllApi();
@@ -113,24 +111,24 @@ public class ServerVerticle extends AbstractVerticle {
     private void stopServer(boolean filterIdle) {
         List<Integer> idles = new ArrayList<Integer>();
         APP_ON_PORT.forEach((k, apps) -> {
-            if(!filterIdle || (filterIdle && (apps == null || apps.size() == 0))){
+            if (!filterIdle || (filterIdle && (apps == null || apps.size() == 0))) {
                 idles.add(k);
             }
         });
 
-        for(int idle : idles){
+        for (int idle : idles) {
             HttpServer server = SERVER.get(idle);
             server.close(res -> {
-                if(res.succeeded()) {
+                if (res.succeeded()) {
                     logger.debug("Server on {} closed!", idle);
-                }else{
+                } else {
                     logger.error("Server on {} cant close", idle, res.cause());
                 }
             });
         }
     }
 
-    private void removeAppFromPort(int appId){
+    private void removeAppFromPort(int appId) {
         APP_ON_PORT.forEach((k, apps) -> {
             apps.remove(appId);
         });
@@ -139,7 +137,7 @@ public class ServerVerticle extends AbstractVerticle {
     private synchronized void startApp(Message<JsonObject> message) {
         AppOption appOption = message.body().mapTo(AppOption.class);
         App app = getApp(appOption.getId());
-        if(app == null) {
+        if (app == null) {
             try {
                 app = new App(appOption);
                 Router router = Router.router(vertx);
@@ -155,7 +153,7 @@ public class ServerVerticle extends AbstractVerticle {
         List<Future> futureList = new ArrayList<>();
 
         int port = app.getPort();
-        if(SERVER.get(port) == null) {
+        if (SERVER.get(port) == null) {
             futureList.add(Future.<Void>future(http -> {
                 logger.debug("no Server run on port:{}, now create...", port);
                 createHttpServer(port, res -> {
@@ -174,7 +172,7 @@ public class ServerVerticle extends AbstractVerticle {
 
         final Ssl cert = app.getSsl();
         final int sslPort = cert != null ? cert.getPort() : -1;
-        if(sslPort > 0 && SERVER.get(sslPort) == null){
+        if (sslPort > 0 && SERVER.get(sslPort) == null) {
             futureList.add(Future.<Void>future(https -> {
                 logger.debug("no Server run on port:{}, now create...", sslPort);
                 createHttpsServer(sslPort, cert, res -> {
@@ -221,7 +219,7 @@ public class ServerVerticle extends AbstractVerticle {
             if (upstreamOption.getThreadType() == UpstreamOption.UpstreamThreadType.APP) {
                 useHttpClient = app.getHttpClient(buildHttpClientOption(app.getProxyOption()));
             } else {
-                useHttpClient = vertx.createHttpClient(buildHttpClientOption((UpstreamOption)api.getProxyOption()));
+                useHttpClient = vertx.createHttpClient(buildHttpClientOption((UpstreamOption) api.getProxyOption()));
             }
         }
 
@@ -247,7 +245,7 @@ public class ServerVerticle extends AbstractVerticle {
         message.reply(idArray.length);
     }
 
-    protected void pauseApi(Message<JsonObject> message){
+    protected void pauseApi(Message<JsonObject> message) {
         JsonObject body = message.body();
         String appId = body.getString("appId");
         String ids = body.getString("id");
@@ -263,7 +261,7 @@ public class ServerVerticle extends AbstractVerticle {
         message.reply(idArray.length);
     }
 
-    protected void resumeApi(Message<JsonObject> message){
+    protected void resumeApi(Message<JsonObject> message) {
         JsonObject body = message.body();
         String appId = body.getString("appId");
         String ids = body.getString("id");
@@ -334,13 +332,13 @@ public class ServerVerticle extends AbstractVerticle {
             server.requestHandler(request -> {
                 String host = request.host();
                 Router useRouter = HOST_ROUTER_MAP.get(host);
-                if(useRouter != null){
+                if (useRouter != null) {
                     useRouter.handle(request);
-                }else{
-                    Set<Map.Entry<Integer, App>> appSet =  APPS.entrySet();
-                    for(Map.Entry<Integer, App> entry : appSet){
+                } else {
+                    Set<Map.Entry<Integer, App>> appSet = APPS.entrySet();
+                    for (Map.Entry<Integer, App> entry : appSet) {
                         App app = entry.getValue();
-                        if(app.match(host)) {
+                        if (app.match(host)) {
                             Router router = app.getRouter();
                             HOST_ROUTER_MAP.put(host, router);
                             router.handle(request);
@@ -370,7 +368,7 @@ public class ServerVerticle extends AbstractVerticle {
      * host->
      * base routes
      * -> ip -> limit -> auth-> xss/sql .... security filters ->
-     *
+     * <p>
      * pre processors-> static/main proxy -> post processors
      *
      * @param path
@@ -401,7 +399,7 @@ public class ServerVerticle extends AbstractVerticle {
         }
 
         Processor sqlFilter = preference.getSqlFilter();
-        if(sqlFilter != null){
+        if (sqlFilter != null) {
             route.handler(sqlFilter);
         }
 
@@ -457,7 +455,7 @@ public class ServerVerticle extends AbstractVerticle {
     }
 
 
-    private void routeBase(App app, Route route){
+    private void routeBase(App app, Route route) {
         String[] ipBlanklist = app.getPreference().getIpBlacklist();
         if (ipBlanklist != null && ipBlanklist.length > 0)
             route.handler(new IpFilterHandler(ipBlanklist));
@@ -531,7 +529,7 @@ public class ServerVerticle extends AbstractVerticle {
         httpClientOptions.setMaxInitialLineLength(upstreamOption.getMaxInitialLineLength());
         httpClientOptions.setMaxHeaderSize(upstreamOption.getMaxHeaderSize());
         httpClientOptions.setKeepAlive(upstreamOption.isKeepAlive());
-        if(httpClientOptions.isKeepAlive())
+        if (httpClientOptions.isKeepAlive())
             httpClientOptions.setKeepAliveTimeout(upstreamOption.getKeepAliveTimeout());
         httpClientOptions.setConnectTimeout(upstreamOption.getTimeout());
         httpClientOptions.setIdleTimeout(upstreamOption.getMaxIdleTimeout());

@@ -28,11 +28,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @ToString
 public class ClusterMessage {
     public static final long DEFAULT_TIMEOUT = 60 * 1000;
-
-    private static Logger logger = LoggerFactory.getLogger(ClusterMessage.class);
-
     private static final Map<String, ClusterContext> CLUSTER_FUTURE = new ConcurrentHashMap<>(64, 0.75f, 2);
-
+    private static Logger logger = LoggerFactory.getLogger(ClusterMessage.class);
     private Vertx vertx;
 
 //    private String node;
@@ -72,31 +69,29 @@ public class ClusterMessage {
         send(toNodes, address, message, new DeliveryOptions().setSendTimeout(DEFAULT_TIMEOUT), handler);
     }
 
-    public <T> void send(Collection<String> toNodes, String address, JsonObject message, DeliveryOptions options){
+    public <T> void send(Collection<String> toNodes, String address, JsonObject message, DeliveryOptions options) {
         send(toNodes, address, message, options, null);
     }
 
     /**
-     *
-     * @param toNodes
-     *  为空表示向全集群广播
+     * @param toNodes 为空表示向全集群广播
      * @param address
      * @param message
      * @param options
      * @param handler
      * @param <T>
      */
-    public <T> void send(Collection<String> toNodes, String address, JsonObject message, DeliveryOptions options, Handler<AsyncResult<T>> handler){
+    public <T> void send(Collection<String> toNodes, String address, JsonObject message, DeliveryOptions options, Handler<AsyncResult<T>> handler) {
         ClusterContext context = new ClusterContext();
 
-        if(handler != null)
+        if (handler != null)
             context.future.setHandler(handler);
 
         String uuid = UUID.randomUUID().toString();
 
         message.put("msgId", uuid);
 
-        if(handler != null) {
+        if (handler != null) {
             CLUSTER_FUTURE.put(uuid, context);
             if (toNodes != null && toNodes.size() > 0) {
                 context.targetNodes = new ArrayList(toNodes);
@@ -122,7 +117,7 @@ public class ClusterMessage {
         String uuid = (String) data.remove("msgId");
         ClusterContext context = CLUSTER_FUTURE.get(uuid);
 
-        if(context == null){
+        if (context == null) {
             logger.debug("收到无主或已过期广播，忽略");
             return;
         }
@@ -131,7 +126,7 @@ public class ClusterMessage {
         context.result.getJsonArray("nodes").add(new JsonObject().put(replyNode, data));
 
         //为空表示向全集群广播
-        if(context.noReplyNodes != null) {
+        if (context.noReplyNodes != null) {
             //是否有错误广播的消息
             boolean hasNode = context.noReplyNodes.remove(replyNode);
 
@@ -142,9 +137,9 @@ public class ClusterMessage {
                 context.result.put("fullSuccess", true);
                 context.future.complete(context.result);
             }
-        }else{ //有任意一个回复信息，都表示成功执行了
+        } else { //有任意一个回复信息，都表示成功执行了
             CLUSTER_FUTURE.remove(uuid);
-            if(!vertx.isClustered()){
+            if (!vertx.isClustered()) {
                 context.result.put("fullSuccess", true);
             }
             context.future.complete(context.result);
@@ -152,17 +147,13 @@ public class ClusterMessage {
     }
 
     @Data
-    public static final class ClusterContext{
+    public static final class ClusterContext {
         protected Future future = Future.future();
 
 //        private String uuid;
-
-        private long timerId;
-
         protected List targetNodes;
-
         protected Queue noReplyNodes;
-
         protected JsonObject result = new JsonObject().put("fullSuccess", false).put("nodes", new JsonArray());
+        private long timerId;
     }
 }

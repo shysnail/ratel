@@ -35,13 +35,11 @@ import java.util.Map;
 public class ConsoleVerticle extends AbstractVerticle {
 
     private static final Logger logger = LoggerFactory.getLogger(ConsoleVerticle.class);
+    private static String favicon = ResourceUtil.inJar(ConsoleVerticle.class) ? "../conf/favicon.ico" : "favicon.ico";
+    protected final String CONTENT_TYPE_HTML_UTF8 = "text/html;charset=UTF-8";
     private int port;
     private boolean debug;
-    private static String favicon = ResourceUtil.inJar(ConsoleVerticle.class) ? "../conf/favicon.ico" : "favicon.ico";
     private String uploadsTempDir;
-
-    protected final String CONTENT_TYPE_HTML_UTF8 = "text/html;charset=UTF-8";
-
     private AppAction appAction;
     private ApiAction apiAction;
     private GroupAction groupAction;
@@ -87,7 +85,7 @@ public class ConsoleVerticle extends AbstractVerticle {
                     .end("fail!!" + failureContext.statusCode());
         });
 
-        if(debug)
+        if (debug)
             System.setProperty("io.vertx.ext.web.TemplateEngine.disableCache", "true");
 
         FreeMarkerTemplateEngine engine = FreeMarkerTemplateEngine.create(vertx);
@@ -98,7 +96,7 @@ public class ConsoleVerticle extends AbstractVerticle {
         router.getWithRegex(".+\\.html").handler(this::htmlRender);
         router.route().handler(context -> {
             String path = context.request().path();
-            if(!StringUtils.isEmpty(path) && !"/".equalsIgnoreCase(path)){
+            if (!StringUtils.isEmpty(path) && !"/".equalsIgnoreCase(path)) {
                 context.next();
                 return;
             }
@@ -196,21 +194,21 @@ public class ConsoleVerticle extends AbstractVerticle {
         super.stop();
     }
 
-    private void wrapContext(RoutingContext context){
+    private void wrapContext(RoutingContext context) {
         Map<String, Object> data = new HashMap<>();
         data.put("name", Configuration.OFFICIAL_NAME);
         User user = context.session().get(ContextAttribute.SESSION_USER);
-        if(user != null){
+        if (user != null) {
             JsonObject principal = user.principal();
             data.put("curUser", principal);
         }
 
-        if(this.getVertx().isClustered()){
+        if (this.getVertx().isClustered()) {
             data.put("cluster", true);
         }
 
         String domain = Configuration.DOMAIN;
-        if(StringUtils.isEmpty(domain))
+        if (StringUtils.isEmpty(domain))
             domain = "//" + context.request().host();
 
         data.put("domain", domain);
@@ -231,7 +229,7 @@ public class ConsoleVerticle extends AbstractVerticle {
 //        });
     }
 
-    private void htmlRender(RoutingContext context){
+    private void htmlRender(RoutingContext context) {
         wrapContext(context);
 
         String path = context.request().path();

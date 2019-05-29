@@ -25,19 +25,23 @@ import org.slf4j.LoggerFactory;
  */
 public class Ratel {
     private static Logger logger;
+    private static Ratel ratel;
+    private static Thread shutdownHook;
     private Vertx vertx;
     private long startTime;
-
-    private static Ratel ratel;
     private String deployId;
     private Configuration config;
     private volatile boolean restarting = false;
     private volatile boolean running = false;
-    private static Thread shutdownHook;
 
+
+    private Ratel() {
+        configLogger();
+    }
 
     /**
      * 没什么并发加载类问题，懒汉即可
+     *
      * @return
      */
     public synchronized static Ratel getInstance() {
@@ -47,18 +51,14 @@ public class Ratel {
         return ratel;
     }
 
-    private Ratel(){
-        configLogger();
-    }
-
-    public void start(String extraLogMessage){
+    public void start(String extraLogMessage) {
         startTime = System.currentTimeMillis();
-        if(extraLogMessage != null)
+        if (extraLogMessage != null)
             logger.info(extraLogMessage);
 
         Future start = Future.future();
         start.setHandler(started -> {
-            if(start.failed()){
+            if (start.failed()) {
                 logger.error("{} start failed!", config.getName(), start.cause());
                 try {
                     Thread.sleep(1500L);
@@ -68,22 +68,22 @@ public class Ratel {
                 System.exit(-2);
             }
 
-            logger.info("{} Startup in {} s, mode:{}, version:{}, cluster:{}", config.getName(), String.format("%.2f", (System.currentTimeMillis()-startTime)/1000.0), config.getMode(), config.getVersion(), vertx.isClustered());
+            logger.info("{} Startup in {} s, mode:{}, version:{}, cluster:{}", config.getName(), String.format("%.2f", (System.currentTimeMillis() - startTime) / 1000.0), config.getMode(), config.getVersion(), vertx.isClustered());
             shutdownHook = new ShutdownHook();
             Runtime.getRuntime().addShutdownHook(shutdownHook);
         });
 
         startMainVertx(res -> {
-            if(res.succeeded()){
+            if (res.succeeded()) {
                 running = true;
                 start.complete();
-            }else{
+            } else {
                 start.fail(res.cause());
             }
         });
     }
 
-    public void restart(){
+    public void restart() {
         if ((this.restarting) || (!this.running)) {
             return;
         }
@@ -104,16 +104,16 @@ public class Ratel {
         restarter.start();
     }
 
-    public void halt(){
+    public void halt() {
         ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
-        vertx.undeploy(deployId, result-> {
+        vertx.undeploy(deployId, result -> {
             logger.info("undeploy main verticle: {}", result.succeeded());
 //            vertx.close();
             vertx.close(res -> {
                 Thread.currentThread().setContextClassLoader(currentClassLoader);
-                if(res.succeeded()){
+                if (res.succeeded()) {
                     logger.debug("main vertx stopped");
-                }else{
+                } else {
                     logger.error("cannot stop main vertx", res.cause());
                 }
                 boolean needRestart = restarting;
@@ -137,8 +137,9 @@ public class Ratel {
                     } else {
                         System.exit(0);
                     }
-                }catch (Exception e){
-                    logger.warn("Error while shutting down the server: " + e.getMessage());;
+                } catch (Exception e) {
+                    logger.warn("Error while shutting down the server: " + e.getMessage());
+                    ;
                 }
 
             });
@@ -164,38 +165,38 @@ public class Ratel {
             mainConfig.put("version", config.getVersion());
             mainConfig.put("mode", config.getMode());
             deployMainVerticle(mainConfig, res -> {
-                if(res.succeeded()){
+                if (res.succeeded()) {
                     handler.handle(Future.succeededFuture());
-                }else{
+                } else {
                     handler.handle(Future.failedFuture(res.cause()));
                 }
             });
         });
-        if(cluster != null && cluster.isEnabled()){
+        if (cluster != null && cluster.isEnabled()) {
             configCluster(cluster, options);
             Monitor monitor = config.getMonitor();
-            if(monitor != null && monitor.isEnabled())
+            if (monitor != null && monitor.isEnabled())
                 configMetrics(options);
             Vertx.clusteredVertx(options, result -> {
-                if(result.succeeded()) {
+                if (result.succeeded()) {
                     ClusterVerticle.myNodeId = options.getClusterManager().getNodeID();
                     logger.info("join cluster, my nodeId:{}", ClusterVerticle.myNodeId);
                     System.setProperty("com.kaitusoft.ratel.nodeId", ClusterVerticle.myNodeId);
-                }else {
+                } else {
                     logger.warn("config cluster mode, but join cluster failed, cluster ? : ", result.cause());
                 }
-                if(result.result() == null || !result.result().isClustered()){
+                if (result.result() == null || !result.result().isClustered()) {
                     logger.warn("config cluster mode, but join cluster failed, create single vertx");
                     options.setClustered(false);
                     vertx = Vertx.vertx(options);
-                }else
+                } else
                     vertx = result.result();
 
-                if(!vertx.isClustered())
+                if (!vertx.isClustered())
                     ClusterVerticle.myNodeId = Configuration.hostname;
                 future.complete();
             });
-        }else{
+        } else {
             vertx = Vertx.vertx(options);
             ClusterVerticle.myNodeId = Configuration.hostname;
             future.complete();
@@ -213,9 +214,9 @@ public class Ratel {
         options.setClustered(true);
         options.setClusterManager(clusterManager);
         options.setClusterPort(cluster.getPort());
-        if(!StringUtils.isEmpty(cluster.getHost()))
+        if (!StringUtils.isEmpty(cluster.getHost()))
             options.setClusterHost(cluster.getHost());
-        else{
+        else {
             String host = null;
             try {
                 host = InetAddressUtil.getDefaultAddressNotLoopback();
@@ -223,20 +224,20 @@ public class Ratel {
             } catch (Exception e) {
                 logger.error("无法获取网卡信息", e);
             }
-            if(host != null)
+            if (host != null)
                 options.setClusterHost(host);
-            else{
+            else {
                 options.setClusterHost(InetAddressUtil.getLoopbackAddress());
             }
         }
     }
 
-    private void deployMainVerticle(JsonObject config, Handler<AsyncResult> handler){
+    private void deployMainVerticle(JsonObject config, Handler<AsyncResult> handler) {
         vertx.deployVerticle(MainVerticle.class, new DeploymentOptions().setConfig(config), result -> {
-            if(result.succeeded()){
+            if (result.succeeded()) {
                 deployId = result.result();
                 handler.handle(Future.succeededFuture());
-            }else{
+            } else {
                 logger.error("启动 MainVerticle verticle 出错", result.cause());
                 handler.handle(Future.failedFuture(result.cause()));
             }
@@ -245,18 +246,18 @@ public class Ratel {
 
     private void configVertx(Configuration config, VertxOptions options) {
         Extend extend = config.getExtend();
-        if(extend == null){
+        if (extend == null) {
             options.setPreferNativeTransport(true);
             return;
         }
 
-        if(extend.getBlockedThreadCheckInterval() > 0)
+        if (extend.getBlockedThreadCheckInterval() > 0)
             options.setBlockedThreadCheckInterval(extend.getBlockedThreadCheckInterval());
 
-        if(extend.getEventLoopPoolSize() != null)
+        if (extend.getEventLoopPoolSize() != null)
             options.setEventLoopPoolSize(extend.getEventLoopPoolSize());
 
-        if(extend.getWorkerPoolSize() != null)
+        if (extend.getWorkerPoolSize() != null)
             options.setWorkerPoolSize(extend.getWorkerPoolSize());
 
     }

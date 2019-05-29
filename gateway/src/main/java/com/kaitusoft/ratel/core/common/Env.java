@@ -42,7 +42,8 @@ public class Env {
 
     public static Set<ExtendInstance> postHandlers = new HashSet<>();
 
-    public static String HOME = System.getProperty("app.home");;
+    public static String HOME = System.getProperty("app.home");
+    ;
 
     static {
         AbstractAuthProcessor defaultAuth = new DemoAuth();
@@ -74,12 +75,12 @@ public class Env {
     private static Collection<Class<?>> getAllExtendClass() throws Exception {
         ClassLoader current = Thread.currentThread().getContextClassLoader();
 
-        if(StringUtils.isEmpty(HOME))
+        if (StringUtils.isEmpty(HOME))
             HOME = current.getResource("").getPath();
         File home = new File(HOME);
         String extendDir = HOME + File.separator + "ext";
         File extend = new File(extendDir);
-        if(!extend.exists() || !extend.isDirectory()){
+        if (!extend.exists() || !extend.isDirectory()) {
             extend = home;
         }
 
@@ -97,7 +98,7 @@ public class Env {
         Collection<Class<?>> allClasses = ResourceUtil.getClassesFromJars(files, myClassLoader);
 
         Set<File> classFiles = ResourceUtil.findFile(home, ".class", true);
-        for(File classFile : classFiles){
+        for (File classFile : classFiles) {
             try {
                 allClasses.add(ResourceUtil.loadFileAsClass(myClassLoader, classFile.getPath(), extend));
             } catch (Throwable throwable) {
@@ -111,7 +112,7 @@ public class Env {
     private static Collection<Class<?>> getAllLoadedClasses() throws NoSuchFieldException, IllegalAccessException {
         Field f = ClassLoader.class.getDeclaredField("classes");
         f.setAccessible(true);
-        Vector classes=(Vector)f.get(Thread.currentThread().getContextClassLoader());
+        Vector classes = (Vector) f.get(Thread.currentThread().getContextClassLoader());
         return classes;
     }
 
@@ -226,12 +227,12 @@ public class Env {
 //    }
 
 
-    public static boolean isCommander(){
+    public static boolean isCommander() {
         return !StringUtils.isEmpty(System.getProperty("config.console"));
     }
 
 
-    public static boolean isCluster(){
+    public static boolean isCluster() {
         return !StringUtils.isEmpty(System.getProperty("config.cluster"));
     }
 }

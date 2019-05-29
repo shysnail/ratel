@@ -32,8 +32,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SystemVerticle extends AbstractVerticle {
 
     private static final Logger logger = LoggerFactory.getLogger(SystemVerticle.class);
+    /**
+     * 暂未启用此方法
+     */
+    private static final Map<Api, Set<Target>> API_DEAD_TARGETS = new ConcurrentHashMap<>();
     private static int COLLECT_PERIOD = 120000;
-    private static int CLEAN_STATUS_AGE = 24 * 3600 * 7;
 
 //    /** JVM最大内存量 */
 //    private long maxMemory = 0;
@@ -56,19 +59,21 @@ public class SystemVerticle extends AbstractVerticle {
 //     * 请求到达网关的总次数
 //     */
 //    private AtomicLong requestCountPeriod = new AtomicLong();
+    private static int CLEAN_STATUS_AGE = 24 * 3600 * 7;
     /**
      * 启动时间
      */
     private LocalDateTime startTime = LocalDateTime.now();
-//
+    //
 //    private Map<Integer, AtomicLong> requestFailedCountMap = new ConcurrentHashMap<>();
     //    private SysStatus status = new SysStatus();
 //
     private SysStatus lastStatus = null;
     private Map<Object, AppStatus> appStatusMap = new ConcurrentHashMap<>(16, 0.75f, 4);
     private Map<Object, AppStatus> appStatusLastPeriod = new ConcurrentHashMap<>(16, 0.75f, 4);
-
     private MetricsService metricsService;
+    private long retryTaskId = -1;
+    private long monitorTaskId = -1;
 
     @Override
     public void start() throws Exception {
@@ -156,24 +161,19 @@ public class SystemVerticle extends AbstractVerticle {
     @Override
     public void stop() throws Exception {
         logger.info("停止 任务");
-        if(retryTaskId >= 0){
+        if (retryTaskId >= 0) {
             vertx.cancelTimer(retryTaskId);
         }
 
-        if(monitorTaskId >= 0){
+        if (monitorTaskId >= 0) {
             vertx.cancelTimer(monitorTaskId);
         }
         super.stop();
     }
 
-    /**
-     * 暂未启用此方法
-     */
-    private static final Map<Api, Set<Target>> API_DEAD_TARGETS = new ConcurrentHashMap<>();
-    private long retryTaskId = -1;
     private void initRetryTask() {
         retryTaskId = vertx.setPeriodic(5000, retry -> {
-            if(API_DEAD_TARGETS.size() == 0)
+            if (API_DEAD_TARGETS.size() == 0)
                 return;
 
             logger.debug("retry test urls available");
@@ -196,7 +196,6 @@ public class SystemVerticle extends AbstractVerticle {
 
     }
 
-    private long monitorTaskId = -1;
     private void initMonitor() {
         monitorTaskId = vertx.setPeriodic(COLLECT_PERIOD, collect -> {
 
@@ -327,13 +326,13 @@ public class SystemVerticle extends AbstractVerticle {
                 }
             });
 
-            if(apps.size() > 0)
-            vertx.eventBus().<Object>send(Event.formatInternalAddress(Event.APP_STATUS_ADD), apps, reply -> {
-                logger.debug("save apps status -> {}", reply.succeeded());
-                if (!reply.succeeded()) {
-                    logger.error("save apps status failed", reply.cause());
-                }
-            });
+            if (apps.size() > 0)
+                vertx.eventBus().<Object>send(Event.formatInternalAddress(Event.APP_STATUS_ADD), apps, reply -> {
+                    logger.debug("save apps status -> {}", reply.succeeded());
+                    if (!reply.succeeded()) {
+                        logger.error("save apps status failed", reply.cause());
+                    }
+                });
 
             long cleanTimestamp = System.currentTimeMillis() / 1000 - CLEAN_STATUS_AGE;
             JsonObject cleanParam = new JsonObject();

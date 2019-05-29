@@ -53,7 +53,7 @@ public class Cluster {
     @ToString
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class Retry{
+    public static class Retry {
 
         private static final int DEFAULT_RETRY_INITIAL_SLEEPTIME = 1000;
 

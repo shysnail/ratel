@@ -85,7 +85,7 @@ public class DeployVerticle extends AbstractVerticle {
         String appId = message.body();
         JsonArray runningApis = new JsonArray();
         RUNNING_APIS.forEach((app, apis) -> {
-            if(!appId.equalsIgnoreCase(app))
+            if (!appId.equalsIgnoreCase(app))
                 return;
 
             apis.forEach(api -> {
@@ -140,7 +140,7 @@ public class DeployVerticle extends AbstractVerticle {
 
     private void runOnStart(Message<Void> message) {
         vertx.eventBus().<JsonArray>send(Event.formatInternalAddress(Event.FIND_ALL_APP), null, reply -> {
-            if(!reply.succeeded()){
+            if (!reply.succeeded()) {
                 logger.error("find all app error", reply.cause());
                 return;
             }
@@ -153,7 +153,7 @@ public class DeployVerticle extends AbstractVerticle {
                 int appId = appJson.getInteger("id");
                 int originStat = appJson.getInteger("running");
 
-                if(App.STOPPED == originStat){
+                if (App.STOPPED == originStat) {
                     logger.warn("app:{} 是停止状态，不启动", appId);
                     successNum.incrementAndGet();
                     return;
@@ -403,7 +403,7 @@ public class DeployVerticle extends AbstractVerticle {
         metricsOptions.setEnabled(true);
         vertxOptions.setMetricsOptions(metricsOptions);
 
-        vertx.eventBus().<Object>send(Event.formatInternalAddress(Event.START_APP_ACT), object, res-> {
+        vertx.eventBus().<Object>send(Event.formatInternalAddress(Event.START_APP_ACT), object, res -> {
             if (!res.succeeded()) {
                 logger.error("启动应用网关:{} -> failed! :", object.getString("name"), res.cause().getMessage());
             } else {
@@ -438,7 +438,7 @@ public class DeployVerticle extends AbstractVerticle {
                 array.forEach(obj -> {
                     JsonObject apiJson = (JsonObject) obj;
                     //设定为自动运行，则启动
-                    if(apiJson.getInteger("running") == 1) {
+                    if (apiJson.getInteger("running") == 1) {
                         startAppApi(id, apiJson, res -> {
                             if (res.succeeded()) {
                                 success.incrementAndGet();
@@ -453,7 +453,7 @@ public class DeployVerticle extends AbstractVerticle {
                                 handler.handle(Future.succeededFuture(result));
                             }
                         });
-                    }else{
+                    } else {
                         //不自动运行，直接返回
                         success.incrementAndGet();
                         logger.debug("app:{} -> api:{} 不自动运行，需手动启动", id, apiJson.getValue("id"));
@@ -475,6 +475,7 @@ public class DeployVerticle extends AbstractVerticle {
     /**
      * 启动某个api
      * 判断是否已启动
+     *
      * @param appId
      * @param obj
      * @param handler

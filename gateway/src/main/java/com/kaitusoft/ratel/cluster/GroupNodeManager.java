@@ -33,26 +33,39 @@ import java.util.List;
  */
 public class GroupNodeManager {
     private static final Logger logger = LoggerFactory.getLogger(GroupNodeManager.class);
-
-//    public static final Map<String, Node> NODE_HOST_MAP = new ConcurrentHashMap<>();
+    private static String rootPath;
+    //    public static final Map<String, Node> NODE_HOST_MAP = new ConcurrentHashMap<>();
     private JsonObject clusterConfig;
     private CuratorFramework client;
-
-    private static String rootPath;
-
     private Vertx vertx;
 
-    public GroupNodeManager(Vertx vertx, JsonObject config){
+    public GroupNodeManager(Vertx vertx, JsonObject config) {
         this.vertx = vertx;
         this.clusterConfig = config;
 
         rootPath = clusterConfig.getString("rootPath");
-        if(!rootPath.startsWith("/"))
+        if (!rootPath.startsWith("/"))
             rootPath = "/" + rootPath;
 
     }
 
-    protected void init(){
+    protected static String getPath(String base, Object... subs) {
+        StringBuilder path = new StringBuilder(rootPath);
+        path.append("/cluster");
+        path.append(base.startsWith("/") ? base : ("/" + base));
+
+        if (subs == null || subs.length == 0)
+            return path.toString();
+
+        for (Object sub : subs) {
+            String dir = sub.toString();
+            path.append(dir.startsWith("/") ? dir : ("/" + dir));
+        }
+
+        return path.toString();
+    }
+
+    protected void init() {
         JsonObject retry = clusterConfig.getJsonObject("retry");
 
         ExponentialBackoffRetry retryPolicy = new ExponentialBackoffRetry(retry.getInteger("initialSleepTimeMs", 1000), retry.getInteger("maxTimes", 3), retry.getInteger("maxSleepMs", 3000));
@@ -71,16 +84,16 @@ public class GroupNodeManager {
         touch(getPath("/groups", 0), true);
     }
 
-    protected void destroy(){
+    protected void destroy() {
         client.close();
     }
 
-    public void haltNode(Message<JsonObject> message){
+    public void haltNode(Message<JsonObject> message) {
         JsonObject data = message.body();
         Future future = Future.future();
         future.setHandler(h -> {
-            new Thread(){
-                public void run(){
+            new Thread() {
+                public void run() {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -94,7 +107,7 @@ public class GroupNodeManager {
 
         boolean expel = data.getBoolean("expel", false);
 
-        if(vertx.isClustered() && expel){
+        if (vertx.isClustered() && expel) {
             try {
                 nodeLeft(ClusterVerticle.myNodeId, res -> {
                     future.complete();
@@ -103,17 +116,17 @@ public class GroupNodeManager {
                 logger.warn("clean node status from cluster error", e);
                 future.complete();
             }
-        }else{
+        } else {
             future.complete();
         }
 
     }
 
-    public void restartNode(Message<Void> message){
+    public void restartNode(Message<Void> message) {
         Future future = Future.future();
         future.setHandler(h -> {
-            new Thread(){
-                public void run(){
+            new Thread() {
+                public void run() {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -124,7 +137,7 @@ public class GroupNodeManager {
             }.start();
             message.reply(1);
         });
-        if(vertx.isClustered()){
+        if (vertx.isClustered()) {
             try {
                 nodeLeft(ClusterVerticle.myNodeId, res -> {
                     future.complete();
@@ -133,21 +146,21 @@ public class GroupNodeManager {
                 logger.warn("clean node status from cluster error", e);
                 future.complete();
             }
-        }else{
+        } else {
             future.complete();
         }
     }
 
-    protected void node(Message<String> message){
+    protected void node(Message<String> message) {
         String nodeId = message.body();
         try {
             Node node = this.getDataByNodeId(nodeId);
-            if(node == null){
+            if (node == null) {
                 message.reply(null);
                 return;
             }
             List<String> nodeIds = ClusterVerticle.getClusterManager(null).getNodes();
-            if(nodeIds.contains(nodeId))
+            if (nodeIds.contains(nodeId))
                 node.setOnline(true);
 
             message.reply(JsonObject.mapFrom(node));
@@ -177,13 +190,13 @@ public class GroupNodeManager {
 //        });
         List<String> nodeIds = ClusterVerticle.getClusterManager(null).getNodes();
         List<String> children;
-        if(groupId != null) {
+        if (groupId != null) {
             String[] groupIds = groupId.split(",");
             children = new ArrayList<>(groupIds.length);
-            for(String id : groupIds){
+            for (String id : groupIds) {
                 children.add(id);
             }
-        }else {
+        } else {
             try {
                 children = client.getChildren().forPath(getPath("/groups"));
             } catch (Exception e) {
@@ -193,16 +206,16 @@ public class GroupNodeManager {
             }
         }
         try {
-            for(String groupPath : children){
+            for (String groupPath : children) {
                 List<String> groupNodes = client.getChildren().forPath(getPath("/groups", groupPath));
 
-                for(String hostname : groupNodes){
+                for (String hostname : groupNodes) {
                     String nodePath = getPath("/groups", groupPath, hostname);
                     Node node = getData(nodePath);
-                    if(nodeIds.contains(node.getNodeId())){ //节点在线
+                    if (nodeIds.contains(node.getNodeId())) { //节点在线
                         node.setOnline(true);
-                    }else{
-                        if(node.isOnline()) {
+                    } else {
+                        if (node.isOnline()) {
                             node.setOnline(false);
                             saveData(nodePath, node);
                         }
@@ -211,7 +224,7 @@ public class GroupNodeManager {
                 }
 
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error("从节点获取数据出错", e);
             message.fail(StatusCode.SYS_ERROR, e.getMessage());
             return;
@@ -257,13 +270,13 @@ public class GroupNodeManager {
         }
     }
 
-    protected void expelNode(Message<String> message){
+    protected void expelNode(Message<String> message) {
         String nodeId = message.body();
         try {
             nodeLeft(nodeId, res -> {
-                if(res.succeeded()){
+                if (res.succeeded()) {
                     message.reply(1);
-                }else{
+                } else {
                     message.reply(0);
                 }
             });
@@ -272,7 +285,6 @@ public class GroupNodeManager {
             message.reply(0);
         }
     }
-
 
     protected void nodeLeft(Message<JsonObject> message) {
         JsonObject data = message.body();
@@ -390,7 +402,7 @@ public class GroupNodeManager {
     private void initNodeHostMap() {
         String groupBasePath = getPath("/groups");
         try {
-            if(!exists(groupBasePath))
+            if (!exists(groupBasePath))
                 return;
 
             GetChildrenBuilder childrenBuilder = client.getChildren();
@@ -474,7 +486,7 @@ public class GroupNodeManager {
     private Node getDataByNodeId(String nodeId) throws Exception {
         String groupBasePath = getPath("/groups");
 
-        if(!exists(groupBasePath))
+        if (!exists(groupBasePath))
             return null;
 
         GetChildrenBuilder childrenBuilder = client.getChildren();
@@ -488,10 +500,10 @@ public class GroupNodeManager {
             for (String node : nodes) {
                 String wholePath = getPath("/groups", c, node);
                 Node nodeData = (Node) SerializeUtil.unserialize(client.getData().forPath(wholePath));
-                if(nodeData == null)
+                if (nodeData == null)
                     continue;
 
-                if(nodeId.equalsIgnoreCase(nodeData.getNodeId())){
+                if (nodeId.equalsIgnoreCase(nodeData.getNodeId())) {
                     return nodeData;
                 }
 
@@ -501,7 +513,7 @@ public class GroupNodeManager {
         return null;
     }
 
-    protected void removeNode(String nodeId)  throws Exception{
+    protected void removeNode(String nodeId) throws Exception {
         removeNodeFromGroupByNodeId(nodeId);
     }
 
@@ -509,60 +521,16 @@ public class GroupNodeManager {
         removeNodeFromGroup(groupId, nodeId, 2);
     }
 
-    private void removeNodeFromGroupByHostname(String groupId, String hostname)  throws Exception{
+    private void removeNodeFromGroupByHostname(String groupId, String hostname) throws Exception {
         removeNodeFromGroup(groupId, hostname, 1);
     }
 
-    private void removeNodeFromGroupByNodeId(String nodeId)  throws Exception{
+    private void removeNodeFromGroupByNodeId(String nodeId) throws Exception {
         removeNodeFromGroup(null, nodeId, 2);
     }
 
     private void removeNodeFromGroupByHostname(String hostname) throws Exception {
         removeNodeFromGroup(null, hostname, 1);
-    }
-
-    /**
-     * 根据数据类型删除节点
-     * @param groupId
-     * @param value
-     * @param type
-     *          1=hostname
-     *          其它=nodeId
-     */
-    private void removeNodeFromGroup(String groupId, String value, int type) throws Exception{
-        String groupBasePath = getPath("/groups");
-
-        if(!exists(groupBasePath))
-            return;
-
-        GetChildrenBuilder childrenBuilder = client.getChildren();
-
-        List<String> children = childrenBuilder.forPath(groupBasePath);
-        for (String c : children) {
-            logger.debug("group : {}", c);
-            //非目标组
-            if(StringUtils.isEmpty(groupId) || !groupId.equalsIgnoreCase(c))
-                continue;
-            String path = getPath("/groups", c);
-            List<String> nodes = childrenBuilder.forPath(path);
-
-            for (String node : nodes) {
-                String wholePath = getPath("/groups", c, node);
-
-                if(type == 1) {
-                    if (value.equals(node)) {
-                        client.delete().forPath(wholePath);
-                        break;
-                    }
-                }else{
-                    Node nodeData = (Node) SerializeUtil.unserialize(client.getData().forPath(wholePath));
-                    if(value.equalsIgnoreCase(nodeData.getNodeId())){
-                        client.delete().forPath(wholePath);
-                        break;
-                    }
-                }
-            }
-        }
     }
 
 //    protected static String getNodeGroupFromPath(String path) {
@@ -572,20 +540,48 @@ public class GroupNodeManager {
 //        return path.replace(getPath("/groups") + "/", "").replace("/" + Configuration.hostname, "");
 //    }
 
-    protected static String getPath(String base, Object... subs){
-        StringBuilder path = new StringBuilder(rootPath);
-        path.append("/cluster");
-        path.append(base.startsWith("/") ? base : ("/"+base));
+    /**
+     * 根据数据类型删除节点
+     *
+     * @param groupId
+     * @param value
+     * @param type    1=hostname
+     *                其它=nodeId
+     */
+    private void removeNodeFromGroup(String groupId, String value, int type) throws Exception {
+        String groupBasePath = getPath("/groups");
 
-        if(subs == null || subs.length == 0)
-            return path.toString();
+        if (!exists(groupBasePath))
+            return;
 
-        for(Object sub: subs){
-            String dir = sub.toString();
-            path.append(dir.startsWith("/") ? dir : ("/" + dir));
+        GetChildrenBuilder childrenBuilder = client.getChildren();
+
+        List<String> children = childrenBuilder.forPath(groupBasePath);
+        for (String c : children) {
+            logger.debug("group : {}", c);
+            //非目标组
+            if (StringUtils.isEmpty(groupId) || !groupId.equalsIgnoreCase(c))
+                continue;
+            String path = getPath("/groups", c);
+            List<String> nodes = childrenBuilder.forPath(path);
+
+            for (String node : nodes) {
+                String wholePath = getPath("/groups", c, node);
+
+                if (type == 1) {
+                    if (value.equals(node)) {
+                        client.delete().forPath(wholePath);
+                        break;
+                    }
+                } else {
+                    Node nodeData = (Node) SerializeUtil.unserialize(client.getData().forPath(wholePath));
+                    if (value.equalsIgnoreCase(nodeData.getNodeId())) {
+                        client.delete().forPath(wholePath);
+                        break;
+                    }
+                }
+            }
         }
-
-        return path.toString();
     }
 
     private boolean exists(String path) throws Exception {
@@ -597,8 +593,8 @@ public class GroupNodeManager {
 
     private boolean touch(String path, boolean createNotExists) throws Exception {
         ExistsBuilder existsBuilder = client.checkExists();
-        if (existsBuilder.forPath(path) == null){
-            if(createNotExists){
+        if (existsBuilder.forPath(path) == null) {
+            if (createNotExists) {
                 logger.debug("path :{} not exists , need create ", path);
                 client.create().forPath(path);
                 return true;
@@ -632,7 +628,6 @@ public class GroupNodeManager {
 
         return null;
     }
-
 
 
     private String getNodePathInGroup(String hostname) {
