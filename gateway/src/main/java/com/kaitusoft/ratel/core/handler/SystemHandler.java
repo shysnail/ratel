@@ -115,7 +115,6 @@ public class SystemHandler extends Processor {
                 //chunked 需计算实际写出数量去掉head长度
                 Long headLen;
                 headLen = context.get(ContextAttribute.CTX_RES_SENT_HEAD);
-                bodyLen = response.bytesWritten() - headLen;
                 if(headLen != null)
                     bodyLen = response.bytesWritten() - headLen;
                 else{
