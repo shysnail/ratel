@@ -295,20 +295,12 @@ public class ServerVerticle extends AbstractVerticle {
     private void createHttpServer(boolean ssl, int port, Ssl cert, Handler<AsyncResult<HttpServer>> result) {
         HttpServerOptions serverOptions = new HttpServerOptions();
         serverOptions.setPort(port);
-        final Router refRouter;
-        if (ssl)
-            refRouter = Router.router(vertx);
-        else
-            refRouter = Router.router(vertx);
+        Router refRouter = Router.router(vertx);
 
         refRouter.route().order(Integer.MAX_VALUE).handler(notfound -> {
             HttpServerResponse response = notfound.response();
             response.setStatusCode(HttpResponseStatus.NOT_FOUND.code()).end("not found");
         });
-
-//        refRouter.route().failureHandler(fail -> {
-//            fail.next();
-//        });
 
         // 创建https服务器
         if (ssl) {
@@ -362,7 +354,6 @@ public class ServerVerticle extends AbstractVerticle {
 
             server.listen(serverOptions.getPort(), startResult -> {
                 if (startResult.succeeded()) {
-//                    ROUTER_MAP.put(serverOptions.getPort(), refRouter);
                     result.handle(Future.succeededFuture(server));
                 } else {
                     result.handle(Future.failedFuture(startResult.cause()));
@@ -394,9 +385,8 @@ public class ServerVerticle extends AbstractVerticle {
 
         Route route = newRoute(path, routeMethods, router);
         routes.add(route);
-//        route.handler(new VHostHandler(app.getVhost()));
 
-        routeBase(path, route);
+        routeBase(path.getApp(), route);
 
         route.handler(new SystemHandler(vertx, app, path));
 
@@ -467,10 +457,7 @@ public class ServerVerticle extends AbstractVerticle {
     }
 
 
-    private void routeBase(Api api, Route route){
-        App app = api.getApp();
-//        Route route = router.route();
-
+    private void routeBase(App app, Route route){
         String[] ipBlanklist = app.getPreference().getIpBlacklist();
         if (ipBlanklist != null && ipBlanklist.length > 0)
             route.handler(new IpFilterHandler(ipBlanklist));
@@ -495,7 +482,7 @@ public class ServerVerticle extends AbstractVerticle {
             route.handler(CookieHandler.create()).handler(sessionHandler);
         }
 
-        route.handler((context) -> {
+        route.handler(context -> {
             HttpServerRequest request = context.request();
             if (request.method().equals(HttpMethod.POST) || request.method().equals(HttpMethod.PUT)) {
                 context.request().setExpectMultipart(true);
