@@ -77,7 +77,6 @@ public class SystemHandler extends Processor {
                 response.setStatusCode(result.getCode()).putHeader(HttpHeaders.CONTENT_TYPE, result.getContentType()).end(result.getContent().toString());
             else
                 response.setStatusCode(HttpResponseStatus.NOT_FOUND.code()).end("暂停提供服务");
-
             return;
         }
 
