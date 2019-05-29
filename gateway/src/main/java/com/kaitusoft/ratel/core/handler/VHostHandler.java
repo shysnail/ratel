@@ -3,7 +3,6 @@ package com.kaitusoft.ratel.core.handler;
 import com.kaitusoft.ratel.handler.Processor;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.VirtualHostHandler;
 
 import java.util.regex.Pattern;
 
@@ -53,7 +52,7 @@ public class VHostHandler extends Processor {
                 if(match) {
                     context.next();
                 } else {     //host不匹配，不处理，交由后续的route处理
-//                    context.fail(HttpResponseStatus.NOT_FOUND.code());
+                    context.fail(HttpResponseStatus.NOT_FOUND.code());
                     return;
                 }
             }

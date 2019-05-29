@@ -1,32 +1,29 @@
 package com.kaitusoft.ratel.core.model;
 
 import com.kaitusoft.ratel.ContextAttribute;
-import io.vertx.core.http.HttpHeaders;
 import io.vertx.ext.web.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.*;
-import org.apache.logging.log4j.core.appender.AsyncAppender;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.RollingFileAppender;
 import org.apache.logging.log4j.core.appender.rolling.DefaultRolloverStrategy;
 import org.apache.logging.log4j.core.appender.rolling.TimeBasedTriggeringPolicy;
 import org.apache.logging.log4j.core.appender.rolling.TriggeringPolicy;
-import org.apache.logging.log4j.core.async.AsyncLogger;
 import org.apache.logging.log4j.core.async.AsyncLoggerConfig;
 import org.apache.logging.log4j.core.config.AppenderRef;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.Property;
-import org.apache.logging.log4j.core.filter.ThreadContextMapFilter;
 import org.apache.logging.log4j.core.layout.PatternLayout;
-import org.apache.logging.log4j.core.util.KeyValuePair;
 
 import java.nio.charset.Charset;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

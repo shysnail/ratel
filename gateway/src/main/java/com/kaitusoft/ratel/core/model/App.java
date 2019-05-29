@@ -13,6 +13,7 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Route;
+import io.vertx.ext.web.Router;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -20,8 +21,8 @@ import lombok.ToString;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /**
  * @author frog.w
@@ -73,14 +74,27 @@ public class App {
 
     private Map<Integer, List<Route>> apiRoutes = new HashMap<>();
 
+    private Router router;
+
     private Map<Integer, Result> customResult = null; //new ConcurrentHashMap<>(8, 1.0f, 4);
 
+
+    private Pattern[] regexs;
 
     public App(AppOption option) throws Exception {
         this.name = option.getName();
         this.id = option.getId();
         if (!StringUtils.isEmpty(option.getVhost()) && !"*".equals(option.getVhost().trim())) {
             vhost = option.getVhost().split(" ");
+
+            if(vhost != null && vhost.length > 0){
+                regexs = new Pattern[vhost.length];
+
+                for(int i = 0; i < vhost.length; i ++){
+                    String vh = vhost[i];
+                    regexs[i] = Pattern.compile("^" + vh.replaceAll("\\.", "\\\\.").replaceAll("[*]", "(.*?)") + "$", 2);
+                }
+            }
         }
 
         this.port = option.getPort();
@@ -176,6 +190,35 @@ public class App {
         });
 
         apiRoutes.clear();
+    }
+
+    public boolean match(String requestHost){
+        if(regexs == null)
+            return true;
+
+        boolean match = false;
+        String[] var4 = requestHost.split(":");
+        int var5 = var4.length;
+
+        for(int var6 = 0; var6 < var5; ++var6) {
+            String h = var4[var6];
+            if(matchAny(h)){
+                match = true;
+                break;
+            }
+        }
+
+        return match;
+    }
+
+    private boolean matchAny(String host){
+        for(Pattern regex : regexs){
+            if(regex.matcher(host).matches()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public Api getDeployApi(Integer id){

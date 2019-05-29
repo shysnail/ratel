@@ -1,8 +1,6 @@
 package com.kaitusoft.ratel.core.verticle;
 
-import com.kaitusoft.ratel.console.model.ErrorInfo;
 import com.kaitusoft.ratel.core.common.Event;
-import com.kaitusoft.ratel.core.common.ProtocolEnum;
 import com.kaitusoft.ratel.core.common.StatusCode;
 import com.kaitusoft.ratel.core.handler.IpFilterHandler;
 import com.kaitusoft.ratel.core.handler.SystemHandler;
@@ -19,7 +17,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.*;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.PemKeyCertOptions;
@@ -39,6 +36,8 @@ import org.slf4j.LoggerFactory;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * @author frog.w
@@ -48,16 +47,21 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ServerVerticle extends AbstractVerticle {
 
-    private static final Logger logger = LoggerFactory.getLogger(ServerVerticle.class);
+    private final Logger logger = LoggerFactory.getLogger(ServerVerticle.class);
 
-    private static final Map<Integer, App> APPS = new HashMap<>();
+    private final Map<Integer, App> APPS = new ConcurrentHashMap<>(16, 0.75f, 4);
 
-    private static final Map<Integer, Router> ROUTER_MAP = new HashMap<>();
+    /**
+     * 有序集合，根据app vhost顺序进行匹配
+     */
+    private final Queue<App> MATH_QUEUE = new ConcurrentLinkedQueue<>();
+//    private static final Map<Integer, Router> ROUTER_MAP = new HashMap<>();
 
-    private static final Map<Integer, HttpServer> SERVER = new HashMap<>();
+    private final Map<Integer, HttpServer> SERVER = new HashMap<>();
 
-    private static final Map<Integer, Set> APP_ON_PORT = new HashMap<>();
+    private final Map<Integer, Set> APP_ON_PORT = new HashMap<>();
 
+    private final Map<String, Router> HOST_ROUTER_MAP = new ConcurrentHashMap<>(16, 0.75f, 4);
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -67,8 +71,8 @@ public class ServerVerticle extends AbstractVerticle {
 
     public void stop() throws Exception {
         APPS.clear();
-        ROUTER_MAP.clear();
         APP_ON_PORT.clear();
+        HOST_ROUTER_MAP.clear();
 
         stopServer(false);
         SERVER.clear();
@@ -138,6 +142,8 @@ public class ServerVerticle extends AbstractVerticle {
         if(app == null) {
             try {
                 app = new App(appOption);
+                Router router = Router.router(vertx);
+                app.setRouter(router);
                 APPS.put(app.getId(), app);
             } catch (Exception e) {
                 logger.error("parse app json error:", e);
@@ -154,11 +160,11 @@ public class ServerVerticle extends AbstractVerticle {
                 logger.debug("no Server run on port:{}, now create...", port);
                 createHttpServer(port, res -> {
                     if (res.succeeded()) {
-                        logger.debug("Server Created! port:{}", port);
+                        logger.debug("HTTP Server Created! port:{}", port);
                         SERVER.put(port, res.result());
                         http.complete();
                     } else {
-                        logger.error("Server ERROR! port:{}", port);
+                        logger.error("HTTP Server ERROR! port:{}", port);
                         http.fail(res.cause());
                     }
 
@@ -173,11 +179,11 @@ public class ServerVerticle extends AbstractVerticle {
                 logger.debug("no Server run on port:{}, now create...", sslPort);
                 createHttpsServer(sslPort, cert, res -> {
                     if (res.succeeded()) {
-                        logger.debug("Server Created! port:{}", sslPort);
+                        logger.debug("HTTPS Server Created! port:{}", sslPort);
                         SERVER.put(sslPort, res.result());
                         https.complete();
                     } else {
-                        logger.error("Server ERROR! port:{}", sslPort);
+                        logger.error("HTTPS Server ERROR! port:{}", sslPort);
                         https.fail(res.cause());
                     }
                 });
@@ -221,11 +227,7 @@ public class ServerVerticle extends AbstractVerticle {
 
         api.buildProxy(useHttpClient);
 
-        route(api, ROUTER_MAP.get(app.getPort()));
-
-        if(app.getSsl() != null && app.getSsl().getPort() > 0){
-            route(api, ROUTER_MAP.get(app.getSsl().getPort()));
-        }
+        route(api, app.getRouter());
 
         message.reply(1);
     }
@@ -329,7 +331,6 @@ public class ServerVerticle extends AbstractVerticle {
                 result.handle(Future.failedFuture(MessageFormat.format("不支持的证书类型:{0}，目前支持 PEM，PFX，JKS", cert.getCertType())));
                 return;
             }
-
         }
 
         if (vertx.isNativeTransportEnabled()) {
@@ -338,12 +339,30 @@ public class ServerVerticle extends AbstractVerticle {
 
         try {
             HttpServer server = vertx.createHttpServer(serverOptions);
+            server.requestHandler(request -> {
+                String host = request.host();
+                Router useRouter = HOST_ROUTER_MAP.get(host);
+                if(useRouter != null){
+                    useRouter.handle(request);
+                }else{
+                    Set<Map.Entry<Integer, App>> appSet =  APPS.entrySet();
+                    for(Map.Entry<Integer, App> entry : appSet){
+                        App app = entry.getValue();
+                        if(app.match(host)) {
+                            Router router = app.getRouter();
+                            HOST_ROUTER_MAP.put(host, router);
+                            router.handle(request);
+                            return;
+                        }
+                    }
 
-            server.requestHandler(refRouter::handle);
+                    refRouter.handle(request);
+                }
+            });
 
             server.listen(serverOptions.getPort(), startResult -> {
                 if (startResult.succeeded()) {
-                    ROUTER_MAP.put(serverOptions.getPort(), refRouter);
+//                    ROUTER_MAP.put(serverOptions.getPort(), refRouter);
                     result.handle(Future.succeededFuture(server));
                 } else {
                     result.handle(Future.failedFuture(startResult.cause()));
@@ -375,7 +394,7 @@ public class ServerVerticle extends AbstractVerticle {
 
         Route route = newRoute(path, routeMethods, router);
         routes.add(route);
-        route.handler(new VHostHandler(app.getVhost()));
+//        route.handler(new VHostHandler(app.getVhost()));
 
         routeBase(path, route);
 

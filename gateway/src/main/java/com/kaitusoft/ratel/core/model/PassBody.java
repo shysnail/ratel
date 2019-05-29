@@ -5,7 +5,6 @@ import com.kaitusoft.ratel.core.model.option.DataDecoderOption;
 import com.kaitusoft.ratel.core.model.option.PassBodyOption;
 import com.kaitusoft.ratel.util.ResourceUtil;
 import com.kaitusoft.ratel.util.StringUtils;
-import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;

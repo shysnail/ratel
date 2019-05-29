@@ -1,6 +1,5 @@
 package com.kaitusoft.ratel.cache.redis;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;

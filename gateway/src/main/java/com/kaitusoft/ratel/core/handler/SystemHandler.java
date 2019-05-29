@@ -2,7 +2,6 @@ package com.kaitusoft.ratel.core.handler;
 
 import com.kaitusoft.ratel.ContextAttribute;
 import com.kaitusoft.ratel.Result;
-import com.kaitusoft.ratel.cluster.ClusterVerticle;
 import com.kaitusoft.ratel.core.common.Configuration;
 import com.kaitusoft.ratel.core.common.Event;
 import com.kaitusoft.ratel.core.common.ProtocolEnum;
@@ -16,7 +15,6 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import java.util.Date;

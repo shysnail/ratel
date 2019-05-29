@@ -1,6 +1,5 @@
 package com.kaitusoft.ratel.cluster;
 
-import com.kaitusoft.ratel.core.common.Configuration;
 import com.kaitusoft.ratel.core.common.Event;
 import com.kaitusoft.ratel.core.model.vo.Node;
 import io.vertx.core.*;

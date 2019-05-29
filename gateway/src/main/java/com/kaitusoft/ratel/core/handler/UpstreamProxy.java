@@ -7,8 +7,6 @@ import com.kaitusoft.ratel.core.model.Target;
 import com.kaitusoft.ratel.core.model.option.ProxyOption;
 import com.kaitusoft.ratel.core.model.option.UpstreamOption;
 import com.kaitusoft.ratel.util.StringUtils;
-import com.sun.org.apache.bcel.internal.generic.RET;
-import com.sun.org.apache.regexp.internal.RE;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
