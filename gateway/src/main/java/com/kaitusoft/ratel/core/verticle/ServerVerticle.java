@@ -142,8 +142,8 @@ public class ServerVerticle extends AbstractVerticle {
             try {
                 app = new App(appOption);
                 Router router = Router.router(vertx);
-                app.setRouter(router);
                 routeApp(app, router);
+                app.setRouter(router);
                 APPS.put(app.getId(), app);
             } catch (Exception e) {
                 logger.error("parse app json error:", e);
