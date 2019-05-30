@@ -11,6 +11,9 @@ public class ContextAttribute {
     public static final String CTX_ATTR_FAIL_COUNT = "ctx.fail.count";
     public static final String CTX_ATTR_FAIL = "ctx.attr.fail";
 
+    public static final String CTX_ATTR_TOUCH_APP = "route.fail.apps";
+
+
     public static final String CTX_ATTR_PATH_ID = "path.id";
     public static final String CTX_ATTR_APP = "app";
     public static final String CTX_ATTR_PATH = "path";

@@ -1,5 +1,6 @@
 package com.kaitusoft.ratel.core.verticle;
 
+import com.kaitusoft.ratel.ContextAttribute;
 import com.kaitusoft.ratel.core.common.Event;
 import com.kaitusoft.ratel.core.common.StatusCode;
 import com.kaitusoft.ratel.core.handler.IpFilterHandler;
@@ -142,6 +143,7 @@ public class ServerVerticle extends AbstractVerticle {
                 app = new App(appOption);
                 Router router = Router.router(vertx);
                 app.setRouter(router);
+                routeApp(app, router);
                 APPS.put(app.getId(), app);
             } catch (Exception e) {
                 logger.error("parse app json error:", e);
@@ -199,6 +201,101 @@ public class ServerVerticle extends AbstractVerticle {
         });
     }
 
+    private void routeApp(App app, Router router) {
+        Route route = router.route();
+        String[] ipBlanklist = app.getPreference().getIpBlacklist();
+        if (ipBlanklist != null && ipBlanklist.length > 0)
+            route.handler(new IpFilterHandler(ipBlanklist));
+
+        /**
+         * 设置服务选项，如上传路径，请求体大小
+         */
+//        refRouter.route().handler(BodyHandler.create());
+
+        SessionOption sessionOption = app.getSessionOption();
+        if (sessionOption != null) {
+
+            SessionStore sessionStore;
+            if (vertx.isClustered()) {
+                sessionStore = ClusteredSessionStore.create(vertx);
+            } else {
+                sessionStore = LocalSessionStore.create(vertx);
+            }
+            SessionHandler sessionHandler = SessionHandler.create(sessionStore);
+            sessionHandler.setSessionCookieName(sessionOption.getName());
+            sessionHandler.setSessionTimeout(sessionOption.getInterval() * 1000);
+            route.handler(CookieHandler.create()).handler(sessionHandler);
+        }
+
+        route.handler(context -> {
+            HttpServerRequest request = context.request();
+            if (request.method().equals(HttpMethod.POST) || request.method().equals(HttpMethod.PUT)) {
+                context.request().setExpectMultipart(true);
+            }
+            context.next();
+        });
+
+        if (app.getCrossDomain() != null) {
+            CrossDomain crossDomain = app.getCrossDomain();
+            CorsHandler corsHandler = CorsHandler.create(crossDomain.getAllowedOrigin());
+            if (crossDomain.getAllowedHeaders() != null) {
+                corsHandler.allowedHeaders(crossDomain.getAllowedHeaders());
+            }
+            corsHandler.allowCredentials(crossDomain.isAllowCredentials());
+            if (crossDomain.getExposedHeaders() != null) {
+                corsHandler.exposedHeaders(crossDomain.getExposedHeaders());
+            }
+            if (crossDomain.getAllowedMethods() != null) {
+                corsHandler.allowedMethods(crossDomain.getAllowedMethods());
+            }
+            corsHandler.maxAgeSeconds(crossDomain.getMaxAgeSeconds());
+            route.handler(corsHandler);
+        }
+
+        //挂载静态目录
+        if (!StringUtils.isEmpty(app.getPreference().getDocRoot())) {
+            route.handler(StaticHandler.create(app.getPreference().getDocRoot()).setCachingEnabled(true));
+        }
+
+        routingCommonStatus(app, route);
+
+
+        /**
+         * 当前app没有合适的路由，判断其它app是否有合适的路由
+         */
+        router.route().order(Integer.MAX_VALUE).handler(missRouteContext -> {
+            String host = missRouteContext.request().host();
+            List<Integer> notInApp = missRouteContext.get(ContextAttribute.CTX_ATTR_TOUCH_APP);
+            if(notInApp == null){
+                notInApp = new ArrayList();
+            }
+            notInApp.add(app.getId());
+            missRouteContext.put(ContextAttribute.CTX_ATTR_TOUCH_APP, notInApp);
+
+            Set<Map.Entry<Integer, App>> appSet = APPS.entrySet();
+            for (Map.Entry<Integer, App> entry : appSet) {
+                App nextApp = entry.getValue();
+                if (!notInApp.contains(nextApp.getId()) && nextApp.match(host) ) {
+                    Router nextRouter = nextApp.getRouter();
+                    HOST_ROUTER_MAP.put(host, nextRouter);
+                    nextRouter.handle(missRouteContext.request());
+                    return;
+                }
+            }
+
+            //如果是这里，说明没找到，调用404返回
+        });
+
+    }
+
+    /**
+     * 给404。500等等常规响应做路由配置
+     */
+    private void routingCommonStatus(App app, Route route) {
+
+    }
+
+
 
     protected void startApi(Message<JsonObject> message) {
         ApiOption apiOption = message.body().mapTo(ApiOption.class);
@@ -226,6 +323,8 @@ public class ServerVerticle extends AbstractVerticle {
         api.buildProxy(useHttpClient);
 
         route(api, app.getRouter());
+
+
 
         message.reply(1);
     }
@@ -384,8 +483,6 @@ public class ServerVerticle extends AbstractVerticle {
         Route route = newRoute(path, routeMethods, router);
         routes.add(route);
 
-        routeBase(path.getApp(), route);
-
         route.handler(new SystemHandler(vertx, app, path));
 
         Processor limit = preference.getAccessLimit();
@@ -453,73 +550,6 @@ public class ServerVerticle extends AbstractVerticle {
 
         return route.path(path.getPath());
     }
-
-
-    private void routeBase(App app, Route route) {
-        String[] ipBlanklist = app.getPreference().getIpBlacklist();
-        if (ipBlanklist != null && ipBlanklist.length > 0)
-            route.handler(new IpFilterHandler(ipBlanklist));
-
-        /**
-         * 设置服务选项，如上传路径，请求体大小
-         */
-//        refRouter.route().handler(BodyHandler.create());
-
-        SessionOption sessionOption = app.getSessionOption();
-        if (sessionOption != null) {
-
-            SessionStore sessionStore;
-            if (vertx.isClustered()) {
-                sessionStore = ClusteredSessionStore.create(vertx);
-            } else {
-                sessionStore = LocalSessionStore.create(vertx);
-            }
-            SessionHandler sessionHandler = SessionHandler.create(sessionStore);
-            sessionHandler.setSessionCookieName(sessionOption.getName());
-            sessionHandler.setSessionTimeout(sessionOption.getInterval() * 1000);
-            route.handler(CookieHandler.create()).handler(sessionHandler);
-        }
-
-        route.handler(context -> {
-            HttpServerRequest request = context.request();
-            if (request.method().equals(HttpMethod.POST) || request.method().equals(HttpMethod.PUT)) {
-                context.request().setExpectMultipart(true);
-            }
-            context.next();
-        });
-
-        if (app.getCrossDomain() != null) {
-            CrossDomain crossDomain = app.getCrossDomain();
-            CorsHandler corsHandler = CorsHandler.create(crossDomain.getAllowedOrigin());
-            if (crossDomain.getAllowedHeaders() != null) {
-                corsHandler.allowedHeaders(crossDomain.getAllowedHeaders());
-            }
-            corsHandler.allowCredentials(crossDomain.isAllowCredentials());
-            if (crossDomain.getExposedHeaders() != null) {
-                corsHandler.exposedHeaders(crossDomain.getExposedHeaders());
-            }
-            if (crossDomain.getAllowedMethods() != null) {
-                corsHandler.allowedMethods(crossDomain.getAllowedMethods());
-            }
-            corsHandler.maxAgeSeconds(crossDomain.getMaxAgeSeconds());
-            route.handler(corsHandler);
-        }
-
-        //挂载静态目录
-        if (!StringUtils.isEmpty(app.getPreference().getDocRoot())) {
-            route.handler(StaticHandler.create(app.getPreference().getDocRoot()).setCachingEnabled(true));
-        }
-
-        routingCommonStatus(app, route);
-    }
-
-    /**
-     * 给404。500等等常规响应做路由配置
-     */
-    private void routingCommonStatus(App app, Route route) {
-
-    }
-
 
     private HttpClientOptions buildHttpClientOption(UpstreamOption upstreamOption) {
         HttpClientOptions httpClientOptions = new HttpClientOptions();
