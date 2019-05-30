@@ -96,8 +96,9 @@ public class ServerVerticle extends AbstractVerticle {
                 continue;
             removeAppFromPort(app.getId());
             app.unDeployAllApi();
-
             APPS.remove(app.getId());
+
+            removeRouter(app.getRouter());
         }
 
         JsonObject result = new JsonObject();
@@ -107,6 +108,20 @@ public class ServerVerticle extends AbstractVerticle {
         stopServer(true);
 
         message.reply(result);
+    }
+
+    private void removeRouter(Router router) {
+        Set<Map.Entry<String, Router>> routerSet = HOST_ROUTER_MAP.entrySet();
+        List<String> removeKeys = new ArrayList<>();
+        HOST_ROUTER_MAP.forEach((k, v) -> {
+            if(v == router){ //如果就是一个对象。删除key
+                removeKeys.add(k);
+            }
+        });
+
+        removeKeys.forEach(k -> {
+            HOST_ROUTER_MAP.remove(k);
+        });
     }
 
     private void stopServer(boolean filterIdle) {
