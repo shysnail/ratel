@@ -48,19 +48,13 @@ public class ServerVerticle extends AbstractVerticle {
 
     private final Logger logger = LoggerFactory.getLogger(ServerVerticle.class);
 
-    private final Map<Integer, App> APPS = new ConcurrentHashMap<>(16, 0.75f, 4);
+    private static final Map<Integer, App> APPS = new ConcurrentHashMap<>(16, 0.75f, 4);
 
-    /**
-     * 有序集合，根据app vhost顺序进行匹配
-     */
-    private final Queue<App> MATH_QUEUE = new ConcurrentLinkedQueue<>();
-//    private static final Map<Integer, Router> ROUTER_MAP = new HashMap<>();
+    private static final Map<Integer, HttpServer> SERVER = new HashMap<>();
 
-    private final Map<Integer, HttpServer> SERVER = new HashMap<>();
+    private static final Map<Integer, Set> APP_ON_PORT = new HashMap<>();
 
-    private final Map<Integer, Set> APP_ON_PORT = new HashMap<>();
-
-    private final Map<String, Router> HOST_ROUTER_MAP = new ConcurrentHashMap<>(16, 0.75f, 4);
+    private static final Map<String, Router> HOST_ROUTER_MAP = new ConcurrentHashMap<>(16, 0.75f, 4);
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -170,13 +164,13 @@ public class ServerVerticle extends AbstractVerticle {
         List<Future> futureList = new ArrayList<>();
 
         int port = app.getPort();
-        if (SERVER.get(port) == null) {
+//        if (SERVER.get(port) == null) {
             futureList.add(Future.<Void>future(http -> {
                 logger.debug("no Server run on port:{}, now create...", port);
                 createHttpServer(port, res -> {
                     if (res.succeeded()) {
                         logger.debug("HTTP Server Created! port:{}", port);
-                        SERVER.put(port, res.result());
+//                        SERVER.put(port, res.result());
                         http.complete();
                     } else {
                         logger.error("HTTP Server ERROR! port:{}", port);
@@ -185,17 +179,17 @@ public class ServerVerticle extends AbstractVerticle {
 
                 });
             }));
-        }
+//        }
 
         final Ssl cert = app.getSsl();
         final int sslPort = cert != null ? cert.getPort() : -1;
-        if (sslPort > 0 && SERVER.get(sslPort) == null) {
+        if (sslPort > 0){ // && SERVER.get(sslPort) == null) {
             futureList.add(Future.<Void>future(https -> {
                 logger.debug("no Server run on port:{}, now create...", sslPort);
                 createHttpsServer(sslPort, cert, res -> {
                     if (res.succeeded()) {
                         logger.debug("HTTPS Server Created! port:{}", sslPort);
-                        SERVER.put(sslPort, res.result());
+//                        SERVER.put(sslPort, res.result());
                         https.complete();
                     } else {
                         logger.error("HTTPS Server ERROR! port:{}", sslPort);
@@ -404,7 +398,14 @@ public class ServerVerticle extends AbstractVerticle {
         createHttpServer(false, port, null, result);
     }
 
-    private void createHttpServer(boolean ssl, int port, Ssl cert, Handler<AsyncResult<HttpServer>> result) {
+    private synchronized void createHttpServer(boolean ssl, int port, Ssl cert, Handler<AsyncResult<HttpServer>> result) {
+        HttpServer existServer = SERVER.get(port);
+        if(existServer != null){
+            logger.info("HTTP{} server on port {} already exists or creating", ssl ? "S":"", port);
+            result.handle(Future.succeededFuture(existServer));
+            return;
+        }
+
         HttpServerOptions serverOptions = new HttpServerOptions();
         serverOptions.setPort(port);
         Router refRouter = Router.router(vertx);
@@ -442,7 +443,9 @@ public class ServerVerticle extends AbstractVerticle {
         }
 
         try {
+            logger.info("Creating HTTP{} server on port:{}", ssl ? "S":"", port);
             HttpServer server = vertx.createHttpServer(serverOptions);
+            SERVER.put(port, server);
             server.requestHandler(request -> {
                 String host = request.host();
                 Router useRouter = HOST_ROUTER_MAP.get(host);

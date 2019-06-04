@@ -209,15 +209,15 @@ public class UpstreamProxy extends Proxy {
 
         HttpServerResponse clientResponse = context.response();
         upstream.exceptionHandler(e -> {
+            if (clientResponse.ended() || clientResponse.closed()) {
+                return;
+            }
+
             Integer errCount = context.get(ContextAttribute.CTX_ATTR_FAIL_COUNT);
             if (errCount == null)
                 errCount = 0;
 
             logger.error("upstream error {} times :", errCount + 1, e);
-
-            if (clientResponse.ended() || clientResponse.closed()) {
-                return;
-            }
 
             /**
              * 当前转发目标 重试次数
