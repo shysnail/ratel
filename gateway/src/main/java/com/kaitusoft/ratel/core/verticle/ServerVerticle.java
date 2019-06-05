@@ -471,6 +471,7 @@ public class ServerVerticle extends AbstractVerticle {
                 if (startResult.succeeded()) {
                     result.handle(Future.succeededFuture(server));
                 } else {
+                    SERVER.remove(port);
                     result.handle(Future.failedFuture(startResult.cause()));
                 }
             });
