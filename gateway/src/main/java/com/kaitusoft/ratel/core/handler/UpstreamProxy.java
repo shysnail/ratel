@@ -83,9 +83,10 @@ public class UpstreamProxy extends Proxy {
             }
         }
 
-        context.vertx().runOnContext(upstream -> {
-            doUpstream(context, clientRequest, clientHeaders);
-        });
+//        context.vertx().runOnContext(upstream -> {
+//        });
+
+        doUpstream(context, clientRequest, clientHeaders);
     }
 
     private void doUpstream(RoutingContext context, HttpServerRequest clientRequest, MultiMap clientHeaders) {
@@ -312,7 +313,8 @@ public class UpstreamProxy extends Proxy {
     private boolean hasBody(HttpServerRequest request) {
         if (request.isEnded())
             return false;
-        return request.method().equals(HttpMethod.POST) || request.method().equals(HttpMethod.PUT);
+        HttpMethod reqMethod = request.method();
+        return HttpMethod.POST.equals(reqMethod) || HttpMethod.PUT.equals(reqMethod);
     }
 
     private boolean needChunked(HttpClientResponse upstreamResponse) {
