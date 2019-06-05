@@ -83,10 +83,9 @@ public class UpstreamProxy extends Proxy {
             }
         }
 
-//        context.vertx().runOnContext(upstream -> {
-//        });
-
-        doUpstream(context, clientRequest, clientHeaders);
+        context.vertx().runOnContext(upstream -> {
+            doUpstream(context, clientRequest, clientHeaders);
+        });
     }
 
     private void doUpstream(RoutingContext context, HttpServerRequest clientRequest, MultiMap clientHeaders) {
