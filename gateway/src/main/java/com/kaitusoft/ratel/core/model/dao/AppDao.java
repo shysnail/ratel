@@ -24,10 +24,10 @@ public class AppDao extends BaseDao {
     private static final Logger logger = LoggerFactory.getLogger(AppDao.class);
     private static final String SQL_APP_ALL = "select * from app where 1=1 ";
     private static final String SQL_APP_GET = "select * from app where id=?";
-    private static final String SQL_APP_ADD = "insert into app(name, protocol, port, deploy_group, description, parameter)" +
-            " values(?,?,?,?,?,?)";
+    private static final String SQL_APP_ADD = "insert into app(name, protocol, port, deploy_group, description, parameter, vhost)" +
+            " values(?,?,?,?,?,?,?)";
     private static final String SQL_APP_COUNT_EXISTS = "select count(1) from app where port=? and id!=? union all select count(1) from app where name=? and id!=?";
-    private static final String SQL_APP_UPDATE = "update app set name=?, protocol=?, port=?, deploy_group=?, description=?, parameter=? where id=?";
+    private static final String SQL_APP_UPDATE = "update app set name=?, protocol=?, port=?, deploy_group=?, description=?, parameter=?, vhost=? where id=?";
     private static final String SQL_APP_DELETE = "delete from app where id=?";
     private static final String SQL_APP_COND = "select * from app where 1=1 ";
     private static final String SQL_APP_UPDATE_PROP = "update app set $CONDTIONS$ where id=?";
@@ -192,6 +192,7 @@ public class AppDao extends BaseDao {
                 params.add(app.getDeployGroup() == null ? 0 : app.getDeployGroup());
                 params.add(app.getDescription());
                 params.add(app.getParameter());
+                params.add(app.getVhost());
                 jdbcClient.updateWithParams(SQL_APP_ADD, params, addRes -> {
                     if (addRes.succeeded()) {
                         logger.debug("addApp:{} -> ok", app);
@@ -244,6 +245,7 @@ public class AppDao extends BaseDao {
                 params.add(app.getDeployGroup() == null ? 0 : app.getDeployGroup());
                 params.add(app.getDescription());
                 params.add(app.getParameter());
+                params.add(app.getVhost());
                 params.add(app.getId());
                 jdbcClient.updateWithParams(SQL_APP_UPDATE, params, addRes -> {
                     if (addRes.succeeded()) {
