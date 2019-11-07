@@ -24,7 +24,7 @@ import java.util.*;
  *          <p>
  *          write description here
  */
-public class NodeAction extends BaseAction{
+public class NodeAction extends BaseAction {
 
     private static Logger logger = LoggerFactory.getLogger(NodeAction.class);
 
@@ -167,12 +167,12 @@ public class NodeAction extends BaseAction{
         logger.debug("驱逐节点:{}", nodeId);
         HttpServerResponse response = context.response();
         context.vertx().eventBus().<JsonObject>send(Event.formatInternalAddress(Event.CLUSTER_GET_NODE), nodeId, res -> {
-            if(res.succeeded()){
+            if (res.succeeded()) {
                 JsonObject node = res.result().body();
 
                 Object data = nodeId;
                 String address = Event.formatInternalAddress(Event.CLUSTER_EXPEL_NODE);
-                if(node.getBoolean("online", false)) {
+                if (node.getBoolean("online", false)) {
                     data = new JsonObject().put("expel", true);
                     address = Event.formatAddress(Event.CLUSTER_HALT_NODE, nodeId);
                 }
@@ -189,7 +189,7 @@ public class NodeAction extends BaseAction{
                                 .end(Json.encode(new ExecuteResult(false, reply.cause().getMessage())));
                     }
                 });
-            }else{
+            } else {
                 logger.error("获取节点状态出错:", res.cause());
                 response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                         .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
@@ -200,20 +200,20 @@ public class NodeAction extends BaseAction{
     }
 
 
-    public void apps(RoutingContext context){
+    public void apps(RoutingContext context) {
         Vertx vertx = context.vertx();
         String nodeId = context.request().getParam("nodeId");
         logger.debug("查看节点 apps:{}", nodeId);
         HttpServerResponse response = context.response();
 
         vertx.eventBus().<JsonObject>send(Event.formatInternalAddress(Event.CLUSTER_GET_NODE), nodeId, res -> {
-            if(res.succeeded()){
+            if (res.succeeded()) {
                 JsonObject node = res.result().body();
                 String groupId = node.getString("groupId");
                 JsonObject params = new JsonObject();
                 params.put("deploy_group", groupId);
                 vertx.eventBus().<JsonArray>send(Event.formatInternalAddress(Event.FIND_APP_COND), params, apps -> {
-                    if(apps.succeeded()){
+                    if (apps.succeeded()) {
                         JsonArray appArray = apps.result().body();
 
                         Collection toNodes = new ArrayList();
@@ -230,17 +230,17 @@ public class NodeAction extends BaseAction{
                             }
                             logger.debug("获取节点app运行状态:{}", nodeResult);
                             Map<String, Integer> runningApps = new HashMap<>();
-                            for(int i = 0; i < nodeResult.size(); i ++){
+                            for (int i = 0; i < nodeResult.size(); i++) {
                                 JsonObject nodeDataJson = nodeResult.getJsonObject(i);
                                 JsonObject data = nodeDataJson.getJsonObject(nodeId);
-                                if(data == null)
+                                if (data == null)
                                     continue;
                                 boolean nodeSuccess = data.getBoolean("success");
-                                if(!nodeSuccess)
+                                if (!nodeSuccess)
                                     return;
 
                                 JsonArray nodeAppIds = data.getJsonArray("result");
-                                for(int x = 0; x < nodeAppIds.size(); x ++){
+                                for (int x = 0; x < nodeAppIds.size(); x++) {
                                     String nodeAppId = nodeAppIds.getString(x);
                                     runningApps.put(nodeAppId, 0);
                                 }
@@ -249,7 +249,7 @@ public class NodeAction extends BaseAction{
 
                             appArray.forEach(obj -> {
                                 JsonObject appJson = (JsonObject) obj;
-                                if(runningApps.get(appJson.getInteger("id").toString()) != null){
+                                if (runningApps.get(appJson.getInteger("id").toString()) != null) {
                                     appJson.put("realRunning", true);
                                 }
                                 appJson.remove("parameter");
@@ -258,14 +258,14 @@ public class NodeAction extends BaseAction{
                             response.putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                                     .end(Json.encode(appArray));
                         });
-                    }else{
+                    } else {
                         logger.error("未能查找到对应app ", apps.cause());
                         response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                                 .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                                 .end(Json.encode(new ExecuteResult(false, apps.cause().getMessage())));
                     }
                 });
-            }else{
+            } else {
                 logger.error("获取节点状态出错:", res.cause());
                 response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                         .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
@@ -275,7 +275,7 @@ public class NodeAction extends BaseAction{
     }
 
 
-    public void apis(RoutingContext context){
+    public void apis(RoutingContext context) {
         Vertx vertx = context.vertx();
         String nodeId = context.request().getParam("nodeId");
         String appId = context.request().getParam("appId");
@@ -305,21 +305,21 @@ public class NodeAction extends BaseAction{
                     } else {
                         nodeResult = new JsonArray();
                     }
-                    logger.debug("获取节点 app:{} - apis 运行状态:{}",appId, nodeResult);
+                    logger.debug("获取节点 app:{} - apis 运行状态:{}", appId, nodeResult);
 
                     Map<String, Integer> runningApps = new HashMap<>();
 
-                    for(int i = 0; i < nodeResult.size(); i ++){
+                    for (int i = 0; i < nodeResult.size(); i++) {
                         JsonObject nodeDataJson = nodeResult.getJsonObject(i);
                         JsonObject data = nodeDataJson.getJsonObject(nodeId);
-                        if(data == null)
+                        if (data == null)
                             continue;
                         boolean nodeSuccess = data.getBoolean("success");
-                        if(!nodeSuccess)
+                        if (!nodeSuccess)
                             return;
 
                         JsonArray nodeAppIds = data.getJsonArray("result");
-                        for(int x = 0; x < nodeAppIds.size(); x ++){
+                        for (int x = 0; x < nodeAppIds.size(); x++) {
                             String nodeAppId = nodeAppIds.getString(x);
                             runningApps.put(nodeAppId, 0);
                         }
@@ -328,7 +328,7 @@ public class NodeAction extends BaseAction{
 
                     apiArray.forEach(obj -> {
                         JsonObject appJson = (JsonObject) obj;
-                        if(runningApps.get(appJson.getInteger("id").toString()) != null){
+                        if (runningApps.get(appJson.getInteger("id").toString()) != null) {
                             appJson.put("realRunning", true);
                         }
                         appJson.remove("parameter");
@@ -343,7 +343,7 @@ public class NodeAction extends BaseAction{
 
         Future<Void> futureApp = Future.future(app -> {
             context.vertx().eventBus().<JsonObject>send(Event.formatInternalAddress(Event.GET_APP), appId, reply -> {
-                if(reply.succeeded()){
+                if (reply.succeeded()) {
                     JsonObject appJson = reply.result().body();
                     JsonObject appJsonVo = new JsonObject();
                     appJsonVo.put("id", appJson.getValue("id"));
@@ -356,11 +356,11 @@ public class NodeAction extends BaseAction{
         });
 
         CompositeFuture.all(futureApis, futureApp).setHandler(res -> {
-            if(res.succeeded()){
+            if (res.succeeded()) {
                 response
                         .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .end(Json.encode(result));
-            }else{
+            } else {
                 response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                         .putHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .end(Json.encode(new ExecuteResult(false, res.cause().getMessage())));

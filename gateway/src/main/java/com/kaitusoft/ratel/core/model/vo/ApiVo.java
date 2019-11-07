@@ -23,7 +23,7 @@ public class ApiVo extends ApiOption {
 
     private AppOption app;
 
-    private ApiExtendOption extendOption;
+    private transient ApiExtendOption extendOption;
 
     public JsonObject toModleJson() {
 //        JsonObject parameter = new JsonObject();

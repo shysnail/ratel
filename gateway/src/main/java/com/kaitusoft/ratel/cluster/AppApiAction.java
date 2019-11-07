@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  *          <p>
  *          write description here
  */
-public class AppApiAction extends BaseClusterAction{
+public class AppApiAction extends BaseClusterAction {
 
     public static final Logger logger = LoggerFactory.getLogger(AppApiAction.class);
 

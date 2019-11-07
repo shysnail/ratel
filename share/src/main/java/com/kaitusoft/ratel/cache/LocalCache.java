@@ -223,7 +223,7 @@ public class LocalCache implements ICacheCommand<String ,Object>{
         }
     }
 
-    class CheckOutOfDateSchedule implements Runnable {
+    static class CheckOutOfDateSchedule implements Runnable {
         /**
          * 具体内容存放的地方
          */

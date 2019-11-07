@@ -20,7 +20,7 @@ import java.util.Set;
  *          <p>
  *          write description here
  */
-public class User extends AbstractUser{
+public class User extends AbstractUser {
 
     private Set<String> myResources;
 
@@ -40,6 +40,7 @@ public class User extends AbstractUser{
 
     /**
      * 序列化自定义属性
+     *
      * @param buff
      */
     @Override
@@ -47,9 +48,9 @@ public class User extends AbstractUser{
         super.writeToBuffer(buff);
 
         JsonObject data = new JsonObject();
-        if(myResources != null)
+        if (myResources != null)
             data.put("resources", new JsonArray(new ArrayList(myResources)));
-        if(principal != null)
+        if (principal != null)
             data.put("principal", principal);
 
         Buffer dataBuffer = data.toBuffer();
@@ -58,6 +59,7 @@ public class User extends AbstractUser{
 
     /**
      * 反序列化自定义属性
+     *
      * @param pos
      * @param buffer
      * @return
@@ -65,11 +67,11 @@ public class User extends AbstractUser{
     @Override
     public int readFromBuffer(int pos, Buffer buffer) {
         int posLocal = super.readFromBuffer(pos, buffer);
-        if(buffer.length() < posLocal + 4)
+        if (buffer.length() < posLocal + 4)
             return posLocal;
 
         int dataLength = buffer.getInt(posLocal);
-        if(buffer.length() < posLocal + 4 + dataLength)
+        if (buffer.length() < posLocal + 4 + dataLength)
             return posLocal;
 
         posLocal += 4;
@@ -78,7 +80,7 @@ public class User extends AbstractUser{
 
         JsonObject jsonData = new JsonObject(new String(data));
         JsonArray resources = jsonData.getJsonArray("resources");
-        if(resources != null) {
+        if (resources != null) {
             myResources = new HashSet<>();
             resources.forEach(obj -> {
                 myResources.add((String) obj);
@@ -96,7 +98,7 @@ public class User extends AbstractUser{
         return principal;
     }
 
-    public void setPrincipal(JsonObject principal){
+    public void setPrincipal(JsonObject principal) {
         this.principal = principal;
     }
 

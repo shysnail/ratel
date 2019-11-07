@@ -19,7 +19,7 @@ public abstract class HandlerInterceptor implements Handler<RoutingContext> {
 
     private Set<String> excludes = new HashSet<>();
 
-    public HandlerInterceptor(){
+    public HandlerInterceptor() {
 
     }
 
@@ -33,15 +33,15 @@ public abstract class HandlerInterceptor implements Handler<RoutingContext> {
     @Override
     public void handle(RoutingContext context) {
         String path = context.request().path();
-        if(isExclude(path))
+        if (isExclude(path))
             context.next();
 
-        if(preHandle(context, context.request(), context.response())){
+        if (preHandle(context, context.request(), context.response())) {
             context.next();
         }
     }
 
-    protected boolean isExclude(String requestPath){
+    protected boolean isExclude(String requestPath) {
         for (String path : excludes) {
             if (StringUtils.isMatch(requestPath, path)) {
                 return true;

@@ -23,7 +23,7 @@ import java.util.Set;
  *          <p>
  *          write description here
  */
-public class LoginCheck implements Handler<RoutingContext>{
+public class LoginCheck implements Handler<RoutingContext> {
 
     /**
      * 排除某些路径，这种方法并不好
@@ -32,7 +32,7 @@ public class LoginCheck implements Handler<RoutingContext>{
      */
     private Set<String> excludes = new HashSet<>();
 
-    public LoginCheck(){
+    public LoginCheck() {
 
     }
 
@@ -48,8 +48,8 @@ public class LoginCheck implements Handler<RoutingContext>{
 
     public static LoginCheck create(String[] excludes) {
         LoginCheck check = new LoginCheck();
-        if(excludes != null){
-            for(String e : excludes){
+        if (excludes != null) {
+            for (String e : excludes) {
                 check.excludes.add(e);
             }
         }
@@ -59,18 +59,18 @@ public class LoginCheck implements Handler<RoutingContext>{
     @Override
     public void handle(RoutingContext context) {
         HttpServerRequest request = context.request();
-        if(isExclude(request.path())) {
+        if (isExclude(request.path())) {
             context.next();
-        }else{
+        } else {
             User user = context.session().get(ContextAttribute.SESSION_USER);
             if (user != null) {
                 context.setUser(user);
                 context.next();
-            }else {
+            } else {
                 String xhr = request.getHeader("X-Requested-With");
                 HttpServerResponse response = context.response();
                 if (!StringUtils.isEmpty(xhr)) {
-                    response.putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end(Json.encode(new ExecuteResult(false, new ErrorInfo(""+HttpResponseStatus.UNAUTHORIZED.code(), "请先登录再操作"))));
+                    response.putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end(Json.encode(new ExecuteResult(false, new ErrorInfo("" + HttpResponseStatus.UNAUTHORIZED.code(), "请先登录再操作"))));
                 } else {
                     response.setStatusCode(HttpResponseStatus.FOUND.code()).putHeader(HttpHeaders.CONTENT_TYPE, HttpHeaders.TEXT_HTML).putHeader(HttpHeaders.LOCATION, "/login.html").end();
                 }
@@ -79,8 +79,8 @@ public class LoginCheck implements Handler<RoutingContext>{
     }
 
 
-    protected boolean isExclude(String requestPath){
-        if(requestPath.equalsIgnoreCase("/favicon.ico"))
+    protected boolean isExclude(String requestPath) {
+        if (requestPath.equalsIgnoreCase("/favicon.ico"))
             return true;
         for (String path : excludes) {
             if (StringUtils.isMatch(requestPath, path)) {

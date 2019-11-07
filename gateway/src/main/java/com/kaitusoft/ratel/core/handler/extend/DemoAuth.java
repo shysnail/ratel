@@ -28,7 +28,7 @@ public class DemoAuth extends AbstractAuthProcessor {
         MultiMap headers = context.request().headers();
         String token = headers.get("accessToken");
         String token2 = context.request().getParam("accessToken");
-        if(!StringUtils.isEmpty(token) || !StringUtils.isEmpty(token2))
+        if (!StringUtils.isEmpty(token) || !StringUtils.isEmpty(token2))
             return true;
 
         return false;

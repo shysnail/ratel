@@ -5,7 +5,6 @@ import com.kaitusoft.ratel.core.model.option.DataDecoderOption;
 import com.kaitusoft.ratel.core.model.option.PassBodyOption;
 import com.kaitusoft.ratel.util.ResourceUtil;
 import com.kaitusoft.ratel.util.StringUtils;
-import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
@@ -155,7 +154,7 @@ public class PassBody {
         if (decoder) { //如果需要解码
             clientRequest.bodyHandler(buffer -> {
                 //在这里进行解码
-                if(dataDecoder != null) {
+                if (dataDecoder != null) {
                     Buffer decoded = Buffer.buffer(dataDecoder.decode(buffer));
                     buffer = decoded;
                 }

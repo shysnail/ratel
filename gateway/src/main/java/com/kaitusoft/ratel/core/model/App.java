@@ -8,15 +8,21 @@ import com.kaitusoft.ratel.core.model.option.SessionOption;
 import com.kaitusoft.ratel.core.model.option.UpstreamOption;
 import com.kaitusoft.ratel.core.model.po.AppOption;
 import com.kaitusoft.ratel.util.StringUtils;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Route;
+import io.vertx.ext.web.Router;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /**
  * @author frog.w
@@ -25,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *          write description here
  */
 @Data
-@ToString(exclude={"apis"})
+@ToString(exclude = {"apis"})
 @NoArgsConstructor
 public class App {
     public static final int RUNNING = 1;
@@ -66,14 +72,29 @@ public class App {
 
     private Map<Integer, Api> apis = new HashMap<>(16, 1.0f);
 
+    private Map<Integer, List<Route>> apiRoutes = new HashMap<>();
+
+    private Router router;
+
     private Map<Integer, Result> customResult = null; //new ConcurrentHashMap<>(8, 1.0f, 4);
 
+
+    private Pattern[] regexs;
 
     public App(AppOption option) throws Exception {
         this.name = option.getName();
         this.id = option.getId();
         if (!StringUtils.isEmpty(option.getVhost()) && !"*".equals(option.getVhost().trim())) {
             vhost = option.getVhost().split(" ");
+
+            if (vhost != null && vhost.length > 0) {
+                regexs = new Pattern[vhost.length];
+
+                for (int i = 0; i < vhost.length; i++) {
+                    String vh = vhost[i];
+                    regexs[i] = Pattern.compile("^" + vh.replaceAll("\\.", "\\\\.").replaceAll("[*]", "(.*?)") + "$", 2);
+                }
+            }
         }
 
         this.port = option.getPort();
@@ -114,44 +135,103 @@ public class App {
             }
         }
 
-        if(!StringUtils.isEmpty(extendOption.getBlowSetting())){
+        if (!StringUtils.isEmpty(extendOption.getBlowSetting())) {
             try {
                 blowSetting = new JsonObject(extendOption.getBlowSetting()).mapTo(Blow.class);
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        if(blowSetting == null)
+        if (blowSetting == null)
             blowSetting = new Blow();
 
 
         AccessLogOption accessLogOption = extendOption.getAccessLogOption();
-        if(accessLogOption != null){
+        if (accessLogOption != null) {
             accessLog = new AccessLog(this, accessLogOption.getFormat(), accessLogOption.getSavePath());
         }
 
     }
 
-    public void addDeployApi(Api api){
+    public synchronized HttpClient getHttpClient(HttpClientOptions options) {
+        if (httpClient == null)
+            httpClient = Vertx.vertx().createHttpClient(options);
+        return httpClient;
+    }
+
+    public void addDeployApi(Api api, List<Route> routes) {
         apis.put(api.getId(), api);
+        apiRoutes.put(api.getId(), routes);
     }
 
-    public void unDeployApi(Integer id){
+    public void unDeployApi(Integer id) {
         apis.remove(id);
+
+        List<Route> routes = apiRoutes.get(id);
+        if (routes == null)
+            return;
+        routes.forEach(route -> {
+            route.disable();
+            route.remove();
+        });
     }
 
-    public Api getDeployApi(Integer id){
+    public void unDeployAllApi() {
+        apis.clear();
+        apiRoutes.forEach((k, v) -> {
+            List<Route> routes = apiRoutes.get(k);
+            if (routes == null)
+                return;
+            routes.forEach(route -> {
+                route.disable();
+                route.remove();
+            });
+        });
+
+        apiRoutes.clear();
+    }
+
+    public boolean match(String requestHost) {
+        if (regexs == null)
+            return true;
+
+        boolean match = false;
+        String[] var4 = requestHost.split(":");
+        int var5 = var4.length;
+
+        for (int var6 = 0; var6 < var5; ++var6) {
+            String h = var4[var6];
+            if (matchAny(h)) {
+                match = true;
+                break;
+            }
+        }
+
+        return match;
+    }
+
+    private boolean matchAny(String host) {
+        for (Pattern regex : regexs) {
+            if (regex.matcher(host).matches()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public Api getDeployApi(Integer id) {
         return apis.get(id);
     }
 
 
-    public void stop(){
+    public void stop() {
         accessLog.destroy();
     }
 
     public boolean equals(Object another) {
-        if (another instanceof App)
+        if (!(another instanceof App))
             return false;
 
         App that = (App) another;
@@ -159,4 +239,7 @@ public class App {
     }
 
 
+    public int hashCode() {
+        return this.id.hashCode();
+    }
 }

@@ -15,13 +15,15 @@ import lombok.ToString;
 @NoArgsConstructor
 public class Ssl {
 
-    private int port;
+    private int port = -1;
 
     private CertType certType;
 
     private String keyPath;
 
     private String certPath;
+
+    private boolean publish;
 
     public enum CertType {
         PFX, PEM, JKS;

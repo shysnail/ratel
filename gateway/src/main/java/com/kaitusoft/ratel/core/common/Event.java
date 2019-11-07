@@ -87,6 +87,21 @@ public class Event {
     public static final String RESUME_API = "r:g:api.rerun";
 
 
+    public static final String START_APP_ACT = "r:g:a.start.act";
+
+    public static final String RESTART_APP_ACT = "r:g:a.restart.act";
+
+    public static final String STOP_APP_ACT = "r:g:a.stop.act";
+
+    public static final String START_API_ACT = "r:g:api.start.act";
+
+    public static final String RESTART_API_ACT = "r:g:api.restart.act";
+
+    public static final String STOP_API_ACT = "r:g:api.stop.act";
+
+    public static final String PAUSE_API_ACT = "r:g:api.pause.act";
+    public static final String RESUME_API_ACT = "r:g:api.rerun.act";
+
     public static final String APP_STATUS = "r:g:a.status";
     public static final String API_STATUS = "r:g:api.status";
 
@@ -132,18 +147,18 @@ public class Event {
 //    public static final String CLUSTER_STOP_API = "r:c:api.stop";
 
 
-    public static String formatAddress(String event, Object... sign){
+    public static String formatAddress(String event, Object... sign) {
         StringBuilder sb = new StringBuilder();
         sb.append(event);
-        if(sign != null && sign.length > 0){
+        if (sign != null && sign.length > 0) {
             sb.append("-");
-            for(int i = 0; i < sign.length ; i ++){
+            for (int i = 0; i < sign.length; i++) {
                 sb.append(sign[i]).append(".");
             }
         }
 
 //        debug模式
-        if(!StringUtils.isEmpty(System.getProperty("debug"))){
+        if (!StringUtils.isEmpty(System.getProperty("debug"))) {
 
         }
 
@@ -152,19 +167,20 @@ public class Event {
 
     /**
      * 内部地址，强制加入节点标志
+     *
      * @param event
      * @param sign
      * @return
      */
-    public static String formatInternalAddress(String event, Object... sign){
+    public static String formatInternalAddress(String event, Object... sign) {
         int signLength = 1;
-        if(sign != null && sign.length > 0){
+        if (sign != null && sign.length > 0) {
             signLength = sign.length + 1;
         }
         Object[] newSign = new Object[signLength];
 
         newSign[0] = ClusterVerticle.myNodeId;
-        if(signLength > 1) {
+        if (signLength > 1) {
             System.arraycopy(sign, 0, newSign, 1, sign.length);
         }
         return formatAddress(event, newSign);

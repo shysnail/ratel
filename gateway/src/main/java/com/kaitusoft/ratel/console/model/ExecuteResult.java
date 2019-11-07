@@ -3,11 +3,10 @@ package com.kaitusoft.ratel.console.model;
 import java.io.Serializable;
 
 /**
- *
  * @author Administrator
  * @date 2017/12/27
  */
-public class ExecuteResult implements Serializable{
+public class ExecuteResult implements Serializable {
 
     private static final long serialVersionUID = 4970347654699688288L;
 
@@ -22,15 +21,15 @@ public class ExecuteResult implements Serializable{
      */
     private Object data;
 
-    public ExecuteResult(){
+    public ExecuteResult() {
     }
 
-    public ExecuteResult(Object data){
+    public ExecuteResult(Object data) {
         this.success = true;
         this.data = data;
     }
 
-    public ExecuteResult(boolean success, Object data){
+    public ExecuteResult(boolean success, Object data) {
         this.success = success;
         this.data = data;
     }
@@ -54,7 +53,7 @@ public class ExecuteResult implements Serializable{
     }
 
     @Override
-    public ExecuteResult clone(){
+    public ExecuteResult clone() {
         ExecuteResult newObject = null;
         try {
             newObject = (ExecuteResult) super.clone();

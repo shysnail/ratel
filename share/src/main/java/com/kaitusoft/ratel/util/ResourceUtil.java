@@ -202,7 +202,11 @@ public class ResourceUtil {
         if(prefix != null)
             fileName = fileName.substring(prefix.getPath().length() + 1);
         fileName = fileName.substring(0, fileName.length() - 6);
-        String className = fileName.replace('/', '.');
+        String regexp = "/";
+        if(File.separator.indexOf('\\') >= 0){
+            regexp = "\\\\";
+        }
+        String className = fileName.replaceAll(regexp, ".");
         return classLoader.loadClass(className);
     }
 

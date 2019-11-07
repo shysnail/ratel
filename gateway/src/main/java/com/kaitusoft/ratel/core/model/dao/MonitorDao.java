@@ -20,13 +20,8 @@ import java.util.List;
  *          <p>
  *          write description here
  */
-public class MonitorDao extends BaseDao{
+public class MonitorDao extends BaseDao {
     private static final Logger logger = LoggerFactory.getLogger(MonitorDao.class);
-
-    public MonitorDao(JDBCClient jdbcClient) {
-        super(jdbcClient);
-    }
-
     private static final String SQL_STATUS_ADD = "insert into sys_status(node, `type`, status) values (?,0,?)";
     private static final String SQL_APP_STATUS_ADD = "insert into sys_app_status(node, app_id, `type`, status) values (?,?,0,?) ";
     private static final String SQL_STATUS_APP_FIND = "select * from sys_app_status where 1=1 ${where} order by create_time desc limit ?";
@@ -34,6 +29,9 @@ public class MonitorDao extends BaseDao{
     private static final String SQL_STATUS_FIND = "select * from sys_status where 1=1 ${where} order by create_time desc limit ?";
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final String SQL_STATUS_DELETE = "delete from sys_status where 1=1 ${where}";
+    public MonitorDao(JDBCClient jdbcClient) {
+        super(jdbcClient);
+    }
 
     public void addStatus(Message<JsonObject> message) {
         JsonObject body = message.body();

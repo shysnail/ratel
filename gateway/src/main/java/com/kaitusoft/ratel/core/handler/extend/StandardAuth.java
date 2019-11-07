@@ -22,19 +22,19 @@ public class StandardAuth extends AbstractAuthProcessor {
 
     ICacheCommand<String, Object> cache;
 
-    public StandardAuth(){
+    public StandardAuth() {
         initCache();
     }
 
     private void initCache() {
         InputStream is = null;
-        try{
+        try {
             is = StandardAuth.class.getResourceAsStream("/redis.yml");
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("用户认证无法加载 redis配置，检查classpath下是否有redis.yml文件，且配置正确");
         }
 
-        if(is == null)
+        if (is == null)
             return;
 
         RedisConfig config = null;
@@ -58,17 +58,17 @@ public class StandardAuth extends AbstractAuthProcessor {
         MultiMap headers = context.request().headers();
 
         String ticket = headers.get("ticket");
-        if (StringUtils.isEmpty(ticket)){
+        if (StringUtils.isEmpty(ticket)) {
             ticket = context.request().getParam("ticket");
         }
-        if(StringUtils.isEmpty(ticket))
+        if (StringUtils.isEmpty(ticket))
             return false;
 
         String clientId = headers.get("clientId");
         String appId = headers.get("appId");
 
         String tokenJson = (String) cache.get("TK_" + appId + "." + clientId);
-        if(StringUtils.isEmpty(tokenJson)){
+        if (StringUtils.isEmpty(tokenJson)) {
             return false;
         }
 
@@ -77,7 +77,7 @@ public class StandardAuth extends AbstractAuthProcessor {
         long expiresAt = json.getLong("expireAt");
 
         //已过期
-        if(expiresAt < System.currentTimeMillis()){
+        if (expiresAt < System.currentTimeMillis()) {
             return false;
         }
 

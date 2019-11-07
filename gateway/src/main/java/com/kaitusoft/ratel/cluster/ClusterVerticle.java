@@ -1,6 +1,5 @@
 package com.kaitusoft.ratel.cluster;
 
-import com.kaitusoft.ratel.core.common.Configuration;
 import com.kaitusoft.ratel.core.common.Event;
 import com.kaitusoft.ratel.core.model.vo.Node;
 import io.vertx.core.*;
@@ -32,21 +31,17 @@ import java.util.List;
  *          write description here
  */
 public class ClusterVerticle extends AbstractVerticle {
-    private static Logger logger = LoggerFactory.getLogger(ClusterVerticle.class);
-
     public static volatile Integer myGroup = 0;
     public static volatile String myNodeId = "";
-    private boolean isCommander;
-
     public static ClusterMessage clusterMessage;
-
+    private static Logger logger = LoggerFactory.getLogger(ClusterVerticle.class);
     private static ClusterManager clusterManager;
     private static GroupNodeManager groupNodeManager;
-
+    private boolean isCommander;
     private AppApiAction appApiAction;
 
-    public static ClusterManager getClusterManager(JsonObject configCluster){
-        if(clusterManager == null){
+    public static ClusterManager getClusterManager(JsonObject configCluster) {
+        if (clusterManager == null) {
             clusterManager = new ZookeeperClusterManager(configCluster);
             clusterManager.nodeListener(new NodeListener() {
                 @Override
@@ -81,7 +76,7 @@ public class ClusterVerticle extends AbstractVerticle {
         boolean configCluster = clusterConfig != null && clusterConfig.getBoolean("enabled", false);
 
         vertx.executeBlocking(cluster -> {
-            if(configCluster && vertx.isClustered()) {
+            if (configCluster && vertx.isClustered()) {
                 try {
                     groupNodeManager.init();
                 } catch (Exception e) {
@@ -92,14 +87,14 @@ public class ClusterVerticle extends AbstractVerticle {
         }, other -> {
             registerConsumer();
 
-            if(configCluster && !vertx.isClustered()){
+            if (configCluster && !vertx.isClustered()) {
                 logger.debug("cluster verticle deploy id:{}, configured cluster mode, but fail join into cluster :{}!", deployId, clusterConfig);
                 //配置集群并且未能连接到集群
                 future.complete(false);
-            }else{
-                if(configCluster && vertx.isClustered()){
+            } else {
+                if (configCluster && vertx.isClustered()) {
                     logger.debug("cluster verticle deploy id:{}, in cluster mode", deployId);
-                }else{
+                } else {
                     logger.debug("cluster verticle deploy id:{}, not cluster mode", deployId);
                 }
                 future.complete(true);
@@ -109,7 +104,7 @@ public class ClusterVerticle extends AbstractVerticle {
 
     public void stop() throws Exception {
         logger.info("stop cluster verticle");
-        if(vertx.isClustered())
+        if (vertx.isClustered())
             groupNodeManager.destroy();
 
         clusterManager = null;
@@ -118,34 +113,34 @@ public class ClusterVerticle extends AbstractVerticle {
     private void registerConsumer() {
         //控制台具备节点管理功能，此处有单点风险，一旦控制台挂了，集群运转不来了
 
-            vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_NODE_ADD), groupNodeManager::nodeAdd);
-            vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_NODE_OFFLINE), groupNodeManager::nodeLeft);
-            vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_EXPEL_NODE), groupNodeManager::expelNode);
+        vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_NODE_ADD), groupNodeManager::nodeAdd);
+        vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_NODE_OFFLINE), groupNodeManager::nodeLeft);
+        vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_EXPEL_NODE), groupNodeManager::expelNode);
 
-            vertx.eventBus().consumer(Event.formatAddress(Event.CLUSTER_GROUPING), groupNodeManager::grouping);
+        vertx.eventBus().consumer(Event.formatAddress(Event.CLUSTER_GROUPING), groupNodeManager::grouping);
 
-            if(!vertx.isClustered()) {
-                Node newNode = new Node();
-                newNode.setNodeId(myNodeId);
-                newNode.setHostname(myNodeId);
-                newNode.setGroupId(myGroup.toString());
-                vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_GET_NODES), message -> {
-                    message.reply(new JsonArray().add(JsonObject.mapFrom(newNode)));
-                });
-                vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_GET_NODE), message -> {
-                    message.reply(JsonObject.mapFrom(newNode));
-                });
-            }else{
-                //本地即可获取
-                vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_GET_NODES), groupNodeManager::nodes);
-                vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_GET_NODE), groupNodeManager::node);
+        if (!vertx.isClustered()) {
+            Node newNode = new Node();
+            newNode.setNodeId(myNodeId);
+            newNode.setHostname(myNodeId);
+            newNode.setGroupId(myGroup.toString());
+            vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_GET_NODES), message -> {
+                message.reply(new JsonArray().add(JsonObject.mapFrom(newNode)));
+            });
+            vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_GET_NODE), message -> {
+                message.reply(JsonObject.mapFrom(newNode));
+            });
+        } else {
+            //本地即可获取
+            vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_GET_NODES), groupNodeManager::nodes);
+            vertx.eventBus().localConsumer(Event.formatInternalAddress(Event.CLUSTER_GET_NODE), groupNodeManager::node);
 
                 /*
                  * 接受集群消息
                  */
-                vertx.eventBus().consumer(Event.formatAddress(Event.CLUSTER_HALT_NODE, myNodeId), groupNodeManager::haltNode);
-                vertx.eventBus().consumer(Event.formatAddress(Event.CLUSTER_RESTART_NODE, myNodeId), groupNodeManager::restartNode);
-            }
+            vertx.eventBus().consumer(Event.formatAddress(Event.CLUSTER_HALT_NODE, myNodeId), groupNodeManager::haltNode);
+            vertx.eventBus().consumer(Event.formatAddress(Event.CLUSTER_RESTART_NODE, myNodeId), groupNodeManager::restartNode);
+        }
 //            vertx.eventBus().consumer(Event.CLUSTER_GROUP_NODES, this::groupNodes);
 
 
@@ -167,8 +162,6 @@ public class ClusterVerticle extends AbstractVerticle {
         vertx.eventBus().consumer("cluster.test", this::test);
 
     }
-
-
 
 
     @Deprecated

@@ -1,5 +1,5 @@
 这是一个api网关
-基于 eclipse vertx(base on netty) 开发的一款轻量级网关。
+基于 vertx(base on netty) 开发的一款轻量级网关。
 
 # 部署
 

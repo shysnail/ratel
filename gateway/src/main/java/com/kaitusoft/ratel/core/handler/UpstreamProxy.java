@@ -7,8 +7,6 @@ import com.kaitusoft.ratel.core.model.Target;
 import com.kaitusoft.ratel.core.model.option.ProxyOption;
 import com.kaitusoft.ratel.core.model.option.UpstreamOption;
 import com.kaitusoft.ratel.util.StringUtils;
-import com.sun.org.apache.bcel.internal.generic.RET;
-import com.sun.org.apache.regexp.internal.RE;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -36,12 +34,10 @@ public class UpstreamProxy extends Proxy {
     private static final Logger logger = LoggerFactory.getLogger(UpstreamProxy.class);
 
     private static final int HOST_CHECK_TASK_INTERVAL = 10000;
-
+    private static final Map<String, Object> RETRY_TARGETS = new ConcurrentHashMap<>();
     private HttpClient httpClient;
     private UpstreamOption upstreamOption;
     private PassBody passBody;
-
-    private static final Map<String, Object> RETRY_TARGETS = new ConcurrentHashMap<>();
 
     public UpstreamProxy(Api api, ProxyOption option) {
         super(api, option);
@@ -87,7 +83,7 @@ public class UpstreamProxy extends Proxy {
             }
         }
 
-        context.vertx().runOnContext( upstream -> {
+        context.vertx().runOnContext(upstream -> {
             doUpstream(context, clientRequest, clientHeaders);
         });
     }
@@ -95,12 +91,12 @@ public class UpstreamProxy extends Proxy {
     private void doUpstream(RoutingContext context, HttpServerRequest clientRequest, MultiMap clientHeaders) {
 
         Target target = null;
-        try{
+        try {
             target = proxyPolicy.next(context);
-        }catch(Exception e){
+        } catch (Exception e) {
             logger.error("no available upstream target", e);
         }
-        if(target == null){
+        if (target == null) {
             logger.warn("no available upstream target for request:{}", context.get(ContextAttribute.CTX_REQ_ID).toString());
             return;
         }
@@ -157,7 +153,7 @@ public class UpstreamProxy extends Proxy {
             logger.warn("ws request:{},  close!", reqId);
 //            wsClient.frameHandler(null);
             WebSocket ws = context.remove(ContextAttribute.CTX_REQ_WS);
-            if(ws != null)
+            if (ws != null)
                 ws.frameHandler(null);
         });
 
@@ -165,7 +161,7 @@ public class UpstreamProxy extends Proxy {
             logger.error("ws request:{}, exception:", reqId, error);
             wsClient.frameHandler(null);
             WebSocket ws = context.remove(ContextAttribute.CTX_REQ_WS);
-            if(ws != null)
+            if (ws != null)
                 ws.frameHandler(null);
 
 //            wsClient.close();
@@ -213,15 +209,15 @@ public class UpstreamProxy extends Proxy {
 
         HttpServerResponse clientResponse = context.response();
         upstream.exceptionHandler(e -> {
+            if (clientResponse.ended() || clientResponse.closed()) {
+                return;
+            }
+
             Integer errCount = context.get(ContextAttribute.CTX_ATTR_FAIL_COUNT);
             if (errCount == null)
                 errCount = 0;
 
             logger.error("upstream error {} times :", errCount + 1, e);
-
-            if (clientResponse.ended() || clientResponse.closed()) {
-                return;
-            }
 
             /**
              * 当前转发目标 重试次数
@@ -292,7 +288,7 @@ public class UpstreamProxy extends Proxy {
         if (passBody != null) {
             if (hasBody(clientRequest)) {
                 passBody.pass(reqId, clientRequest, upstream);
-            } else{
+            } else {
                 Buffer buffer = context.remove(ContextAttribute.CTX_REQ_BODY);
                 if (buffer != null && buffer.length() > 0) {
                     passBody.pass(reqId, upstreamMethod, buffer, upstream);
@@ -316,7 +312,8 @@ public class UpstreamProxy extends Proxy {
     private boolean hasBody(HttpServerRequest request) {
         if (request.isEnded())
             return false;
-        return request.method().equals(HttpMethod.POST) || request.method().equals(HttpMethod.PUT);
+        HttpMethod reqMethod = request.method();
+        return HttpMethod.POST.equals(reqMethod) || HttpMethod.PUT.equals(reqMethod);
     }
 
     private boolean needChunked(HttpClientResponse upstreamResponse) {
@@ -333,6 +330,7 @@ public class UpstreamProxy extends Proxy {
 
     /**
      * 此方法缺点明显，重试一次后，如果仍旧失败，仍需重试
+     *
      * @param currentTarget
      * @param vertx
      * @param upstreamMethod
@@ -340,7 +338,7 @@ public class UpstreamProxy extends Proxy {
      */
     private synchronized void tryReconnectTask(Target currentTarget, Vertx vertx, HttpMethod upstreamMethod, String target) {
         logger.warn("retry connect target {}:{}", upstreamMethod, target);
-        if(RETRY_TARGETS.get(target) != null){
+        if (RETRY_TARGETS.get(target) != null) {
             logger.debug("target {}:{} retring", upstreamMethod, target);
             return;
         }
@@ -357,7 +355,7 @@ public class UpstreamProxy extends Proxy {
         vertx.setTimer(HOST_CHECK_TASK_INTERVAL, retryTask);
     }
 
-    private void doReconnect(Target currentTarget, Vertx vertx, HttpMethod upstreamMethod, String target, Handler task){
+    private void doReconnect(Target currentTarget, Vertx vertx, HttpMethod upstreamMethod, String target, Handler task) {
         httpClient.requestAbs(upstreamMethod, target).setTimeout(upstreamOption.getTimeout()).handler(response -> {
             int statusCode = response.statusCode();
             RETRY_TARGETS.remove(target);
@@ -370,7 +368,7 @@ public class UpstreamProxy extends Proxy {
         }).exceptionHandler(e -> {
             RETRY_TARGETS.remove(target);
             logger.error("app:{}, api:{} , 失败接口:{}:{} 尝试连接出错", api.getApp().getName(), api.getPath(), upstreamMethod, target, e);
-            if(task != null)
+            if (task != null)
                 vertx.setTimer(HOST_CHECK_TASK_INTERVAL, task);
         }).end();
     }

@@ -33,7 +33,7 @@ public class AppVo extends AppOption implements Serializable {
 
     private int runningApiNum;
 
-    private AppExtendOption extendOption;
+    private transient AppExtendOption extendOption;
 
     public static AppVo fromJson(JsonObject jsonObject) {
         return jsonObject.mapTo(AppVo.class);

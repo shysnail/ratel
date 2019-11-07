@@ -73,7 +73,7 @@ public class Preference {
         }
 
         if (option.getRoot() != null)
-            this.docRoot = new String(option.getRoot());
+            this.docRoot = option.getRoot();
 
         //创建 访问限制
         AccessLimitOption accessLimitOption = option.getAccessLimitOption();

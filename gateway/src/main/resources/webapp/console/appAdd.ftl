@@ -60,7 +60,7 @@
                         <input class="input-text" id="port" name="port" placeholder="8765" value="8765"/>
                     </div>
                 </div>
-                <div class="row cl" style="display: none;">
+                <div class="row cl">
                     <label class="form-label col-xs-3" for="name">vhost:</label>
                     <div class="formControls col-xs-8">
                         <input class="input-text" id="vhost" name="vhost" placeholder="请输入vhost，如 x.test.com，多个以 空格 拼接"

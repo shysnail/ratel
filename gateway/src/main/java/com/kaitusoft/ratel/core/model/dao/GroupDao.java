@@ -16,14 +16,9 @@ import java.util.List;
  *          <p>
  *          write description here
  */
-public class GroupDao extends BaseDao{
+public class GroupDao extends BaseDao {
 
     private static final Logger logger = LoggerFactory.getLogger(GroupDao.class);
-
-    public GroupDao(JDBCClient jdbcClient) {
-        super(jdbcClient);
-    }
-
     private static final String SQL_GROUP_ALL = "select * from groups";
     private static final String SQL_GROUP_FIND_IDS = "select * from groups where id in (?)";
     private static final String SQL_GROUP_DELETE = "delete from groups where id in (?)";
@@ -31,6 +26,9 @@ public class GroupDao extends BaseDao{
     private static final String SQL_GROUP_UPDATE = "update groups set name=?, description=? where id=?";
     private static final String SQL_GROUP_ADD = "insert into groups(name, description) values(?,?)";
     private static final String SQL_GROUP_GET = "select * from groups where id=?";
+    public GroupDao(JDBCClient jdbcClient) {
+        super(jdbcClient);
+    }
 
     public void findGroups(Message<String> message) {
         jdbcClient.query(SQL_GROUP_ALL, res -> {

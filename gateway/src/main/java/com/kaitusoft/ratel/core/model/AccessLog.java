@@ -1,32 +1,29 @@
 package com.kaitusoft.ratel.core.model;
 
 import com.kaitusoft.ratel.ContextAttribute;
-import io.vertx.core.http.HttpHeaders;
 import io.vertx.ext.web.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.*;
-import org.apache.logging.log4j.core.appender.AsyncAppender;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.RollingFileAppender;
 import org.apache.logging.log4j.core.appender.rolling.DefaultRolloverStrategy;
 import org.apache.logging.log4j.core.appender.rolling.TimeBasedTriggeringPolicy;
 import org.apache.logging.log4j.core.appender.rolling.TriggeringPolicy;
-import org.apache.logging.log4j.core.async.AsyncLogger;
 import org.apache.logging.log4j.core.async.AsyncLoggerConfig;
 import org.apache.logging.log4j.core.config.AppenderRef;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.Property;
-import org.apache.logging.log4j.core.filter.ThreadContextMapFilter;
 import org.apache.logging.log4j.core.layout.PatternLayout;
-import org.apache.logging.log4j.core.util.KeyValuePair;
 
 import java.nio.charset.Charset;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,35 +36,32 @@ import java.util.regex.Pattern;
 public class AccessLog {
 
     private static final String LOGNAME = AccessLog.class.getName();
-
-    private String format;
-
-    private String savePath;
-
-    private Logger logger;
-
-    private String appLogName;
-
-    private String template;
-
-    private List<String> keys = new ArrayList<>();
-
     //为false时，返回多个LoggerContext对象，   true：返回唯一的单例LoggerContext
     private static final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
     private static final Configuration config = ctx.getConfiguration();
+    private final static String regexp = "((\\$[a-zA-Z])[a-zA-Z0-9_-]{0,})|((\\$_)[a-zA-Z0-9_-]{1,})";
+    private final static Pattern pattern = Pattern.compile(regexp);
     private static LoggerConfig loggerConfig;
-    static{
+
+    static {
         loggerConfig = config.getLoggerConfig(LOGNAME);
-        if(loggerConfig == null){
+        if (loggerConfig == null) {
 //            config.get
             loggerConfig = AsyncLoggerConfig.createLogger(true, Level.ALL, LOGNAME, "true", new AppenderRef[]{}, new Property[]{}, config, null);
         }
     }
 
-    public AccessLog(App app, String format, String savePath) throws RuntimeException{
+    private String format;
+    private String savePath;
+    private Logger logger;
+    private String appLogName;
+    private String template;
+    private List<String> keys = new ArrayList<>();
+
+    public AccessLog(App app, String format, String savePath) throws RuntimeException {
         this.format = format;
         this.savePath = savePath;
-        if(!valid(format))
+        if (!valid(format))
             throw new IllegalArgumentException("日志格式不正确");
         this.template = format;
 
@@ -75,7 +69,11 @@ public class AccessLog {
         createLog();
     }
 
-    private void createLog(){
+    public static boolean valid(String format) {
+        return true;
+    }
+
+    private void createLog() {
         parse();
         PatternLayout layout = PatternLayout.newBuilder()
                 .withCharset(Charset.forName("UTF-8"))
@@ -106,10 +104,10 @@ public class AccessLog {
     }
 
     public void destroy() {
-        synchronized (config){
-            if(loggerConfig != null){
+        synchronized (config) {
+            if (loggerConfig != null) {
                 Appender appender = loggerConfig.getAppenders().get(appLogName);
-                if(appender != null) {
+                if (appender != null) {
                     appender.stop();
                     loggerConfig.removeAppender(appLogName);
                 }
@@ -117,10 +115,6 @@ public class AccessLog {
 
             ctx.updateLoggers();
         }
-    }
-
-    public static boolean valid(String format){
-        return true;
     }
 
     /**
@@ -144,37 +138,38 @@ public class AccessLog {
      * body_bytes_sent
      * upstream_addr
      */
-    private void prepare(){
+    private void prepare() {
 
     }
 
     /**
      * 日志可记录请求头，
      * 这个方法后续会全异步
+     *
      * @param context
      */
-    public void log(RoutingContext context){
+    public void log(RoutingContext context) {
         Object[] data = new Object[keys.size()];
-        for(int i = 0; i < keys.size(); i ++){
+        for (int i = 0; i < keys.size(); i++) {
             String key = keys.get(i);
             Object v = null;
-            if(key.startsWith("http_")){
+            if (key.startsWith("http_")) {
                 String head = key.substring(5);
                 v = context.request().getHeader(head);
-            }else if(key.startsWith("cookie_")){
+            } else if (key.startsWith("cookie_")) {
                 String cookieName = key.substring(7);
                 Cookie cookie = context.getCookie(cookieName);
-                if(cookie != null)
+                if (cookie != null)
                     v = cookie.getValue();
-            }else{
+            } else {
                 v = context.get(key);
-                if(key.equals(ContextAttribute.CTX_TIME_LOCAL)){
+                if (key.equals(ContextAttribute.CTX_TIME_LOCAL)) {
 //                    Instant instant = Instant.now();
 //                    Date date = new Date();
                     Instant instant = Instant.ofEpochMilli((Long) v);
                     v = instant.atZone(ZoneId.systemDefault())
                             .toLocalDateTime();
-                }else{
+                } else {
 
                 }
             }
@@ -187,12 +182,10 @@ public class AccessLog {
         logger.info(template, data);
     }
 
-    private final static String regexp = "((\\$[a-zA-Z])[a-zA-Z0-9_-]{0,})|((\\$_)[a-zA-Z0-9_-]{1,})";
-    private final static Pattern pattern = Pattern.compile(regexp);
-    private String parse(){
+    private String parse() {
         StringBuilder msg = new StringBuilder();
         Matcher matcher = pattern.matcher(format);
-        while(matcher.find()){
+        while (matcher.find()) {
             String s = matcher.group();
             template = template.replace(s, "{}");
             String key = s.substring(1);

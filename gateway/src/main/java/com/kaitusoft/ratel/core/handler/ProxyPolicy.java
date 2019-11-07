@@ -100,8 +100,8 @@ public abstract class ProxyPolicy {
 
     }
 
-    public Target next(RoutingContext context){
-        if(targets == null || targets.length == 0)
+    public Target next(RoutingContext context) {
+        if (targets == null || targets.length == 0)
             return null;
 
         return choseNext(context);

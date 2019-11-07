@@ -12,8 +12,9 @@ import io.vertx.ext.web.RoutingContext;
  *          <p>
  *          write description here
  */
-public class Authtication implements Handler<RoutingContext>{
+public class Authtication implements Handler<RoutingContext> {
     private static final String UNAUTHORIZED = "您不具备操作权限";
+
     @Override
     public void handle(RoutingContext context) {
         User user = context.session().get(ContextAttribute.SESSION_USER);
@@ -25,9 +26,9 @@ public class Authtication implements Handler<RoutingContext>{
 
         String requestPath = context.request().path();
         user.isAuthorized(requestPath, result -> {
-            if(result.succeeded()){
+            if (result.succeeded()) {
                 context.next();
-            }else{
+            } else {
                 HttpServerResponse response = context.response();
                 response.end(UNAUTHORIZED);
             }

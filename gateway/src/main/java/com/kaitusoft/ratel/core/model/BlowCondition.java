@@ -14,15 +14,15 @@ public class BlowCondition {
 
     private String value;
 
-    enum Condition{
+    enum Condition {
         ERROR, TIMEOUT;
     }
 
-    enum Operator{
+    enum Operator {
         GT, LT;
     }
 
-    enum Relation{
+    enum Relation {
         AND, OR;
     }
 }
