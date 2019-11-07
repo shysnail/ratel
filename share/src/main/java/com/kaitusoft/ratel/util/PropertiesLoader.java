@@ -57,12 +57,14 @@ public class PropertiesLoader {
         if (is == null)
             throw new IllegalStateException("没有找到有效的配置文件，确保classpath下存在" + file);
 
-        BufferedReader bfd = new BufferedReader(new InputStreamReader(is));
+        try {
+            BufferedReader bfd = new BufferedReader(new InputStreamReader(is));
 
-        prop.load(bfd);
-
-        if(is != null)
+            prop.load(bfd);
+            bfd.close();
+        }finally {
             is.close();
+        }
 
         return prop;
     }

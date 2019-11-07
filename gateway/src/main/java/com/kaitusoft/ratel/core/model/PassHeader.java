@@ -46,7 +46,7 @@ public class PassHeader extends PassData {
         passDataOption.setPassBodyType(this.passDataType);
         JsonObject option = new JsonObject();
         if (method != null)
-            option.put("method", method.toString());
+            option.put("method", method);
         if (headers != null && headers.size() > 0)
             option.put("headers", headers);
 

@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.ToString;
 
 import java.sql.Timestamp;
+import java.util.Objects;
 
 /**
  * @author frog.w
@@ -30,7 +31,10 @@ public class Group {
         } catch (Exception e) {
             return false;
         }
-
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
+    }
 }
