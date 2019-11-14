@@ -3,7 +3,7 @@ package com.kaitusoft.ratel.core.handler.extend;
 import com.kaitusoft.ratel.cache.ICacheCommand;
 import com.kaitusoft.ratel.cache.redis.RedisCache;
 import com.kaitusoft.ratel.cache.redis.RedisConfig;
-import com.kaitusoft.ratel.handler.AbstractAuthProcessor;
+import com.kaitusoft.ratel.handler.AbstractAuthHttpProcessor;
 import com.kaitusoft.ratel.util.StringUtils;
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonObject;
@@ -18,7 +18,7 @@ import java.io.InputStream;
  *          <p>
  *          write description here
  */
-public class StandardAuth extends AbstractAuthProcessor {
+public class StandardAuth extends AbstractAuthHttpProcessor {
 
     ICacheCommand<String, Object> cache;
 

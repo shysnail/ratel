@@ -408,16 +408,24 @@ public class DeployVerticle extends AbstractVerticle {
                 logger.error("启动应用网关:{} -> failed! :", object.getString("name"), res.cause().getMessage());
             } else {
                 DEPLOY_APP.put(object.getInteger("id").toString(), res.result().body().toString());
-                startAppAllApi(object.getInteger("id"), deployApiResult -> {
-                    if (deployApiResult.succeeded()) {
-                        JsonObject result = deployApiResult.result();
-                        handler.handle(Future.succeededFuture(result));
-                        logger.info("启动应用网关:{} -> ok, api success: {}, fail:{}", object.getString("name"), result.getInteger("success"), result.getInteger("fail"));
-                    } else {
-                        handler.handle(Future.failedFuture(deployApiResult.cause()));
-                        logger.error("启动应用网关:{} -> failed! ", object.getString("name"), deployApiResult.cause());
-                    }
-                });
+                if("HTTP_HTTPS".equalsIgnoreCase(object.getString("protocol"))){
+                    startAppAllApi(object.getInteger("id"), deployApiResult -> {
+                        if (deployApiResult.succeeded()) {
+                            JsonObject result = deployApiResult.result();
+                            handler.handle(Future.succeededFuture(result));
+                            logger.info("启动应用网关:{} -> ok, api success: {}, fail:{}", object.getString("name"), result.getInteger("success"), result.getInteger("fail"));
+                        } else {
+                            handler.handle(Future.failedFuture(deployApiResult.cause()));
+                            logger.error("启动应用网关:{} -> failed! ", object.getString("name"), deployApiResult.cause());
+                        }
+                    });
+                }else{
+                    JsonObject result = new JsonObject();
+                    result.put("success", 1);
+                    result.put("fail", 0);
+                    handler.handle(Future.succeededFuture(result));
+                    logger.info("启动应用网关:{} -> ok", object.getString("name"));
+                }
             }
         });
     }

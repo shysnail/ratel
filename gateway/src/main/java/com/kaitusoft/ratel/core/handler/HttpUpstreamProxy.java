@@ -29,17 +29,15 @@ import java.util.concurrent.ConcurrentHashMap;
  *          <p>
  *          write description here
  */
-public class UpstreamProxy extends Proxy {
+public class HttpUpstreamProxy extends HttpProxy {
 
-    private static final Logger logger = LoggerFactory.getLogger(UpstreamProxy.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpUpstreamProxy.class);
 
-    private static final int HOST_CHECK_TASK_INTERVAL = 10000;
-    private static final Map<String, Object> RETRY_TARGETS = new ConcurrentHashMap<>();
     private HttpClient httpClient;
     private UpstreamOption upstreamOption;
     private PassBody passBody;
 
-    public UpstreamProxy(Api api, ProxyOption option) {
+    public HttpUpstreamProxy(Api api, ProxyOption option) {
         super(api, option);
         if (option.getProxyType() != ProxyOption.ProxyType.UPSTREAM)
             throw new IllegalStateException("proxy type must upstream!");
@@ -92,7 +90,7 @@ public class UpstreamProxy extends Proxy {
 
         Target target = null;
         try {
-            target = proxyPolicy.next(context);
+            target = proxyPolicy.next(getClientAddr(context));
         } catch (Exception e) {
             logger.error("no available upstream target", e);
         }
@@ -103,7 +101,7 @@ public class UpstreamProxy extends Proxy {
 
         String prefix = context.currentRoute().getPath();
 
-        String host = target.getHost();
+        String host = target.getHostAndPort();
         clientHeaders.set(HttpHeaders.HOST, host);
         String refer = clientRequest.scheme() + "://" + host + "/";
         if (!StringUtils.isEmpty(clientHeaders.get(HttpHeaders.REFERER))) {
@@ -137,7 +135,7 @@ public class UpstreamProxy extends Proxy {
             }
 
             HttpClient wsClient = context.vertx().createHttpClient(api.buildWsClientOption());
-            String wsUrl = "ws://" + target.getHost() + url.substring(target.getUrl().length());
+            String wsUrl = "ws://" + target.getHostAndPort() + url.substring(target.getUrl().length());
             ReadStream<WebSocket> readStream = wsClient.websocketStreamAbs(wsUrl, clientHeaders.remove("Sec-WebSocket-Extensions"), wsVersion, ws.subProtocol());
 
             doWsUpstream(readStream, ws, context);
@@ -199,7 +197,7 @@ public class UpstreamProxy extends Proxy {
 
     private void doUpstream(Target currentTarget, HttpMethod upstreamMethod, String target, MultiMap clientHeaders, HttpServerRequest clientRequest, RoutingContext context) {
         final String reqId = context.get(ContextAttribute.CTX_REQ_ID).toString();
-        context.put(ContextAttribute.CTX_UPSTREAM_ADDR, currentTarget.getHost());
+        context.put(ContextAttribute.CTX_UPSTREAM_ADDR, currentTarget.getHostAndPort());
         logger.debug("request:{} -> upstream to {}:{}", reqId, upstreamMethod, target);
         HttpClientRequest upstream = httpClient.requestAbs(upstreamMethod, target).setTimeout(upstreamOption.getTimeout());
         upstream.setFollowRedirects(true);
@@ -259,7 +257,7 @@ public class UpstreamProxy extends Proxy {
             Pump pump = Pump.pump(upstreamResponse, clientResponse);
 
             upstreamResponse.exceptionHandler(e -> {
-                logger.error("got excepiton", e);
+                logger.error("got exception", e);
                 context.put(ContextAttribute.CTX_UPSTREAM, Future.<Boolean>failedFuture(e));
                 pump.stop();
                 try {
@@ -338,12 +336,12 @@ public class UpstreamProxy extends Proxy {
      */
     private synchronized void tryReconnectTask(Target currentTarget, Vertx vertx, HttpMethod upstreamMethod, String target) {
         logger.warn("retry connect target {}:{}", upstreamMethod, target);
-        if (RETRY_TARGETS.get(target) != null) {
+        if (RETRY_TARGETS.get(currentTarget) != null) {
             logger.debug("target {}:{} retring", upstreamMethod, target);
             return;
         }
 
-        RETRY_TARGETS.put(target, 1);
+        RETRY_TARGETS.put(currentTarget, 1);
 
         Handler retryTask = new Handler() {
             @Override
@@ -358,7 +356,7 @@ public class UpstreamProxy extends Proxy {
     private void doReconnect(Target currentTarget, Vertx vertx, HttpMethod upstreamMethod, String target, Handler task) {
         httpClient.requestAbs(upstreamMethod, target).setTimeout(upstreamOption.getTimeout()).handler(response -> {
             int statusCode = response.statusCode();
-            RETRY_TARGETS.remove(target);
+            RETRY_TARGETS.remove(currentTarget);
             if (statusCode != 200) {
                 logger.warn("app:{}, api:{} , 失败接口:{}:{} 已连接，返回码非 200，{}", api.getApp().getName(), api.getPath(), upstreamMethod, target, statusCode);
             } else {
@@ -366,7 +364,7 @@ public class UpstreamProxy extends Proxy {
             }
             proxyPolicy.rebirth(currentTarget);
         }).exceptionHandler(e -> {
-            RETRY_TARGETS.remove(target);
+            RETRY_TARGETS.remove(currentTarget);
             logger.error("app:{}, api:{} , 失败接口:{}:{} 尝试连接出错", api.getApp().getName(), api.getPath(), upstreamMethod, target, e);
             if (task != null)
                 vertx.setTimer(HOST_CHECK_TASK_INTERVAL, task);

@@ -2,6 +2,8 @@ package com.kaitusoft.ratel.core.model;
 
 import com.kaitusoft.ratel.Result;
 import com.kaitusoft.ratel.core.common.ProtocolEnum;
+import com.kaitusoft.ratel.core.handler.TcpProxy;
+import com.kaitusoft.ratel.core.handler.UdpProxy;
 import com.kaitusoft.ratel.core.model.option.AccessLogOption;
 import com.kaitusoft.ratel.core.model.option.AppExtendOption;
 import com.kaitusoft.ratel.core.model.option.SessionOption;
@@ -78,6 +80,9 @@ public class App {
 
     private Map<Integer, Result> customResult = null; //new ConcurrentHashMap<>(8, 1.0f, 4);
 
+    private TcpProxy tcpProxy;
+
+    private UdpProxy udpProxy;
 
     private Pattern[] regexs;
 
@@ -111,6 +116,13 @@ public class App {
             preference = new Preference(extendOption.getPreferenceOption());
             if (extendOption.getPreferenceOption().isStaticServer())
                 root = extendOption.getPreferenceOption().getRoot();
+
+            if (preference.getCustomCodes() != null && preference.getCustomCodes().length > 0) {
+                customResult = new ConcurrentHashMap<>(8, 1.0f, 4);
+                for (Result result : preference.getCustomCodes()) {
+                    customResult.put(result.getCode(), result);
+                }
+            }
         }
 
         if (extendOption.getCrossDomain() != null) {
@@ -127,13 +139,6 @@ public class App {
         }
 
         proxyOption = extendOption.getUpstreamOption();
-
-        if (preference.getCustomCodes() != null && preference.getCustomCodes().length > 0) {
-            customResult = new ConcurrentHashMap<>(8, 1.0f, 4);
-            for (Result result : preference.getCustomCodes()) {
-                customResult.put(result.getCode(), result);
-            }
-        }
 
         if (!StringUtils.isEmpty(extendOption.getBlowSetting())) {
             try {
@@ -225,6 +230,13 @@ public class App {
         return apis.get(id);
     }
 
+    public void buildTcpProxy() {
+        tcpProxy = TcpProxy.build(this, proxyOption);
+    }
+
+    public void buildUdpProxy() {
+        udpProxy = UdpProxy.build(this, proxyOption);
+    }
 
     public void stop() {
         accessLog.destroy();

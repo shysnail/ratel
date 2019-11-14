@@ -32,12 +32,21 @@ public class Target {
 
     private String[] captures;
 
+    private String hostAndPort;
+
     private String host;
+
+    private int port;
 
     public void setUrl(String url) {
         try {
-            URL uri = new URL(url);
-            host = uri.getHost() + (uri.getPort() == 80 || uri.getPort() <= 0 ? "" : (":" + uri.getPort()));
+            String tmpUrl = url;
+            if(!url.startsWith("http://") ||url.startsWith("https://"))
+                tmpUrl = "http://" + url;
+            URL uri = new URL(tmpUrl);
+            host = uri.getHost();
+            port = uri.getPort();
+            hostAndPort = host + (port == 80 || port <= 0 ? "" : (":" + port));
             this.url = url;
             analysis(uri.getPath());
         } catch (MalformedURLException e) {
@@ -55,21 +64,21 @@ public class Target {
         setCapture(URLUtil.isCapture(path));
     }
 
-//    @Override
-//    public boolean equals(Object obj) {
-//        if(this == obj) return true;
-//
-//        if(obj instanceof Target){
-//            Target server = (Target)obj;
-//
-//            return getUrl().equals(server.getUrl());
-//        }
-//        return false;
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return getUrl().hashCode();
-//    }
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) return true;
+
+        if(obj instanceof Target){
+            Target server = (Target)obj;
+
+            return getUrl().equals(server.getUrl());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return getUrl().hashCode();
+    }
 
 }

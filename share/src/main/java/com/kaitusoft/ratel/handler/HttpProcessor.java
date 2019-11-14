@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
  *          <p>
  *          write description here
  */
-public abstract class Processor implements Handler<RoutingContext> {
+public abstract class HttpProcessor implements Handler<RoutingContext> {
 
-    protected static final Logger logger = LoggerFactory.getLogger(Processor.class);
+    protected static final Logger logger = LoggerFactory.getLogger(HttpProcessor.class);
 
     protected Result failResult;
 

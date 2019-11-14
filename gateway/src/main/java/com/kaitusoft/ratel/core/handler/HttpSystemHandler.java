@@ -2,13 +2,12 @@ package com.kaitusoft.ratel.core.handler;
 
 import com.kaitusoft.ratel.ContextAttribute;
 import com.kaitusoft.ratel.Result;
-import com.kaitusoft.ratel.cluster.ClusterVerticle;
 import com.kaitusoft.ratel.core.common.Configuration;
 import com.kaitusoft.ratel.core.common.Event;
 import com.kaitusoft.ratel.core.common.ProtocolEnum;
 import com.kaitusoft.ratel.core.model.Api;
 import com.kaitusoft.ratel.core.model.App;
-import com.kaitusoft.ratel.handler.Processor;
+import com.kaitusoft.ratel.handler.HttpProcessor;
 import com.kaitusoft.ratel.util.StringUtils;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Vertx;
@@ -16,7 +15,6 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import java.util.Date;
@@ -27,7 +25,7 @@ import java.util.Date;
  *          <p>
  *          write description here
  */
-public class SystemHandler extends Processor {
+public class HttpSystemHandler extends HttpProcessor {
 
     private Vertx vertx;
 
@@ -37,7 +35,7 @@ public class SystemHandler extends Processor {
 
     private String badGateway;
 
-    public SystemHandler(Vertx vertx, App app, Api path) {
+    public HttpSystemHandler(Vertx vertx, App app, Api path) {
         this.vertx = vertx;
         this.app = app;
         this.path = path;

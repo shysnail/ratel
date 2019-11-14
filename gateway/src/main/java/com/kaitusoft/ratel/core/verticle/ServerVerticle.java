@@ -3,24 +3,25 @@ package com.kaitusoft.ratel.core.verticle;
 import com.kaitusoft.ratel.ContextAttribute;
 import com.kaitusoft.ratel.core.common.Event;
 import com.kaitusoft.ratel.core.common.StatusCode;
-import com.kaitusoft.ratel.core.handler.IpFilterHandler;
-import com.kaitusoft.ratel.core.handler.SystemHandler;
+import com.kaitusoft.ratel.core.handler.HttpIpFilterHandler;
+import com.kaitusoft.ratel.core.handler.HttpSystemHandler;
+import com.kaitusoft.ratel.core.handler.TcpProxy;
+import com.kaitusoft.ratel.core.handler.UdpProxy;
 import com.kaitusoft.ratel.core.model.*;
 import com.kaitusoft.ratel.core.model.option.ProxyOption;
 import com.kaitusoft.ratel.core.model.option.SessionOption;
 import com.kaitusoft.ratel.core.model.option.UpstreamOption;
 import com.kaitusoft.ratel.core.model.po.ApiOption;
 import com.kaitusoft.ratel.core.model.po.AppOption;
-import com.kaitusoft.ratel.handler.Processor;
+import com.kaitusoft.ratel.handler.HttpProcessor;
 import com.kaitusoft.ratel.util.StringUtils;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.*;
+import io.vertx.core.datagram.DatagramSocket;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.*;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.net.JksOptions;
-import io.vertx.core.net.PemKeyCertOptions;
-import io.vertx.core.net.PfxOptions;
+import io.vertx.core.net.*;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.CookieHandler;
@@ -36,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author frog.w
@@ -50,7 +50,7 @@ public class ServerVerticle extends AbstractVerticle {
 
     private static final Map<Integer, App> APPS = new ConcurrentHashMap<>(16, 0.75f, 4);
 
-    private static final Map<Integer, HttpServer> SERVER = new HashMap<>();
+    private static final Map<Integer, Object> SERVER = new HashMap<>();
 
     private static final Map<Integer, Set> APP_ON_PORT = new HashMap<>();
 
@@ -67,7 +67,7 @@ public class ServerVerticle extends AbstractVerticle {
         APP_ON_PORT.clear();
         HOST_ROUTER_MAP.clear();
 
-        stopServer(false);
+        stopHttpServer(false);
         SERVER.clear();
     }
 
@@ -88,18 +88,23 @@ public class ServerVerticle extends AbstractVerticle {
             App app = getApp(Integer.parseInt(id));
             if (app == null)
                 continue;
-            removeAppFromPort(app.getId());
-            app.unDeployAllApi();
-            APPS.remove(app.getId());
+            switch (app.getProtocol()) {
+                case HTTP_HTTPS: removeAppFromPort(app.getId());
+                        app.unDeployAllApi();
+                        removeRouter(app.getRouter());
+                        break;
+                case TCP:stopTcpServer(app.getPort()); break;
+                case UDP:stopUdpServer(app.getPort()); break;
+            }
 
-            removeRouter(app.getRouter());
+            APPS.remove(app.getId());
         }
 
         JsonObject result = new JsonObject();
         result.put("stoped", idArray.length);
         result.put("left", APPS.size());
 
-        stopServer(true);
+        stopHttpServer(true);
 
         message.reply(result);
     }
@@ -118,7 +123,13 @@ public class ServerVerticle extends AbstractVerticle {
         });
     }
 
-    private void stopServer(boolean filterIdle) {
+    /**
+     * 停止http服务
+     * 1。先检查对应端口是否有运行中的http服务，如果没有就添加到待关闭服务列表，否则跳过
+     * 2。关闭待关闭列表的http服务
+     * @param filterIdle
+     */
+    private void stopHttpServer(boolean filterIdle) {
         List<Integer> idles = new ArrayList<Integer>();
         APP_ON_PORT.forEach((k, apps) -> {
             if (!filterIdle || (filterIdle && (apps == null || apps.size() == 0))) {
@@ -127,12 +138,12 @@ public class ServerVerticle extends AbstractVerticle {
         });
 
         for (int idle : idles) {
-            HttpServer server = SERVER.get(idle);
+            Closeable server = (Closeable) SERVER.get(idle);
             server.close(res -> {
                 if (res.succeeded()) {
-                    logger.debug("Server on {} closed!", idle);
+                    logger.debug("Http Server on {} closed!", idle);
                 } else {
-                    logger.error("Server on {} cant close", idle, res.cause());
+                    logger.error("Http Server on {} cant close", idle, res.cause());
                 }
             });
         }
@@ -146,6 +157,100 @@ public class ServerVerticle extends AbstractVerticle {
 
     private synchronized void startApp(Message<JsonObject> message) {
         AppOption appOption = message.body().mapTo(AppOption.class);
+        switch (appOption.getProtocol()){
+            case HTTP_HTTPS:;
+            case WEB_SOCKET: httpServer(appOption, message); break;
+            case TCP: tcpServer(appOption, message); break;
+            case UDP: udpServer(appOption, message); break;
+            default: break;
+        }
+
+    }
+
+    private void udpServer(AppOption appOption, Message<JsonObject> message) {
+        App app = getApp(appOption.getId());
+        if (app == null) {
+            try {
+                app = new App(appOption);
+                app.buildUdpProxy();
+                APPS.put(app.getId(), app);
+            } catch (Exception e) {
+                logger.error("parse app json error:", e);
+                message.fail(StatusCode.SYS_ERROR, e.getMessage());
+                return;
+            }
+        }
+
+        final UdpProxy udpProxy = app.getUdpProxy();
+        final int usePort = app.getPort();
+        DatagramSocket datagramSocket = vertx.createDatagramSocket();
+        datagramSocket.listen(app.getPort(), "0.0.0.0", result -> {
+            if(result.succeeded()){
+                udpProxy.handle(result.result());
+                message.reply(this.deploymentID());
+            }else{
+                message.fail(500, result.cause().getMessage());
+            }
+        }).exceptionHandler(ex -> {
+            ex.printStackTrace();
+        });
+
+    }
+
+    private void stopUdpServer(int port){
+        DatagramSocket server = (DatagramSocket) SERVER.get(port);
+        server.close(res -> {
+            if (res.succeeded()) {
+                logger.debug("Udp Server on {} closed!", port);
+            } else {
+                logger.error("Udp Server on {} cant close", port, res.cause());
+            }
+        });
+    }
+
+    private void tcpServer(AppOption appOption, Message<JsonObject> message) {
+        App app = getApp(appOption.getId());
+        if (app == null) {
+            try {
+                app = new App(appOption);
+                app.buildTcpProxy();
+                APPS.put(app.getId(), app);
+            } catch (Exception e) {
+                logger.error("parse app json error:", e);
+                message.fail(StatusCode.SYS_ERROR, e.getMessage());
+                return;
+            }
+        }
+
+        final TcpProxy tcpProxy = app.getTcpProxy();
+
+        NetServer server = vertx.createNetServer();
+        final int usePort = app.getPort();
+        server.connectHandler(tcpProxy::handle)
+            .exceptionHandler(ex -> {
+                ex.printStackTrace();
+        }).listen(app.getPort(), result -> {
+            if(result.succeeded()){
+                SERVER.put(usePort, (Closeable) server);
+                message.reply(this.deploymentID());
+            }else{
+                message.fail(500, result.cause().getMessage());
+            }
+        });
+    }
+
+    private void stopTcpServer(int port){
+        Closeable server = (Closeable) SERVER.get(port);
+        server.close(res -> {
+            if (res.succeeded()) {
+                logger.debug("Tcp Server on {} closed!", port);
+            } else {
+                logger.error("Tcp Server on {} cant close", port, res.cause());
+            }
+        });
+    }
+
+    private void httpServer(AppOption appOption, Message<JsonObject> message) {
         App app = getApp(appOption.getId());
         if (app == null) {
             try {
@@ -165,20 +270,20 @@ public class ServerVerticle extends AbstractVerticle {
 
         int port = app.getPort();
 //        if (SERVER.get(port) == null) {
-            futureList.add(Future.<Void>future(http -> {
-                logger.debug("no Server run on port:{}, now create...", port);
-                createHttpServer(port, res -> {
-                    if (res.succeeded()) {
-                        logger.debug("HTTP Server Created! port:{}", port);
+        futureList.add(Future.<Void>future(http -> {
+            logger.debug("no Server run on port:{}, now create...", port);
+            createHttpServer(port, res -> {
+                if (res.succeeded()) {
+                    logger.debug("HTTP Server Created! port:{}", port);
 //                        SERVER.put(port, res.result());
-                        http.complete();
-                    } else {
-                        logger.error("HTTP Server ERROR! port:{}", port);
-                        http.fail(res.cause());
-                    }
+                    http.complete();
+                } else {
+                    logger.error("HTTP Server ERROR! port:{}", port);
+                    http.fail(res.cause());
+                }
 
-                });
-            }));
+            });
+        }));
 //        }
 
         final Ssl cert = app.getSsl();
@@ -214,7 +319,7 @@ public class ServerVerticle extends AbstractVerticle {
         Route route = router.route();
         String[] ipBlanklist = app.getPreference().getIpBlacklist();
         if (ipBlanklist != null && ipBlanklist.length > 0)
-            route.handler(new IpFilterHandler(ipBlanklist));
+            route.handler(new HttpIpFilterHandler(ipBlanklist));
 
         /**
          * 设置服务选项，如上传路径，请求体大小
@@ -329,11 +434,9 @@ public class ServerVerticle extends AbstractVerticle {
             }
         }
 
-        api.buildProxy(useHttpClient);
+        api.buildHttpProxy(useHttpClient);
 
         route(api, app.getRouter());
-
-
 
         message.reply(1);
     }
@@ -390,16 +493,16 @@ public class ServerVerticle extends AbstractVerticle {
         return APPS.get(appId);
     }
 
-    private void createHttpsServer(int port, Ssl cert, Handler<AsyncResult<HttpServer>> result) {
+    private void createHttpsServer(int port, Ssl cert, Handler<AsyncResult<Closeable>> result) {
         createHttpServer(true, port, cert, result);
     }
 
-    private void createHttpServer(int port, Handler<AsyncResult<HttpServer>> result) {
+    private void createHttpServer(int port, Handler<AsyncResult<Closeable>> result) {
         createHttpServer(false, port, null, result);
     }
 
-    private synchronized void createHttpServer(boolean ssl, int port, Ssl cert, Handler<AsyncResult<HttpServer>> result) {
-        HttpServer existServer = SERVER.get(port);
+    private synchronized void createHttpServer(boolean ssl, int port, Ssl cert, Handler<AsyncResult<Closeable>> result) {
+        Closeable existServer = (Closeable) SERVER.get(port);
         if(existServer != null){
             logger.info("HTTP{} server on port {} already exists or creating", ssl ? "S":"", port);
             result.handle(Future.succeededFuture(existServer));
@@ -445,7 +548,7 @@ public class ServerVerticle extends AbstractVerticle {
         try {
             logger.info("Creating HTTP{} server on port:{}", ssl ? "S":"", port);
             HttpServer server = vertx.createHttpServer(serverOptions);
-            SERVER.put(port, server);
+            SERVER.put(port, (Closeable)server);
             server.requestHandler(request -> {
                 String host = request.host();
                 Router useRouter = HOST_ROUTER_MAP.get(host);
@@ -469,7 +572,7 @@ public class ServerVerticle extends AbstractVerticle {
 
             server.listen(serverOptions.getPort(), startResult -> {
                 if (startResult.succeeded()) {
-                    result.handle(Future.succeededFuture(server));
+                    result.handle(Future.succeededFuture((Closeable)server));
                 } else {
                     SERVER.remove(port);
                     result.handle(Future.failedFuture(startResult.cause()));
@@ -502,19 +605,19 @@ public class ServerVerticle extends AbstractVerticle {
         Route route = newRoute(path, routeMethods, router);
         routes.add(route);
 
-        route.handler(new SystemHandler(vertx, app, path));
+        route.handler(new HttpSystemHandler(vertx, app, path));
 
-        Processor limit = preference.getAccessLimit();
+        HttpProcessor limit = preference.getAccessLimit();
         if (limit != null) {
             route.handler(limit);
         }
 
-        Processor auth = preference.getAuth();
+        HttpProcessor auth = preference.getAuth();
         if (auth != null) {
             route.handler(auth);
         }
 
-        Processor sqlFilter = preference.getSqlFilter();
+        HttpProcessor sqlFilter = preference.getSqlFilter();
         if (sqlFilter != null) {
             route.handler(sqlFilter);
         }
@@ -523,18 +626,18 @@ public class ServerVerticle extends AbstractVerticle {
             //挂载自定义静态目录
         }
 
-        Processor[] preProcessors = preference.getPreProcessors();
-        if (preProcessors != null && preProcessors.length == 0) {
-            for (Processor pro : preProcessors) {
+        HttpProcessor[] preHttpProcessors = preference.getPreProcessors();
+        if (preHttpProcessors != null && preHttpProcessors.length == 0) {
+            for (HttpProcessor pro : preHttpProcessors) {
                 route.handler(pro);
             }
         }
 
-        route.handler(path.getProxy());
+        route.handler(path.getHttpProxy());
 
-        Processor[] postProcessors = preference.getPostProcessors();
-        if (postProcessors != null && postProcessors.length == 0) {
-            for (Processor pro : postProcessors) {
+        HttpProcessor[] postHttpProcessors = preference.getPostProcessors();
+        if (postHttpProcessors != null && postHttpProcessors.length == 0) {
+            for (HttpProcessor pro : postHttpProcessors) {
                 route.handler(pro);
             }
         }

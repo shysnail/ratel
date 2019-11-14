@@ -9,7 +9,7 @@ import com.kaitusoft.ratel.Result;
  *          <p>
  *          write description here
  */
-public abstract class AbstractAuthProcessor extends ExtendableProcessor {
+public abstract class AbstractAuthHttpProcessor extends ExtendableHttpProcessor {
 
     public void setResult(Result result) {
         this.failResult = result;

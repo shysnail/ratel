@@ -5,7 +5,7 @@ import com.kaitusoft.ratel.core.handler.extend.DemoPostHandler;
 import com.kaitusoft.ratel.core.handler.extend.DemoPreHandler;
 import com.kaitusoft.ratel.core.model.ExtendInstance;
 import com.kaitusoft.ratel.core.model.po.Group;
-import com.kaitusoft.ratel.handler.AbstractAuthProcessor;
+import com.kaitusoft.ratel.handler.AbstractAuthHttpProcessor;
 import com.kaitusoft.ratel.handler.AbstractPostHandler;
 import com.kaitusoft.ratel.handler.AbstractPreHandler;
 import com.kaitusoft.ratel.util.ResourceUtil;
@@ -46,7 +46,7 @@ public class Env {
     ;
 
     static {
-        AbstractAuthProcessor defaultAuth = new DemoAuth();
+        AbstractAuthHttpProcessor defaultAuth = new DemoAuth();
         ExtendInstance auth = new ExtendInstance();
         auth.setInstance(defaultAuth.getClass().getCanonicalName());
         auth.setUsage(defaultAuth.usage());
@@ -117,13 +117,13 @@ public class Env {
     }
 
     private static void loadExtendInstance(Collection<Class<?>> allClasses) {
-        List<Class<?>> extendAuths = ResourceUtil.getSubClasses(AbstractAuthProcessor.class, allClasses);
+        List<Class<?>> extendAuths = ResourceUtil.getSubClasses(AbstractAuthHttpProcessor.class, allClasses);
         extendAuths.forEach((clazz) -> {
             boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
             if (isAbstract)
                 return;
             try {
-                AbstractAuthProcessor handler = (AbstractAuthProcessor) clazz.newInstance();
+                AbstractAuthHttpProcessor handler = (AbstractAuthHttpProcessor) clazz.newInstance();
                 ExtendInstance extend = new ExtendInstance();
                 extend.setInstance(handler.getClass().getCanonicalName());
                 extend.setUsage(handler.usage());

@@ -12,8 +12,8 @@ import io.vertx.ext.web.RoutingContext;
 public class IpHashProxyPolicy extends ProxyPolicy {
 
     @Override
-    public Target choseNext(RoutingContext context) {
-        String ip = context.request().remoteAddress().host();
+    public Target choseNext(Object client) {
+        String ip = client.toString();
 
         int index = ip.hashCode() % targets.length;
         index = index < 0 ? (0 - index) : index;

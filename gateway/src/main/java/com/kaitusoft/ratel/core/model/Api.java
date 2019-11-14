@@ -1,6 +1,7 @@
 package com.kaitusoft.ratel.core.model;
 
-import com.kaitusoft.ratel.core.handler.Proxy;
+import com.kaitusoft.ratel.core.handler.HttpProxy;
+import com.kaitusoft.ratel.core.handler.HttpProxy;
 import com.kaitusoft.ratel.core.model.option.ApiExtendOption;
 import com.kaitusoft.ratel.core.model.option.ProxyOption;
 import com.kaitusoft.ratel.core.model.option.UpstreamOption;
@@ -60,7 +61,7 @@ public class Api {
 
     private Preference preference;
 
-    private Proxy proxy;
+    private HttpProxy httpProxy;
 
     private String root;
 
@@ -135,14 +136,14 @@ public class Api {
         setFuzzy(path.indexOf('*') > 0);
     }
 
-    public void buildProxy(HttpClient httpClient) {
+    public void buildHttpProxy(HttpClient httpClient) {
         this.httpClient = httpClient;
-        proxy = Proxy.build(this, proxyOption);
+        httpProxy = HttpProxy.build(this, proxyOption);
     }
 
-    public void buildProxy() {
-        buildProxy(null);
-    }
+//    public void buildProxy() {
+//        buildProxy(null);
+//    }
 
 
     /**

@@ -37,13 +37,6 @@
                                placeholder="uri，支持正则表达式。如/demo、^demo[a-z]+/image/[a-z0-9]+$等等"/>
                     </div>
                 </div>
-                <div class="row cl" style="display: none;">
-                    <label class="form-label col-xs-3" for="name">vhost:</label>
-                    <div class="formControls col-xs-8">
-                        <input class="input-text" id="vhost" name="vhost" placeholder="请输入vhost，如 x.test.com，多个以 空格 拼接"
-                               value="*" disabled/>
-                    </div>
-                </div>
                 <div class="row cl">
                     <label class="form-label col-xs-3"></label>
                     <div class="formControls col-xs-8">
@@ -984,7 +977,7 @@
                     }
                 });
 
-                var preHandlers = preference.preProcessors;
+                var preHandlers = preference.preHttpProcessors;
                 if (preHandlers != undefined && preHandlers.length > 0) {
                     var preHandler = preHandlers[0];
                     $(':radio[name=option\\.preHandler]').each(function () {
@@ -999,7 +992,7 @@
                     });
                 }
 
-                var postHandlers = preference.postProcessors;
+                var postHandlers = preference.postHttpProcessors;
                 if (postHandlers != undefined && postHandlers.length > 0) {
                     var postHandler = postHandlers[0];
                     $(':radio[name=option\\.postHandler]').each(function () {
@@ -1236,11 +1229,11 @@
             preference.preHandlerType = "APP";
         } else {
             var preHandler = {};
-            preference.preProcessors = new Array();
+            preference.preHttpProcessors = new Array();
             preHandler.name = $(":input[name=preHandler\\.name]").val();
             preHandler.instance = $(":input[name=preHandler\\.instance]").val();
             preHandler.usage = $("#preHandler\\.usage").text();
-            preference.preProcessors.push(preHandler);
+            preference.preHttpProcessors.push(preHandler);
         }
 
         var openPostHandler = $(':radio[name=option\\.postHandler]:checked').val();
@@ -1250,12 +1243,12 @@
             preference.postHandlerType = "APP";
         } else {
             var postHandler = {};
-            preference.postProcessors = new Array();
+            preference.postHttpProcessors = new Array();
             postHandler.name = $(":input[name=postHandler\\.name]").val();
             postHandler.instance = $(":input[name=postHandler\\.instance]").val();
             ;
             postHandler.usage = $("#postHandler\\.usage").text();
-            preference.postProcessors.push(postHandler);
+            preference.postHttpProcessors.push(postHandler);
         }
 
         $.ajax({

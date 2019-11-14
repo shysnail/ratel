@@ -185,7 +185,7 @@ public class SystemVerticle extends AbstractVerticle {
                     logger.debug("retry test url available:{}", target);
                     try {
                         if (URLUtil.useful(target.getUrl())) {
-                            k.getProxy().getProxyPolicy().rebirth(target);
+                            k.getHttpProxy().getProxyPolicy().rebirth(target);
                         }
                     } catch (IOException e) {
                         logger.error("重试连接 {} 出错", target.getUrl());

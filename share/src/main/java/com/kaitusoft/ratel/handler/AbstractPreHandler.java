@@ -6,5 +6,5 @@ package com.kaitusoft.ratel.handler;
  *          <p>
  *          write description here
  */
-public abstract class AbstractPreHandler extends ExtendableProcessor {
+public abstract class AbstractPreHandler extends ExtendableHttpProcessor {
 }

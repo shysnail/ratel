@@ -2,10 +2,13 @@ package com.kaitusoft.ratel.core.handler;
 
 import com.kaitusoft.ratel.core.model.Target;
 import com.kaitusoft.ratel.util.StringUtils;
+import io.vertx.core.http.Cookie;
 import io.vertx.ext.web.RoutingContext;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author frog.w
@@ -18,7 +21,16 @@ public abstract class ProxyPolicy {
     protected Target[] targets;
     protected Set<Target> deadTargets = new HashSet<>();
 
+    protected boolean keepSession = false;
+
+    private Map<Object, Target> sessionMap;
+
+
     public static ProxyPolicy create(LoadBalance loadBalance, Target[] targets) {
+        return create(loadBalance, false, targets);
+    }
+
+    public static ProxyPolicy create(LoadBalance loadBalance, boolean keepSession, Target[] targets) {
         ProxyPolicy proxyPolicy = null;
         if (loadBalance == LoadBalance.POLLING_AVAILABLE) {
             proxyPolicy = new WeightPollingProxyPolicy();
@@ -32,6 +44,11 @@ public abstract class ProxyPolicy {
 
         proxyPolicy.targets = new Target[targets.length];
         System.arraycopy(targets, 0, proxyPolicy.targets, 0, targets.length);
+
+        proxyPolicy.keepSession = keepSession;
+        if(keepSession)
+            proxyPolicy.sessionMap = new ConcurrentHashMap<Object, Target>(65535, 0.75f, 16);
+
         proxyPolicy.init();
         return proxyPolicy;
     }
@@ -100,14 +117,26 @@ public abstract class ProxyPolicy {
 
     }
 
-    public Target next(RoutingContext context) {
+    public Target next(Object client) {
         if (targets == null || targets.length == 0)
             return null;
 
-        return choseNext(context);
+        Target t = null;
+        if(keepSession && client != null) {
+            t = sessionMap.get(client);
+
+            if(t == null) {
+                t = choseNext(client);
+                sessionMap.put(client, t);
+            }
+        }else{
+            t = choseNext(client);
+        }
+
+        return t;
     }
 
-    public abstract Target choseNext(RoutingContext context);
+    public abstract Target choseNext(Object client);
 
 
     public enum LoadBalance {

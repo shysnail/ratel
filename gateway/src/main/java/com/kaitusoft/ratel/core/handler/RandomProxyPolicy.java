@@ -16,7 +16,7 @@ public class RandomProxyPolicy extends ProxyPolicy {
     private Random random = new Random();
 
     @Override
-    public Target choseNext(RoutingContext context) {
+    public Target choseNext(Object client) {
         int nextInt = random.nextInt(this.targets.length);
         return targets[nextInt];
     }

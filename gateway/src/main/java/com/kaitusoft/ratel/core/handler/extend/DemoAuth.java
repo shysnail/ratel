@@ -1,6 +1,6 @@
 package com.kaitusoft.ratel.core.handler.extend;
 
-import com.kaitusoft.ratel.handler.AbstractAuthProcessor;
+import com.kaitusoft.ratel.handler.AbstractAuthHttpProcessor;
 import com.kaitusoft.ratel.util.StringUtils;
 import io.vertx.core.MultiMap;
 import io.vertx.ext.web.RoutingContext;
@@ -11,7 +11,7 @@ import io.vertx.ext.web.RoutingContext;
  *          <p>
  *          write description here
  */
-public class DemoAuth extends AbstractAuthProcessor {
+public class DemoAuth extends AbstractAuthHttpProcessor {
 
     @Override
     public String usage() {

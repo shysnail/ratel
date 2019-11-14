@@ -1,9 +1,9 @@
 package com.kaitusoft.ratel.core.handler;
 
-import com.kaitusoft.ratel.handler.Processor;
+import com.kaitusoft.ratel.handler.HttpProcessor;
 import io.vertx.ext.web.RoutingContext;
 
-public class SqlFilter extends Processor {
+public class HttpSqlFilter extends HttpProcessor {
 
     @Override
     protected boolean preCheck(RoutingContext context) {

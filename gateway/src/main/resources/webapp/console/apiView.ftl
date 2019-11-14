@@ -99,7 +99,7 @@
                         </div>
 
                         <div class="row cl proxy_upstream">
-                            <label class="form-label col-xs-3">目标:</label>
+                            <label class="form-label col-xs-3">负载均衡目标:</label>
                             <div class="formControls col-xs-9" id="upstreamOption.targets">
 
                             </div>
@@ -487,7 +487,7 @@
                     var targets = "";
                     for (var i = 0; i < upstreamOption.targets.length; i++) {
                         var t = upstreamOption.targets[i];
-                        targets += "URL:" + t.url + " 权重：" + t.weight + "<br/>"
+                        targets += "SERVER: " + t.url + " 权重：" + t.weight + "<br/>"
                     }
 
                     $('#upstreamOption\\.targets').html(targets);
@@ -608,7 +608,7 @@
                     $('#auth_panel').hide();
                 }
 
-                var preHandlers = preferenceOption.preProcessors;
+                var preHandlers = preferenceOption.preHttpProcessors;
                 if (preHandlers != undefined && preHandlers.length > 0) {
                     var preHandler = preHandlers[0];
                     $("#preHandler\\.name").text(preHandler.name);
@@ -618,7 +618,7 @@
                     $('#preHandler_panel').hide();
                 }
 
-                var postHandlers = preferenceOption.postProcessors;
+                var postHandlers = preferenceOption.postHttpProcessors;
                 if (postHandlers != undefined && postHandlers.length > 0) {
                     var postHandler = postHandlers[0];
                     $("#postHandler\\.name").text(postHandler.name);

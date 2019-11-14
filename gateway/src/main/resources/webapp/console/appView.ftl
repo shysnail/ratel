@@ -57,9 +57,35 @@
                     <div class="formControls col-xs-8" id="port">
                     </div>
                 </div>
-                <div class="row cl">
+                <div class="row cl httpOption">
                     <label class="form-label col-xs-3">vhost:</label>
                     <div class="formControls col-xs-8" id="vhost">
+                    </div>
+                </div>
+                <div class="row cl httpOption">
+                    <label class="form-label col-xs-3" for="websocket">websocket:</label>
+                    <div class="check-box" id="websocket">
+                    </div>
+                </div>
+                <div class="row cl tcpOption udpOption">
+                    <label class="form-label col-xs-3">负载策略:</label>
+                    <div class="formControls col-xs-3">
+                        <select id="upstreamOption.proxyPolicy" size="1" class="select-box" readonly>
+                            <option value="RANDOM">随机</option>
+                            <option value="POLLING_AVAILABLE">权重轮训</option>
+                            <option value="IP_HASH">IP分配</option>
+                            <option value="LEAST_ACTIVE">最小活跃数(暂不可用)</option>
+                        </select>(目标url存在多个时，策略生效)
+                    </div>
+                    <div class="formControls col-xs-5 text-r">
+
+                    </div>
+                </div>
+
+                <div class="row cl tcpOption">
+                    <label class="form-label col-xs-3">负载均衡目标:</label>
+                    <div class="formControls col-xs-9" id="upstreamOption.targets">
+
                     </div>
                 </div>
                 <div class="row cl">
@@ -74,7 +100,7 @@
             <div class="e-p-h panel-header">扩展设置<b style="float:right;margin-right: 10px">+</b></div>
             <div class="e-p-b panel-body">
 
-                <div class="e-p-i panel panel-default" id="ssl_panel">
+                <div class="e-p-i panel panel-default httpOption" id="ssl_panel">
                     <div class="e-p-i-h panel-header cl">HTTPS</div>
                     <div class="e-p-i-b panel-body">
                         <div class="row cl">
@@ -100,7 +126,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i panel panel-default mt-20">
+                <div class="e-p-i panel panel-default mt-20 httpOption">
                     <div class="e-p-i-h panel-header">反向代理服务设置<b style="float:right;margin-right: 10px">+</b></div>
                     <div class="e-p-i-b panel-body">
                         <div class="row cl">
@@ -162,7 +188,7 @@
                 </div>
             </div>
 
-            <div class="e-p-i panel panel-default mt-20" id="header_panel">
+            <div class="e-p-i panel panel-default mt-20 httpOption" id="header_panel">
                 <div class="e-p-i-h panel-header">请求头设定</div>
                 <div class="e-p-i-b panel-body">
                     <div class="row cl">
@@ -178,7 +204,7 @@
                 </div>
             </div>
 
-            <div class="e-p-i panel panel-default mt-20" id="accessLogOption_panel">
+            <div class="e-p-i panel panel-default mt-20 httpOption" id="accessLogOption_panel">
                 <div class="e-p-i-h panel-header">访问日志</div>
                 <div class="e-p-i-b panel-body">
                     <div class="row cl">
@@ -194,7 +220,7 @@
                 </div>
             </div>
 
-            <div class="e-p-i panel panel-default mt-20" id="staticServer">
+            <div class="e-p-i panel panel-default mt-20 httpOption" id="staticServer">
                 <div class="panel-header cl">静态WEB服务</div>
                 <div class="e-p-i-b panel-body">
                     <div class="row cl">
@@ -205,7 +231,7 @@
                 </div>
             </div>
 
-            <div class="e-p-i panel panel-default mt-20" id="sessionOption_panel">
+            <div class="e-p-i panel panel-default mt-20 httpOption" id="sessionOption_panel">
                 <div class="e-p-i-h panel-header cl">SESSION</div>
                 <div class="e-p-i-b panel-body">
                     <div class="row cl">
@@ -221,7 +247,7 @@
                 </div>
             </div>
 
-            <div class="e-p-i panel panel-default mt-20" id="crossDomain_panel">
+            <div class="e-p-i panel panel-default mt-20 httpOption" id="crossDomain_panel">
                 <div class="e-p-i-h panel-header cl">跨域</div>
                 <div class="e-p-i-b panel-body">
                     <div class="row cl">
@@ -258,7 +284,7 @@
                 </div>
             </div>
 
-            <div class="e-p-i panel panel-default mt-20" id="limit_panel">
+            <div class="e-p-i panel panel-default mt-20 httpOption" id="limit_panel">
                 <div class="panel-header cl">流控</div>
                 <div class="e-p-i-b panel-body">
                     <div class="row cl">
@@ -329,7 +355,7 @@
             <!--</div>-->
             <!--</div>-->
 
-            <div class="e-p-i panel panel-default mt-20" id="ipbl_panel">
+            <div class="e-p-i panel panel-default mt-20 httpOption" id="ipbl_panel">
                 <div class="e-p-i-h panel-header">IP黑名单</div>
                 <div class="e-p-i-b panel-body">
                     <div class="row cl">
@@ -340,7 +366,7 @@
                 </div>
             </div>
 
-            <div class="e-p-i panel panel-default mt-20" id="auth_panel">
+            <div class="e-p-i panel panel-default mt-20 httpOption" id="auth_panel">
                 <div class="e-p-i-h panel-header cl">租户认证</div>
                 <div class="e-p-i-b panel-body">
                     <div class="row cl">
@@ -368,7 +394,7 @@
                 </div>
             </div>
 
-            <div class="e-p-i panel panel-default mt-20" id="preHandler_panel">
+            <div class="e-p-i panel panel-default mt-20 httpOption" id="preHandler_panel">
                 <div class="e-p-i-h panel-header">前置处理器</div>
                 <div class="e-p-i-b panel-body">
                     <div class="row cl">
@@ -389,7 +415,7 @@
                 </div>
             </div>
 
-            <div class="e-p-i panel panel-default mt-20" id="postHandler_panel">
+            <div class="e-p-i panel panel-default mt-20 httpOption" id="postHandler_panel">
                 <div class="e-p-i-h panel-header">后置处理器</div>
                 <div class="e-p-i-b panel-body">
                     <div class="row cl">
@@ -410,7 +436,7 @@
                 </div>
             </div>
 
-            <div class="e-p-i panel panel-default mt-20" id="code_panel">
+            <div class="e-p-i panel panel-default mt-20 httpOption" id="code_panel">
                 <div class="e-p-i-h panel-header">响应状态码定义</div>
                 <div class="e-p-i-b panel-body">
                     <div class="row cl code" style="display: none">
@@ -487,9 +513,27 @@
             success: function (app) {
                 $('#name').text(app.name);
                 $('#description').text(app.description);
-                $('#protocol').text(app.protocol);
-                $('#vhost').text(app.vhost);
                 $('#port').text(app.port);
+
+                $('#protocol').text(app.protocol);
+                if (app.protocol == 'HTTP_HTTPS') {
+                    $('.tcpOption').hide();
+                    $('.udpOption').hide();
+
+                    $('#vhost').text(app.vhost);
+
+                    $('.httpOption').show();
+                }else if (app.protocol == 'TCP') {
+                    $('.httpOption').hide();
+                    $('.udpOption').hide();
+
+                    $('.tcpOption').show();
+                }else if(app.protocol=='UDP'){
+                    $('.tcpOption').hide();
+                    $('.httpOption').hide();
+                    $('.udpOption').show();
+                }
+
                 $('#deployGroup').text(app.deployGroup);
                 var running = app.running;
                 if (running == 0) {
@@ -499,19 +543,22 @@
                     $('#action_start').hide();
                     $('#action_stop').show();
                 }
+
                 var extendOption = JSON.parse(app.parameter);
 
-                var ssl = extendOption.ssl;
-                if (ssl == undefined) {
-                    $('#ssl_panel').hide();
-                } else {
-                    $('#ssl\\.port').text(ssl.port);
-                    $('#ssl\\.certType').text(ssl.certType);
-                    $('#ssl\\.keyPath').text(ssl.keyPath);
-                    $('#ssl\\.certPath').text(ssl.certPath);
+                var upstreamOption = extendOption.upstreamOption;
+
+                $('#upstreamOption\\.proxyPolicy').val(upstreamOption.loadBalance);
+                $('#upstreamOption\\.proxyPolicy').change();
+
+                var targets = "";
+                for (var i = 0; i < upstreamOption.targets.length; i++) {
+                    var t = upstreamOption.targets[i];
+                    targets += "SERVER: " + t.url + " 权重：" + t.weight + "<br/>"
                 }
 
-                var upstreamOption = extendOption.upstreamOption;
+                $('#upstreamOption\\.targets').html(targets);
+
                 $('#upstreamOption\\.timeout').text(upstreamOption.timeout + '毫秒');
                 $('#upstreamOption\\.retry').text(upstreamOption.retry + '次');
                 $('#upstreamOption\\.passQueryString').text(upstreamOption.passQueryString ? '是' : '否');
@@ -546,6 +593,17 @@
                     $('#upstreamOption\\.appendHeaders').html(appendHeaderStr);
                     $('#upstreamOption\\.removeHeaders').text(removeHeaders);
                 }
+
+                var ssl = extendOption.ssl;
+                if (ssl == undefined) {
+                    $('#ssl_panel').hide();
+                } else {
+                    $('#ssl\\.port').text(ssl.port);
+                    $('#ssl\\.certType').text(ssl.certType);
+                    $('#ssl\\.keyPath').text(ssl.keyPath);
+                    $('#ssl\\.certPath').text(ssl.certPath);
+                }
+
                 var sessionOption = extendOption.sessionOption;
                 if (sessionOption == undefined) {
                     $('#sessionOption_panel').hide();
@@ -619,7 +677,7 @@
                     $('#auth_panel').hide();
                 }
 
-                var preHandlers = preferenceOption.preProcessors;
+                var preHandlers = preferenceOption.preHttpProcessors;
                 if (preHandlers != undefined && preHandlers.length > 0) {
                     var preHandler = preHandlers[0];
                     $("#preHandler\\.name").text(preHandler.name);
@@ -629,7 +687,7 @@
                     $('#preHandler_panel').hide();
                 }
 
-                var postHandlers = preferenceOption.postProcessors;
+                var postHandlers = preferenceOption.postHttpProcessors;
                 if (postHandlers != undefined && postHandlers.length > 0) {
                     var postHandler = postHandlers[0];
                     $("#postHandler\\.name").text(postHandler.name);

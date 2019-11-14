@@ -6,9 +6,9 @@ import com.kaitusoft.ratel.core.model.option.AccessLimitOption;
 import com.kaitusoft.ratel.core.model.option.AuthOption;
 import com.kaitusoft.ratel.core.model.option.EdgeProcessorOption;
 import com.kaitusoft.ratel.core.model.option.PreferenceOption;
-import com.kaitusoft.ratel.handler.AbstractAuthProcessor;
-import com.kaitusoft.ratel.handler.ExtendableProcessor;
-import com.kaitusoft.ratel.handler.Processor;
+import com.kaitusoft.ratel.handler.AbstractAuthHttpProcessor;
+import com.kaitusoft.ratel.handler.ExtendableHttpProcessor;
+import com.kaitusoft.ratel.handler.HttpProcessor;
 import com.kaitusoft.ratel.util.ResourceUtil;
 import com.kaitusoft.ratel.util.StringUtils;
 import io.vertx.core.http.HttpMethod;
@@ -44,17 +44,17 @@ public class Preference {
      */
     private String docRoot;
 
-    private Processor accessLimit;
+    private HttpProcessor accessLimit;
 
-    private Processor xssFilter;
+    private HttpProcessor xssFilter;
 
-    private Processor sqlFilter;
+    private HttpProcessor sqlFilter;
 
-    private AbstractAuthProcessor auth;
+    private AbstractAuthHttpProcessor auth;
 
-    private ExtendableProcessor[] preProcessors;
+    private ExtendableHttpProcessor[] preProcessors;
 
-    private ExtendableProcessor[] postProcessors;
+    private ExtendableHttpProcessor[] postProcessors;
 
     private Result[] customCodes;
 
@@ -84,17 +84,17 @@ public class Preference {
         //创建权限认证
         AuthOption authOption = option.getAuthOption();
         if (option.getAuthOption() != null) {
-            auth = ResourceUtil.instanceClass(authOption.getInstance(), AbstractAuthProcessor.class);
+            auth = ResourceUtil.instanceClass(authOption.getInstance(), AbstractAuthHttpProcessor.class);
             auth.setResult(authOption.getFailReturn().clone());
         }
 
         //前置处理器
         List<EdgeProcessorOption> preProcessorOptions = option.getPreProcessors();
         if (preProcessorOptions != null && preProcessorOptions.size() > 0) {
-            preProcessors = new ExtendableProcessor[preProcessorOptions.size()];
+            preProcessors = new ExtendableHttpProcessor[preProcessorOptions.size()];
 
             for (int i = 0; i < preProcessorOptions.size(); i++) {
-                preProcessors[i] = ResourceUtil.instanceClass(preProcessorOptions.get(i).getInstance(), ExtendableProcessor.class);
+                preProcessors[i] = ResourceUtil.instanceClass(preProcessorOptions.get(i).getInstance(), ExtendableHttpProcessor.class);
             }
 
         }
@@ -103,10 +103,10 @@ public class Preference {
 
         List<EdgeProcessorOption> postProcessorOptions = option.getPostProcessors();
         if (postProcessorOptions != null && postProcessorOptions.size() > 0) {
-            postProcessors = new ExtendableProcessor[postProcessorOptions.size()];
+            postProcessors = new ExtendableHttpProcessor[postProcessorOptions.size()];
 
             for (int i = 0; i < postProcessorOptions.size(); i++) {
-                postProcessors[i] = ResourceUtil.instanceClass(postProcessorOptions.get(i).getInstance(), ExtendableProcessor.class);
+                postProcessors[i] = ResourceUtil.instanceClass(postProcessorOptions.get(i).getInstance(), ExtendableHttpProcessor.class);
             }
 
         }

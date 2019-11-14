@@ -13,11 +13,11 @@ import io.vertx.ext.web.RoutingContext;
  *          <p>
  *          write description here
  */
-public class EchoProxy extends Proxy {
+public class HttpEchoProxy extends HttpProxy {
 
     private Result echo;
 
-    public EchoProxy(Api api, ProxyOption proxyOption) {
+    public HttpEchoProxy(Api api, ProxyOption proxyOption) {
         super(api, proxyOption);
         this.echo = ((EchoOption) proxyOption).getEcho();
     }

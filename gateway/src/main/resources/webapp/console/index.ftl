@@ -186,7 +186,8 @@
 
                     var options = new Array();
 
-                    options.push("<a href='${context.domain!''}/api.html?appId=" + v.id + "' ><i class='iconfont icon-zitiyulan' title='查看APIs'></i></a>");
+                    if(v.protocol == 'HTTP_HTTPS')
+                        options.push("<a href='${context.domain!''}/api.html?appId=" + v.id + "' ><i class='iconfont icon-zitiyulan' title='查看APIs'></i></a>");
 
                     if (running == 0){
                         options.push("<a href='javascript:void(0)' onclick='appAction(" + v.id + ", 1)'><i class='iconfont icon-play-circle' title='启动'></i></a>");

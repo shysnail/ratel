@@ -41,32 +41,87 @@
                     <label class="form-label col-xs-3">服务类型:</label>
                     <div class="formControls skin-minimal col-xs-8">
                         <div class="radio-box">
-                            <input type="radio" id="protocol-1" name="protocol" value="HTTP_HTTPS" checked>
-                            <label for="protocol-1">HTTP(/HTTPS)</label>
+                            <input type="radio" id="protocol-HTTP" name="protocol" value="HTTP" checked>
+                            <label for="protocol-1">HTTP</label>
                         </div>
                         <#--<div class="radio-box">-->
                             <#--<input type="radio" id="protocol-3" name="protocol" value="WEB_SOCKET" disabled>-->
                             <#--<label for="protocol-3">WEB_SOCKET</label>-->
                         <#--</div>-->
                         <div class="radio-box">
-                            <input type="radio" id="protocol-4" name="protocol" value="TCP" disabled>
+                            <input type="radio" id="protocol-TCP" name="protocol" value="TCP">
                             <label for="protocol-4">TCP</label>
+                        </div>
+                        <div class="radio-box">
+                            <input type="radio" id="protocol-UDP" name="protocol" value="UDP">
+                            <label for="protocol-5">UDP</label>
                         </div>
                     </div>
                 </div>
+
                 <div class="row cl">
                     <label class="form-label col-xs-3">使用端口:</label>
                     <div class="formControls col-xs-8">
                         <input class="input-text" id="port" name="port" placeholder="8765" value="8765"/>
                     </div>
                 </div>
-                <div class="row cl">
-                    <label class="form-label col-xs-3" for="name">vhost:</label>
+                <div class="row cl httpOption">
+                    <label class="form-label col-xs-3" for="vhost">vhost:</label>
                     <div class="formControls col-xs-8">
                         <input class="input-text" id="vhost" name="vhost" placeholder="请输入vhost，如 x.test.com，多个以 空格 拼接"
                                value="*"/>
                     </div>
                 </div>
+                <div class="row cl httpOption">
+                    <label class="form-label col-xs-3" for="websocket">websocket:</label>
+                    <div class="check-box">
+                        <input type="checkbox" id="websocket" name="websocket" value="1" checked>
+                        <label for="websocket">开启</label>
+                    </div>
+                </div>
+
+                <div class="e-p-i-i panel panel-default mt-20 tcpOption udpOption">
+                    <div class="e-p-i-i-h panel-header cl">转发设置</div>
+                    <div class="e-p-i-i-b panel-body">
+                        <div class="row cl">
+                            <label class="form-label col-xs-3">负载策略:</label>
+                            <div class="formControls col-xs-3">
+                                <select name="proxyPolicy" size="1" class="select-box">
+                                    <option value="RANDOM">随机</option>
+                                    <option value="POLLING_AVAILABLE">权重轮训</option>
+                                    <option value="IP_HASH">IP分配</option>
+                                    <option value="LEAST_ACTIVE">最小活跃数(暂不可用)</option>
+                                </select>(目标存在多个时，策略生效)
+                            </div>
+                            <div class="formControls col-xs-5 text-r">
+
+                            </div>
+                        </div>
+
+                        <div class="row cl">
+                            <label class="form-label col-xs-3">目标:</label>
+                            <div class="col-xs-9" id="upstream_targets">
+                                <div class="upstream_target">
+                                    <div class="formControls col-xs-6">
+                                        <input class="input-text" type="text" name="target.url" placeholder="请填写目标节点的地址（ip/域名/hostname）+端口，格式ip:port">
+                                    </div>
+                                    <div class="formControls col-xs-3">
+                                        <span class="f-l">权重：</span>&nbsp;<input class="input-text f-l"
+                                                                                 style="width: 50%" type="text"
+                                                                                 name="target.weight" value="1"
+                                                                                 placeholder="1">
+                                    </div>
+                                    <div class="formControls col-xs-3" name="upstream_target_ops">
+                                        <button class="btn btn-secondary radius f-r" type="button"
+                                                onclick="addUpstream()">增加
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row cl">
                     <label class="form-label col-xs-3">发布到网关组:</label>
                     <div class="formControls col-xs-8">
@@ -82,9 +137,9 @@
             <div class="e-p-h panel-header">扩展设置<b style="float:right;margin-right: 10px">+</b></div>
             <div class="e-p-b panel-body">
 
-                <div class="e-p-i panel panel-default">
+                <div class="e-p-i panel panel-default httpOption">
                     <div class="e-p-i-h panel-header cl">
-                        <label class="col-xs-3 text-l pl-5">HTTPS</label>
+                        <label class="col-xs-3 text-l pl-5">SSL</label>
                         <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openHTTPS"
                                                      name="openHTTPS"> <b class='openOrClose'>启用</b></div>
                     </div>
@@ -120,7 +175,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i-normal panel panel-default mt-20">
+                <div class="e-p-i-normal panel panel-default mt-20 httpOption">
                     <div class="e-p-i-h panel-header">反向代理服务设置<b style="float:right;margin-right: 10px">+</b></div>
                     <div class="e-p-i-b panel-body">
                         <div class="row cl">
@@ -245,7 +300,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i-normal panel panel-default mt-20">
+                <div class="e-p-i-normal panel panel-default mt-20 httpOption">
                     <div class="e-p-i-h panel-header">请求头设定<b style="float:right;margin-right: 10px">+</b></div>
                     <div class="e-p-i-b panel-body" id="proxyHeaders">
                         <div class="row cl text-r pr-30">
@@ -278,7 +333,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i-normal panel panel-default mt-20">
+                <div class="e-p-i-normal panel panel-default mt-20 httpOption">
                     <div class="e-p-i-h panel-header">访问日志<b style="float:right;margin-right: 10px">+</b></div>
                     <div class="e-p-i-b panel-body">
                         <div class="row cl">
@@ -296,7 +351,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i panel panel-default mt-20">
+                <div class="e-p-i panel panel-default mt-20 httpOption">
                     <div class="panel-header cl">
                         <label class="col-xs-3 text-l pl-5">静态WEB服务</label>
                         <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openStaticServer"
@@ -314,7 +369,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i panel panel-default mt-20">
+                <div class="e-p-i panel panel-default mt-20 httpOption">
                     <div class="e-p-i-h panel-header cl">
                         <label class="col-xs-3 text-l pl-5">SESSION</label>
                         <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openSession"
@@ -336,7 +391,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i panel panel-default mt-20">
+                <div class="e-p-i panel panel-default mt-20 httpOption">
                     <div class="e-p-i-h panel-header cl">
                         <label class="col-xs-3 text-l pl-5">跨域</label>
                         <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openCrossDomain"
@@ -396,7 +451,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i panel panel-default mt-20">
+                <div class="e-p-i panel panel-default mt-20 httpOption">
                     <div class="e-p-i-h panel-header cl">
                         <label class="col-xs-3 text-l pl-5">流控</label>
                         <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openAccessLimit"
@@ -479,7 +534,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i panel panel-default mt-20">
+                <div class="e-p-i panel panel-default mt-20 httpOption">
                     <div class="e-p-i-h panel-header cl">
                         <label class="col-xs-3 text-l pl-5">IP黑名单</label>
                         <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openIpFilter"
@@ -496,7 +551,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i panel panel-default mt-20">
+                <div class="e-p-i panel panel-default mt-20 httpOption">
                     <div class="e-p-i-h panel-header cl">
                         <label class="col-xs-3 text-l pl-5">租户认证</label>
                         <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openAuth" name="openAuth"
@@ -554,7 +609,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i panel panel-default mt-20" style="display: none">
+                <div class="e-p-i panel panel-default mt-20 httpOption" style="display: none">
                     <div class="e-p-i-h panel-header cl">
                         <label class="col-xs-3 text-l pl-5">自动降级/熔断</label>
                         <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openBlow"
@@ -626,7 +681,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i panel panel-default mt-20">
+                <div class="e-p-i panel panel-default mt-20 httpOption">
                     <div class="e-p-i-h panel-header cl">
                         <label class="col-xs-3 text-l pl-5">前置处理器</label>
                         <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openPreHandler"
@@ -658,7 +713,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i panel panel-default mt-20">
+                <div class="e-p-i panel panel-default mt-20 httpOption">
                     <div class="e-p-i-h panel-header cl">
                         <label class="col-xs-3 text-l pl-5">后置处理器</label>
                         <div class="col-xs-2"><input type="checkbox" class="item_trigger" id="openPostHandler"
@@ -693,7 +748,7 @@
                     </div>
                 </div>
 
-                <div class="e-p-i-normal panel panel-default mt-20" style="display: none;">
+                <div class="e-p-i-normal panel panel-default mt-20 httpOption" style="display: none;">
                     <div class="e-p-i-h panel-header">响应状态码定义<b style="float:right;margin-right: 10px">+</b></div>
                     <div class="e-p-i-b panel-body" id="code_panel">
                         <div class="row cl">
@@ -809,6 +864,22 @@
         codeLine.remove();
     }
 
+    var targetLine = $('#upstream_targets').find('.upstream_target:last');
+    function addUpstream(name, weight) {
+        var newTargetLine = targetLine.clone();
+        if (name != undefined)
+            $(newTargetLine).find("input[name=target\\.url]").val(name);
+        if (weight != undefined)
+            $(newTargetLine).find("input[name=target\\.weight]").val(weight);
+        $(newTargetLine).find("div[name=upstream_target_ops]").html('<button class="btn btn-warning radius" type="button" onclick="removeUpstream(this)">删除</button>');
+        $(newTargetLine).appendTo($('#upstream_targets'));
+        $(newTargetLine).show();
+    }
+    function removeUpstream(obj) {
+        var headLine = $(obj).parent().parent();
+        headLine.remove();
+    }
+
     function getItem(id) {
         $.ajax({
             url: "${context.domain!''}/app/" + id,
@@ -819,11 +890,35 @@
                 $('#name').val(app.name);
                 $('#description').val(app.description);
                 $(':radio[name=protocol]').val(app.protocol);
+                console.log(app.protocol)
+
+                $(':radio[name=protocol]').each(function(){
+                    if(this.id == 'protocol-'+app.protocol)
+                        $(this).click();
+                });
+
                 $('#vhost').val(app.vhost);
                 $('#port').val(app.port);
                 $(":input[name=deployGroup]").val(app.deployGroup);
 
                 var extendOption = JSON.parse(app.parameter);
+
+                var upstreamOption = extendOption.upstreamOption;
+
+                var targets = upstreamOption.targets;
+                console.log(targets);
+                for (var i = 0; targets && i < targets.length; i++) {
+                    var t = targets[i];
+                    addUpstream(t.url, t.weight);
+                }
+
+                if(app.protocol != 'HTTP'){
+                    return;
+                }
+
+                $('input:text[name=upstreamOption\\.timeout]').val(upstreamOption.timeout);
+                $('input:text[name=upstreamOption\\.retry]').val(upstreamOption.retry);
+                $('input:checkbox[name=upstreamOption\\.passQueryString]').prop('checked', upstreamOption.passQueryString);
 
                 var ssl = extendOption.ssl;
                 if (ssl != undefined) {
@@ -833,11 +928,6 @@
                     $(':input[name=ssl\\.certPath]').val(ssl.certPath);
                     $('#openHTTPS').click();
                 }
-
-                var upstreamOption = extendOption.upstreamOption;
-                $('input:text[name=upstreamOption\\.timeout]').val(upstreamOption.timeout);
-                $('input:text[name=upstreamOption\\.retry]').val(upstreamOption.retry);
-                $('input:checkbox[name=upstreamOption\\.passQueryString]').prop('checked', upstreamOption.passQueryString);
 
                 var passBody = upstreamOption.passBody;
 
@@ -954,7 +1044,7 @@
                     $('#openAuth').click();
                 }
 
-                var preHandlers = preferenceOption.preProcessors;
+                var preHandlers = preferenceOption.preHttpProcessors;
                 if (preHandlers != undefined && preHandlers.length > 0) {
                     var preHandler = preHandlers[0];
                     $(":input[name=preHandler\\.name]").val(preHandler.name);
@@ -963,7 +1053,7 @@
                     $('#openPreHandler').click();
                 }
 
-                var postHandlers = preferenceOption.postProcessors;
+                var postHandlers = preferenceOption.postHttpProcessors;
                 if (postHandlers != undefined && postHandlers.length > 0) {
                     var postHandler = postHandlers[0];
                     $(":input[name=postHandler\\.name]").val(postHandler.name);
@@ -994,7 +1084,7 @@
         }
         app.name = $('#name').val();
         app.description = $('#description').val();
-        app.protocol = $(':radio[name=protocol]').val();
+        app.protocol = $(':radio[name=protocol]:checked').val();
         app.vhost = $('#vhost').val();
         app.port = $('#port').val();
 
@@ -1003,174 +1093,201 @@
         var extendOption = {};
         app.extendOption = extendOption;
 
-        if ($('#openHTTPS').prop('checked')) {//开启https
-            var ssl = {};
-            extendOption.ssl = ssl;
-            ssl.port = $(':input[name=ssl\\.port]').val();
-            ssl.certType = $(':input[name=ssl\\.certType]').val();
-            ssl.keyPath = $(':input[name=ssl\\.keyPath]').val();
-            ssl.certPath = $(':input[name=ssl\\.certPath]').val();
-        }
-
-        var preference = {};
-        extendOption.preferenceOption = preference;
-
         var upstreamOption = {};
         extendOption.upstreamOption = upstreamOption;
-        upstreamOption.passQueryString = $('input:checkbox[name=upstreamOption\\.passQueryString]').prop('checked');
-        var passBody = {};
-        upstreamOption.passBody = passBody;
-        passBody.passBodyType = $(":radio[name=passBody\\.passBodyType]:checked").val();
-        if (passBody.passBodyType == 'PASS_BY_METHODS') {
-            var cm = new Array();
-            $('input[name=passBody\\.option]:checked').each(function () {
-                cm.push($(this).val());
+
+        var targets = new Array();
+        var targetsBox = $("#upstream_targets").find(".upstream_target");
+        targetsBox.each(function () {
+            var target = {};
+            target.url = $(this).find(":input[name=target\\.url]").val();
+            if (target.url == undefined || $.trim(target.url) == '') {
+                return;
+            }
+            target.weight = $(this).find(":input[name=target\\.weight]").val();
+            if (target.weight == undefined || $.trim(target.weight) == '') {
+                target.weight = 1;
+            }
+            targets.push(target);
+        })
+        if (targets.length < 1) {
+            $.Huimodalalert('必须指定转发目标！', 2000, function(){
+                $('#waitModal').modal('hide');
             });
-            passBody.option = cm.join(',');
+            return;
         }
-        upstreamOption.timeout = $('input:text[name=upstreamOption\\.timeout]').val();
-        upstreamOption.retry = $('input:text[name=upstreamOption\\.retry]').val();
-        upstreamOption.maxContentLength = $('input:text[name=upstreamOption\\.maxContentLength]').val();
-        upstreamOption.maxInitialLineLength = $('input:text[name=upstreamOption\\.maxInitialLineLength]').val();
-        upstreamOption.maxHeaderSize = $('input:text[name=upstreamOption\\.maxHeaderSize]').val();
-        upstreamOption.maxPoolSize = $("#upstreamOption_maxPoolSize").find(":input").val();
-        upstreamOption.keepAlive = $(':checkbox[name=upstreamOption\\.keepAlive]').prop("checked");
+        upstreamOption.targets = targets;
+        upstreamOption.loadBalance = $(":input[name=proxyPolicy]").val();
 
-        if(upstreamOption.keepAlive)
-            upstreamOption.keepAliveTimeout = $('input:text[name=upstreamOption\\.keepAliveTimeout]').val();
-        upstreamOption.maxIdleTimeout = $('input:text[name=upstreamOption\\.maxIdleTimeout]').val();
-        upstreamOption.maxWaitQueueSize = $('input:text[name=upstreamOption\\.maxWaitQueueSize]').val();
+        if(app.protocol == 'HTTP'){
 
-        var appendHeaders = {};
-        upstreamOption.appendHeaders = appendHeaders;
-        var removeHeaders = new Array();
-        upstreamOption.removeHeaders = removeHeaders;
+            upstreamOption.passQueryString = $('input:checkbox[name=upstreamOption\\.passQueryString]').prop('checked');
+            var passBody = {};
+            upstreamOption.passBody = passBody;
+            passBody.passBodyType = $(":radio[name=passBody\\.passBodyType]:checked").val();
+            if (passBody.passBodyType == 'PASS_BY_METHODS') {
+                var cm = new Array();
+                $('input[name=passBody\\.option]:checked').each(function () {
+                    cm.push($(this).val());
+                });
+                passBody.option = cm.join(',');
+            }
+            upstreamOption.timeout = $('input:text[name=upstreamOption\\.timeout]').val();
+            upstreamOption.retry = $('input:text[name=upstreamOption\\.retry]').val();
+            upstreamOption.maxContentLength = $('input:text[name=upstreamOption\\.maxContentLength]').val();
+            upstreamOption.maxInitialLineLength = $('input:text[name=upstreamOption\\.maxInitialLineLength]').val();
+            upstreamOption.maxHeaderSize = $('input:text[name=upstreamOption\\.maxHeaderSize]').val();
+            upstreamOption.maxPoolSize = $("#upstreamOption_maxPoolSize").find(":input").val();
+            upstreamOption.keepAlive = $(':checkbox[name=upstreamOption\\.keepAlive]').prop("checked");
 
-        var headers = $('#proxyHeaders').find(".header-set");
-        headers.each(function () {
-            var type = $(this).find(":input[name=header\\.type]").val();
-            if (type == 'ADD') {
-                var key = $(this).find(":input[name=header\\.name]").val();
-                if (key == undefined || $.trim(key) == '')
-                    return;
-                appendHeaders[key] = $(this).find(":input[name=header\\.value]").val();
-            } else {
-                var rmHeaders = $(this).find(":input[name=header\\.name]").val();
-                if (rmHeaders != undefined && $.trim(rmHeaders) != '') {
-                    var rm = rmHeaders.split(',');
-                    for (var i = 0; i < rm.length; i++) {
-                        removeHeaders.push(rm[i]);
+            if(upstreamOption.keepAlive)
+                upstreamOption.keepAliveTimeout = $('input:text[name=upstreamOption\\.keepAliveTimeout]').val();
+            upstreamOption.maxIdleTimeout = $('input:text[name=upstreamOption\\.maxIdleTimeout]').val();
+            upstreamOption.maxWaitQueueSize = $('input:text[name=upstreamOption\\.maxWaitQueueSize]').val();
+
+            var appendHeaders = {};
+            upstreamOption.appendHeaders = appendHeaders;
+            var removeHeaders = new Array();
+            upstreamOption.removeHeaders = removeHeaders;
+
+            var headers = $('#proxyHeaders').find(".header-set");
+            headers.each(function () {
+                var type = $(this).find(":input[name=header\\.type]").val();
+                if (type == 'ADD') {
+                    var key = $(this).find(":input[name=header\\.name]").val();
+                    if (key == undefined || $.trim(key) == '')
+                        return;
+                    appendHeaders[key] = $(this).find(":input[name=header\\.value]").val();
+                } else {
+                    var rmHeaders = $(this).find(":input[name=header\\.name]").val();
+                    if (rmHeaders != undefined && $.trim(rmHeaders) != '') {
+                        var rm = rmHeaders.split(',');
+                        for (var i = 0; i < rm.length; i++) {
+                            removeHeaders.push(rm[i]);
+                        }
                     }
                 }
-            }
-        });
-
-        var accessLogOption={};
-        var accFormat = $(":input[name=accessLogOption\\.format]").val();
-        var accPath=$(":input[name=accessLogOption\\.savePath]").val();
-        if(accFormat && $.trim(accFormat) != '')
-            accessLogOption.format = accFormat;
-        if(accPath && $.trim(accPath) != '')
-            accessLogOption.savePath = accPath;
-        extendOption.accessLogOption = accessLogOption;
-
-        if ($('#openStaticServer').prop('checked')) {
-            preference.staticServer = true;
-            preference.root = $(":input[name=docRoot]").val();
-        }
-        if ($('#openSession').prop('checked')) {
-            var openSession = {};
-            extendOption.sessionOption = openSession;
-            openSession.interval = $(":input[name=openSession\\.interval]").val();
-            openSession.name = $(":input[name=openSession\\.name]").val();
-        }
-
-        if ($('#openCrossDomain').prop('checked')) {
-            var crossDomain = {};
-            extendOption.crossDomain = crossDomain;
-            crossDomain.allowedOrigin = $(":input[name=crossDomain\\.allowedOrigin]").val();
-            crossDomain.allowCredentials = $(":input[name=crossDomain\\.allowCredentials]").prop('checked');
-            crossDomain.maxAgeSeconds = $(":input[name=crossDomain\\.maxAgeSeconds]").val();
-            crossDomain.allowedMethods = new Array();
-            $(':input[name=crossDomain\\.allowedMethods]:checked').each(function () {
-                crossDomain.allowedMethods.push($(this).val());
             });
-            crossDomain.allowedHeaders = $(":input[name=crossDomain\\.allowedHeaders]").val().split(',');
-            crossDomain.exposedHeaders = $(":input[name=crossDomain\\.exposedHeaders]").val().split(',');
-        }
 
-        if ($('#openAccessLimit').prop('checked')) {
-            var accessLimit = {};
-            preference.accessLimitOption = accessLimit;
-            accessLimit.limit = $(":input[name=limit\\.limit]").val();
-            accessLimit.limitPerIp = $(":input[name=limit\\.limitPerIp]").val();
-            if ($(":input[name=limit\\.ipFromHeader]").prop('checked')) {
-                accessLimit.ipHeaderKey = $(":input[name=limit\\.ipHeaderKey]").val();
+            if ($('#openHTTPS').prop('checked')) {//开启https
+                var ssl = {};
+                extendOption.ssl = ssl;
+                ssl.port = $(':input[name=ssl\\.port]').val();
+                ssl.certType = $(':input[name=ssl\\.certType]').val();
+                ssl.keyPath = $(':input[name=ssl\\.keyPath]').val();
+                ssl.certPath = $(':input[name=ssl\\.certPath]').val();
             }
-            accessLimit.limitPerClient = $(":input[name=limit\\.limitPerClient]").val();
-            var keys = $(":input[name=limit\\.keys]").val();
-            keys = keys == undefined ? '' : keys;
-            accessLimit.keys = keys.split(',');
-            accessLimit.interval = $(":input[name=limit\\.interval]").val();
-            accessLimit.timeUnit = $(":input[name=limit\\.timeUnit]").val();
-            var overloadedReturn = {};
-            accessLimit.overloadedReturn = overloadedReturn;
-            overloadedReturn.code = $(":input[name=limit\\.overloadedReturn\\.code]").val();
-            overloadedReturn.contentType = $(":input[name=limit\\.overloadedReturn\\.contentType]").val();
-            overloadedReturn.content = $(":input[name=limit\\.overloadedReturn\\.content]").val();
+
+            var preference = {};
+            extendOption.preferenceOption = preference;
+
+            var accessLogOption={};
+            var accFormat = $(":input[name=accessLogOption\\.format]").val();
+            var accPath=$(":input[name=accessLogOption\\.savePath]").val();
+            if(accFormat && $.trim(accFormat) != '')
+                accessLogOption.format = accFormat;
+            if(accPath && $.trim(accPath) != '')
+                accessLogOption.savePath = accPath;
+            extendOption.accessLogOption = accessLogOption;
+
+            if ($('#openStaticServer').prop('checked')) {
+                preference.staticServer = true;
+                preference.root = $(":input[name=docRoot]").val();
+            }
+            if ($('#openSession').prop('checked')) {
+                var openSession = {};
+                extendOption.sessionOption = openSession;
+                openSession.interval = $(":input[name=openSession\\.interval]").val();
+                openSession.name = $(":input[name=openSession\\.name]").val();
+            }
+
+            if ($('#openCrossDomain').prop('checked')) {
+                var crossDomain = {};
+                extendOption.crossDomain = crossDomain;
+                crossDomain.allowedOrigin = $(":input[name=crossDomain\\.allowedOrigin]").val();
+                crossDomain.allowCredentials = $(":input[name=crossDomain\\.allowCredentials]").prop('checked');
+                crossDomain.maxAgeSeconds = $(":input[name=crossDomain\\.maxAgeSeconds]").val();
+                crossDomain.allowedMethods = new Array();
+                $(':input[name=crossDomain\\.allowedMethods]:checked').each(function () {
+                    crossDomain.allowedMethods.push($(this).val());
+                });
+                crossDomain.allowedHeaders = $(":input[name=crossDomain\\.allowedHeaders]").val().split(',');
+                crossDomain.exposedHeaders = $(":input[name=crossDomain\\.exposedHeaders]").val().split(',');
+            }
+
+            if ($('#openAccessLimit').prop('checked')) {
+                var accessLimit = {};
+                preference.accessLimitOption = accessLimit;
+                accessLimit.limit = $(":input[name=limit\\.limit]").val();
+                accessLimit.limitPerIp = $(":input[name=limit\\.limitPerIp]").val();
+                if ($(":input[name=limit\\.ipFromHeader]").prop('checked')) {
+                    accessLimit.ipHeaderKey = $(":input[name=limit\\.ipHeaderKey]").val();
+                }
+                accessLimit.limitPerClient = $(":input[name=limit\\.limitPerClient]").val();
+                var keys = $(":input[name=limit\\.keys]").val();
+                keys = keys == undefined ? '' : keys;
+                accessLimit.keys = keys.split(',');
+                accessLimit.interval = $(":input[name=limit\\.interval]").val();
+                accessLimit.timeUnit = $(":input[name=limit\\.timeUnit]").val();
+                var overloadedReturn = {};
+                accessLimit.overloadedReturn = overloadedReturn;
+                overloadedReturn.code = $(":input[name=limit\\.overloadedReturn\\.code]").val();
+                overloadedReturn.contentType = $(":input[name=limit\\.overloadedReturn\\.contentType]").val();
+                overloadedReturn.content = $(":input[name=limit\\.overloadedReturn\\.content]").val();
+            }
+
+            var ipBlacklist = $('#ipBlacklist').val();
+            if (ipBlacklist != undefined && $.trim(ipBlacklist) != '') {
+                preference.ipBlacklist = ipBlacklist.split(',');
+            }
+
+            var authInstance = $(":input[name=auth\\.instance]").val();
+
+            if ($('#openAuth').prop('checked') && $.trim(authInstance) != '') {
+                var authOption = {};
+                preference.authOption = authOption;
+                authOption.name = $(":input[name=auth\\.name]").val();
+                authOption.instance = authInstance;
+                authOption.usage = $("#auth\\.usage").text();
+                var authFailReturn = {};
+                authOption.failReturn = authFailReturn;
+                authFailReturn.code = $(":input[name=auth\\.failReturn\\.code]").val();
+                authFailReturn.contentType = $(":input[name=auth\\.failReturn\\.contentType]").val();
+                authFailReturn.content = $(":input[name=auth\\.failReturn\\.content]").val();
+            }
+
+            var preHandlerInstance = $(":input[name=preHandler\\.instance]").val();
+            if ($('#openPreHandler').prop('checked') && $.trim(preHandlerInstance) != '') {
+                var preHandler = {};
+                preference.preHttpProcessors = new Array();
+                preHandler.name = $(":input[name=preHandler\\.name]").val();
+                preHandler.instance = preHandlerInstance;
+                preHandler.usage = $("#preHandler\\.usage").text();
+                preference.preHttpProcessors.push(preHandler);
+            }
+
+            var postHandlerInstance = $(":input[name=postHandler\\.instance]").val();
+            if ($('#openPostHandler').prop('checked') && $.trim(postHandlerInstance) != '') {
+                var postHandler = {};
+                preference.postHttpProcessors = new Array();
+                postHandler.name = $(":input[name=postHandler\\.name]").val();
+                postHandler.instance = postHandlerInstance;
+                postHandler.usage = $("#postHandler\\.usage").text();
+                preference.postHttpProcessors.push(postHandler);
+            }
+
+            var customCodes = new Array();
+            var codes = $('#code_panel').find(".code-set:visible");
+            codes.each(function () {
+                var code = {};
+                code.code = $(this).find(":input[name=code]").val();
+                code.contentType = $(this).find(":input[name=contentType]").val();
+                code.content = $(this).find(":input[name=content]").val();
+                customCodes.push(code);
+            });
+            preference.customCodes = customCodes;
+
         }
-
-        var ipBlacklist = $('#ipBlacklist').val();
-        if (ipBlacklist != undefined && $.trim(ipBlacklist) != '') {
-            preference.ipBlacklist = ipBlacklist.split(',');
-        }
-
-        var authInstance = $(":input[name=auth\\.instance]").val();
-
-        if ($('#openAuth').prop('checked') && $.trim(authInstance) != '') {
-            var authOption = {};
-            preference.authOption = authOption;
-            authOption.name = $(":input[name=auth\\.name]").val();
-            authOption.instance = authInstance;
-            authOption.usage = $("#auth\\.usage").text();
-            var authFailReturn = {};
-            authOption.failReturn = authFailReturn;
-            authFailReturn.code = $(":input[name=auth\\.failReturn\\.code]").val();
-            authFailReturn.contentType = $(":input[name=auth\\.failReturn\\.contentType]").val();
-            authFailReturn.content = $(":input[name=auth\\.failReturn\\.content]").val();
-        }
-
-        var preHandlerInstance = $(":input[name=preHandler\\.instance]").val();
-        if ($('#openPreHandler').prop('checked') && $.trim(preHandlerInstance) != '') {
-            var preHandler = {};
-            preference.preProcessors = new Array();
-            preHandler.name = $(":input[name=preHandler\\.name]").val();
-            preHandler.instance = preHandlerInstance;
-            preHandler.usage = $("#preHandler\\.usage").text();
-            preference.preProcessors.push(preHandler);
-        }
-
-        var postHandlerInstance = $(":input[name=postHandler\\.instance]").val();
-        if ($('#openPostHandler').prop('checked') && $.trim(postHandlerInstance) != '') {
-            var postHandler = {};
-            preference.postProcessors = new Array();
-            postHandler.name = $(":input[name=postHandler\\.name]").val();
-            postHandler.instance = postHandlerInstance;
-            postHandler.usage = $("#postHandler\\.usage").text();
-            preference.postProcessors.push(postHandler);
-        }
-
-        var customCodes = new Array();
-        var codes = $('#code_panel').find(".code-set:visible");
-        codes.each(function () {
-            var code = {};
-            code.code = $(this).find(":input[name=code]").val();
-            code.contentType = $(this).find(":input[name=contentType]").val();
-            code.content = $(this).find(":input[name=content]").val();
-            customCodes.push(code);
-        });
-        preference.customCodes = customCodes;
-
 
         $.ajax({
             url: submitURI,
@@ -1256,6 +1373,27 @@
 
     $(function () {
         $(".input-text,.textarea").Huifocusblur();
+
+        $('.tcpOption').hide();
+        $('.httpOption').hide();
+        $('.udpOption').hide();
+
+        $('input[type=radio][name=protocol]').change(function() {
+            console.log(this.id);
+            if (this.id == 'protocol-HTTP') {
+                $('.tcpOption').hide();
+                $('.udpOption').hide();
+                $('.httpOption').show();
+            }else if (this.id == 'protocol-TCP') {
+                $('.httpOption').hide();
+                $('.udpOption').hide();
+                $('.tcpOption').show();
+            }else if(this.id=='protocol-UDP'){
+                $('.tcpOption').hide();
+                $('.httpOption').hide();
+                $('.udpOption').show();
+            }
+        });
 
         $("#extend-panel").Huifold({
             titCell: '.e-p-h',

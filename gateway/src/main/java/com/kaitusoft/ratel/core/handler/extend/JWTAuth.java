@@ -5,7 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.kaitusoft.ratel.handler.AbstractAuthProcessor;
+import com.kaitusoft.ratel.handler.AbstractAuthHttpProcessor;
 import io.vertx.ext.web.RoutingContext;
 
 import java.io.UnsupportedEncodingException;
@@ -18,7 +18,7 @@ import java.util.Map;
  *          <p>
  *          write description here
  */
-public class JWTAuth extends AbstractAuthProcessor {
+public class JWTAuth extends AbstractAuthHttpProcessor {
 
     private static final String TOKEN_NAME = "token";
 

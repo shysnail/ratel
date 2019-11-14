@@ -15,13 +15,13 @@ import io.vertx.ext.web.RoutingContext;
  *          <p>
  *          write description here
  */
-public class RedirectProxy extends Proxy {
+public class HttpRedirectProxy extends HttpProxy {
 
     private int code = 302;
     private String url;
     private boolean isPassQueryString;
 
-    public RedirectProxy(Api path, ProxyOption option) {
+    public HttpRedirectProxy(Api path, ProxyOption option) {
         super(path, option);
         if (option.getProxyType() != ProxyOption.ProxyType.REDIRECT)
             throw new IllegalStateException("proxy type must upstream!");

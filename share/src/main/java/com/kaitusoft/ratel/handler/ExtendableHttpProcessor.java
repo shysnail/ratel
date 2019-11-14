@@ -6,7 +6,7 @@ package com.kaitusoft.ratel.handler;
  *          <p>
  *          write description here
  */
-public abstract class ExtendableProcessor extends Processor {
+public abstract class ExtendableHttpProcessor extends HttpProcessor {
 
     public abstract String usage();
 }

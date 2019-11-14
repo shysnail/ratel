@@ -1,7 +1,7 @@
 package com.kaitusoft.ratel.core.handler;
 
 import com.kaitusoft.ratel.core.model.option.AccessLimitOption;
-import com.kaitusoft.ratel.handler.Processor;
+import com.kaitusoft.ratel.handler.HttpProcessor;
 import com.kaitusoft.ratel.util.StringUtils;
 import io.vertx.ext.web.RoutingContext;
 
@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *          <p>
  *          write description here
  */
-public class DefaultAccessLimit extends Processor {
+public class DefaultAccessLimit extends HttpProcessor {
 
     private AccessLimitOption option;
 

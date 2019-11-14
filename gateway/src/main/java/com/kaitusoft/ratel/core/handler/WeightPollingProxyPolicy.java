@@ -55,7 +55,7 @@ public class WeightPollingProxyPolicy extends ProxyPolicy {
     }
 
     @Override
-    public Target choseNext(RoutingContext context) {
+    public Target choseNext(Object client) {
 //        String url = targets[currentIndex.getAndIncrement() % targets.length].getUrl();
         return getNext1();
     }

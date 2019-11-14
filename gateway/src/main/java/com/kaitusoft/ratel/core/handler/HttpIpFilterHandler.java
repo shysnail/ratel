@@ -1,7 +1,7 @@
 package com.kaitusoft.ratel.core.handler;
 
 import com.kaitusoft.ratel.Result;
-import com.kaitusoft.ratel.handler.Processor;
+import com.kaitusoft.ratel.handler.HttpProcessor;
 import io.vertx.ext.web.RoutingContext;
 
 import java.util.List;
@@ -12,17 +12,17 @@ import java.util.List;
  *          <p>
  *          write description here
  */
-public class IpFilterHandler extends Processor {
+public class HttpIpFilterHandler extends HttpProcessor {
 
     private String[] blacklist;
 
     private Result failReturn;
 
-    public IpFilterHandler(String[] blacklist) {
+    public HttpIpFilterHandler(String[] blacklist) {
         this.blacklist = blacklist;
     }
 
-    public IpFilterHandler(List<String> ips) {
+    public HttpIpFilterHandler(List<String> ips) {
         blacklist = new String[ips.size()];
         ips.toArray(blacklist);
     }

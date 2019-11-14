@@ -7,5 +7,5 @@ package com.kaitusoft.ratel.core.common;
  *          write description here
  */
 public enum ProtocolEnum {
-    HTTP_HTTPS, WEB_SOCKET, TCP;
+    HTTP_HTTPS, WEB_SOCKET, TCP, UDP;
 }
