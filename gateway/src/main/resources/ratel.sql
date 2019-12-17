@@ -17,6 +17,7 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+
 -- ----------------------------
 --  Table structure for `api`
 -- ----------------------------
@@ -31,7 +32,7 @@ CREATE TABLE `api` (
   `vhost` varchar(255) DEFAULT NULL,
   `running` smallint(6) DEFAULT '0' COMMENT '0= 停止，1=运行， 2=暂停',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 --  Table structure for `app`
@@ -39,7 +40,7 @@ CREATE TABLE `api` (
 DROP TABLE IF EXISTS `app`;
 CREATE TABLE `app` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `port` smallint(6) NOT NULL COMMENT '使用的端口',
+  `port` mediumint(6) NOT NULL COMMENT '使用的端口',
   `protocol` varchar(16) DEFAULT NULL,
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
   `deploy_group` smallint(6) DEFAULT NULL,
@@ -49,7 +50,25 @@ CREATE TABLE `app` (
   `vhost` varchar(255) DEFAULT NULL,
   `running` smallint(6) DEFAULT '0' COMMENT '0= 停止，1=运行， 2=暂停',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+--  Table structure for `app_key`
+-- ----------------------------
+DROP TABLE IF EXISTS `app_key`;
+CREATE TABLE `app_key` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL,
+  `name` varchar(60) COLLATE utf8_bin DEFAULT NULL,
+  `app_key` varchar(16) COLLATE utf8_bin DEFAULT NULL,
+  `remark` varchar(300) COLLATE utf8_bin DEFAULT NULL,
+  `app_secret` varchar(64) COLLATE utf8_bin DEFAULT NULL,
+  `create_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `open_register` int(11) DEFAULT '0' COMMENT '是否开放注册',
+  `status` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_r4dh99njkikyhc6wkfogckj2l` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- ----------------------------
 --  Table structure for `groups`
@@ -62,13 +81,6 @@ CREATE TABLE `groups` (
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- ----------------------------
---  Records of `groups`
--- ----------------------------
-BEGIN;
-INSERT INTO `groups` VALUES ('0', '默认', '这是一个默认组', '2018-08-31 17:11:58');
-COMMIT;
 
 -- ----------------------------
 --  Table structure for `node`
@@ -96,7 +108,7 @@ CREATE TABLE `sys_app_status` (
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `I_ND_TIME` (`node`,`create_time`) USING HASH
-) ENGINE=InnoDB AUTO_INCREMENT=18695 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=19290 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 --  Table structure for `sys_status`
@@ -110,7 +122,7 @@ CREATE TABLE `sys_status` (
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `I_ND_TIME` (`node`,`create_time`) USING HASH
-) ENGINE=InnoDB AUTO_INCREMENT=5834 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=6567 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 --  Table structure for `sys_user`
@@ -129,6 +141,15 @@ CREATE TABLE `sys_user` (
   `department` varchar(60) DEFAULT NULL,
   PRIMARY KEY (`id`,`is_locked_out`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+--  Records of `groups`
+-- ----------------------------
+BEGIN;
+INSERT INTO `groups` VALUES ('0', '默认', '这是一个默认组', '2018-08-31 17:11:58');
+COMMIT;
 
 -- ----------------------------
 --  Records of `sys_user`

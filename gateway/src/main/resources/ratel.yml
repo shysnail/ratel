@@ -2,7 +2,7 @@ name: ${project.artifactId}
 version: ${project.version}
 
 ## DEV|PRODUCT, default is product
-mode: DEV
+mode: ${ratel.mode}
 ## port for console , default 5678, if not assign port, console is disabled on this node.
 port: 5678
 

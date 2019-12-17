@@ -33,6 +33,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
+                <ratel.mode>DEV</ratel.mode>
                 <db.url>jdbc:mysql://127.0.0.1:3306/ratel?useUnicode=true&amp;characterEncoding=UTF-8</db.url>
                 <db.username>ratel</db.username>
                 <db.password>123456</db.password>
@@ -45,11 +46,12 @@
         <profile>
             <id>release</id>
             <properties>
-                <db.url>jdbc:mysql://10.9.23.106:3307/ratel</db.url>
+                <ratel.mode>PRODUCT</ratel.mode>
+                <db.url>jdbc:mysql://10.96.2.120:3306/ratel</db.url>
                 <db.username>ratel</db.username>
                 <db.password>123456</db.password>
                 <cluster.port>56789</cluster.port>
-                <zkhosts>localhost:2181</zkhosts>
+                <zkhosts>10.96.0.78:2181</zkhosts>
                 <jmx></jmx>
             </properties>
         </profile>
