@@ -2,6 +2,7 @@ package com.kaitusoft.ratel.core.verticle;
 
 import com.kaitusoft.ratel.ContextAttribute;
 import com.kaitusoft.ratel.core.common.Event;
+import com.kaitusoft.ratel.core.common.ProtocolEnum;
 import com.kaitusoft.ratel.core.common.StatusCode;
 import com.kaitusoft.ratel.core.handler.HttpIpFilterHandler;
 import com.kaitusoft.ratel.core.handler.HttpSystemHandler;
@@ -89,7 +90,7 @@ public class ServerVerticle extends AbstractVerticle {
             if (app == null)
                 continue;
             switch (app.getProtocol()) {
-                case HTTP_HTTPS: removeAppFromPort(app.getId());
+                case HTTP: removeAppFromPort(app.getId());
                         app.unDeployAllApi();
                         removeRouter(app.getRouter());
                         break;
@@ -158,7 +159,7 @@ public class ServerVerticle extends AbstractVerticle {
     private synchronized void startApp(Message<JsonObject> message) {
         AppOption appOption = message.body().mapTo(AppOption.class);
         switch (appOption.getProtocol()){
-            case HTTP_HTTPS:;
+            case HTTP:;
             case WEB_SOCKET: httpServer(appOption, message); break;
             case TCP: tcpServer(appOption, message); break;
             case UDP: udpServer(appOption, message); break;
@@ -558,7 +559,7 @@ public class ServerVerticle extends AbstractVerticle {
                     Set<Map.Entry<Integer, App>> appSet = APPS.entrySet();
                     for (Map.Entry<Integer, App> entry : appSet) {
                         App app = entry.getValue();
-                        if (app.match(host)) {
+                        if (ProtocolEnum.HTTP.equals(app.getProtocol()) && app.match(host)) {
                             Router router = app.getRouter();
                             HOST_ROUTER_MAP.put(host, router);
                             router.handle(request);

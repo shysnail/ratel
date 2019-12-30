@@ -1096,28 +1096,30 @@
         var upstreamOption = {};
         extendOption.upstreamOption = upstreamOption;
 
-        var targets = new Array();
-        var targetsBox = $("#upstream_targets").find(".upstream_target");
-        targetsBox.each(function () {
-            var target = {};
-            target.url = $(this).find(":input[name=target\\.url]").val();
-            if (target.url == undefined || $.trim(target.url) == '') {
+        if(app.protocol != 'HTTP'){
+            var targets = new Array();
+            var targetsBox = $("#upstream_targets").find(".upstream_target");
+            targetsBox.each(function () {
+                var target = {};
+                target.url = $(this).find(":input[name=target\\.url]").val();
+                if (target.url == undefined || $.trim(target.url) == '') {
+                    return;
+                }
+                target.weight = $(this).find(":input[name=target\\.weight]").val();
+                if (target.weight == undefined || $.trim(target.weight) == '') {
+                    target.weight = 1;
+                }
+                targets.push(target);
+            })
+            if (targets.length < 1) {
+                $.Huimodalalert('必须指定转发目标！', 2000, function(){
+                    $('#waitModal').modal('hide');
+                });
                 return;
             }
-            target.weight = $(this).find(":input[name=target\\.weight]").val();
-            if (target.weight == undefined || $.trim(target.weight) == '') {
-                target.weight = 1;
-            }
-            targets.push(target);
-        })
-        if (targets.length < 1) {
-            $.Huimodalalert('必须指定转发目标！', 2000, function(){
-                $('#waitModal').modal('hide');
-            });
-            return;
+            upstreamOption.targets = targets;
+            upstreamOption.loadBalance = $(":input[name=proxyPolicy]").val();
         }
-        upstreamOption.targets = targets;
-        upstreamOption.loadBalance = $(":input[name=proxyPolicy]").val();
 
         if(app.protocol == 'HTTP'){
 
@@ -1375,7 +1377,7 @@
         $(".input-text,.textarea").Huifocusblur();
 
         $('.tcpOption').hide();
-        $('.httpOption').hide();
+        $('.httpOption').show();
         $('.udpOption').hide();
 
         $('input[type=radio][name=protocol]').change(function() {

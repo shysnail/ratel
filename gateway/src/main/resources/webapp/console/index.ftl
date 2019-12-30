@@ -186,7 +186,7 @@
 
                     var options = new Array();
 
-                    if(v.protocol == 'HTTP_HTTPS')
+                    if(v.protocol == 'HTTP')
                         options.push("<a href='${context.domain!''}/api.html?appId=" + v.id + "' ><i class='iconfont icon-zitiyulan' title='查看APIs'></i></a>");
 
                     if (running == 0){

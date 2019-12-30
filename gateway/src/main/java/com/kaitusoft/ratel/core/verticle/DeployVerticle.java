@@ -408,7 +408,7 @@ public class DeployVerticle extends AbstractVerticle {
                 logger.error("启动应用网关:{} -> failed! :", object.getString("name"), res.cause().getMessage());
             } else {
                 DEPLOY_APP.put(object.getInteger("id").toString(), res.result().body().toString());
-                if("HTTP_HTTPS".equalsIgnoreCase(object.getString("protocol"))){
+                if("HTTP".equalsIgnoreCase(object.getString("protocol"))){
                     startAppAllApi(object.getInteger("id"), deployApiResult -> {
                         if (deployApiResult.succeeded()) {
                             JsonObject result = deployApiResult.result();

@@ -25,7 +25,7 @@ public class AppOption implements Serializable {
 
     private String name;
 
-    private ProtocolEnum protocol = ProtocolEnum.HTTP_HTTPS;
+    private ProtocolEnum protocol = ProtocolEnum.HTTP;
 
     private String vhost;
 

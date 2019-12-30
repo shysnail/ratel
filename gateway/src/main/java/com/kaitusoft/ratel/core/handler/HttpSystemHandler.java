@@ -56,7 +56,7 @@ public class HttpSystemHandler extends HttpProcessor {
         context.put(ContextAttribute.CTX_ATTR_PATH, path.getPath());
         String uri = request.uri();
         context.put(ContextAttribute.CTX_REQ_URI, uri);
-        if (app.getProtocol() == ProtocolEnum.HTTP_HTTPS) {
+        if (app.getProtocol() == ProtocolEnum.HTTP) {
             context.put(ContextAttribute.CTX_REQ_SCHEMA, context.request().isSSL() ? "https" : "http");
         }
         vertx.eventBus().send(Event.formatInternalAddress(Event.ACTION_REQUEST), Json.encode(context.data()));

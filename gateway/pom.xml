@@ -49,7 +49,7 @@
                 <ratel.mode>PRODUCT</ratel.mode>
                 <db.url>jdbc:mysql://10.96.2.120:3306/ratel</db.url>
                 <db.username>ratel</db.username>
-                <db.password>123456</db.password>
+                <db.password>cKLoTOt$x4</db.password>
                 <cluster.port>56789</cluster.port>
                 <zkhosts>10.96.0.78:2181</zkhosts>
                 <jmx></jmx>

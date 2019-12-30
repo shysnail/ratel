@@ -102,11 +102,13 @@ public class HttpUpstreamProxy extends HttpProxy {
         String prefix = context.currentRoute().getPath();
 
         String host = target.getHostAndPort();
+
         clientHeaders.set(HttpHeaders.HOST, host);
         String refer = clientRequest.scheme() + "://" + host + "/";
         if (!StringUtils.isEmpty(clientHeaders.get(HttpHeaders.REFERER))) {
             clientHeaders.set(HttpHeaders.REFERER, refer);
         }
+
         if (!StringUtils.isEmpty(clientHeaders.get(HttpHeaders.ORIGIN))) {
             clientHeaders.set(HttpHeaders.ORIGIN, refer);
         }

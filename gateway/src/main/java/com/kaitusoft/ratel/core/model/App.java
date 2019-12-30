@@ -90,8 +90,12 @@ public class App {
         this.name = option.getName();
         this.id = option.getId();
         if (!StringUtils.isEmpty(option.getVhost()) && !"*".equals(option.getVhost().trim())) {
-            vhost = option.getVhost().split(" ");
-
+            if(option.getVhost().indexOf(",") >= 0)
+                vhost = option.getVhost().split(",");
+            else if(option.getVhost().indexOf(";") >= 0)
+                vhost = option.getVhost().split(";");
+            else
+                vhost = option.getVhost().split(" ");
             if (vhost != null && vhost.length > 0) {
                 regexs = new Pattern[vhost.length];
 
@@ -129,7 +133,7 @@ public class App {
             crossDomain = extendOption.getCrossDomain();
         }
 
-        if (protocol == ProtocolEnum.HTTP_HTTPS && extendOption.getSsl() != null) {
+        if (protocol == ProtocolEnum.HTTP && extendOption.getSsl() != null) {
             ssl = extendOption.getSsl();
         }
 

@@ -516,7 +516,7 @@
                 $('#port').text(app.port);
 
                 $('#protocol').text(app.protocol);
-                if (app.protocol == 'HTTP_HTTPS') {
+                if (app.protocol == 'HTTP') {
                     $('.tcpOption').hide();
                     $('.udpOption').hide();
 
