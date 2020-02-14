@@ -107,8 +107,13 @@
                                     <extraArgument>-Dfile.encoding=UTF-8</extraArgument>
                                     <extraArgument>-Dvertx.cacheDirBase=temp/file-cache</extraArgument>
                                     <!--调整内存大小-->
-                                    <extraArgument>-Xmx2G -Xms2G -Xmn512M -XX:SurvivorRatio=8 -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=256m -Xss128k</extraArgument>
-
+                                    <extraArgument>-Xmx2G</extraArgument>
+                                    <extraArgument>-Xms2G</extraArgument>
+                                    <extraArgument>-Xmn512M</extraArgument>
+                                    <extraArgument>-XX:SurvivorRatio=8</extraArgument>
+                                    <extraArgument>-XX:MetaspaceSize=128m</extraArgument>
+                                    <extraArgument>-XX:MaxMetaspaceSize=256m</extraArgument>
+                                    <extraArgument>-Xss128k</extraArgument>
                                 </extraArguments>
                             </jvmSettings>
                         </program>
