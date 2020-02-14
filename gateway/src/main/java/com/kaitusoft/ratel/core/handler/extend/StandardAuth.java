@@ -45,11 +45,11 @@ public class StandardAuth extends AbstractAuthHttpProcessor {
 
     @Override
     public String usage() {
-        return "Auth2.0方式，redis存储客户端token<br/>" +
-                "使用方式：在请求头附带租户口令。header(ticket, 租户口令)" +
+        return "oAuth2.0方式<br/>" +
+                "使用方式：在请求头附带租户口令。header(Authorization, bearer 租户口令)" +
                 "<br/>" +
-                "获取口令时方式:<br/>" +
-                "认证api?clientId=租户id&cipher=md5(clientSecret+key)&key=随机code";
+                "获取口令方式:<br/>" +
+                "认证api?clientId=租户id&cipher=md5(clientSecret+timestamp)&timestamp=请求时的时间戳，long型，精确到毫秒<br/>";
     }
 
     @Override
@@ -57,12 +57,16 @@ public class StandardAuth extends AbstractAuthHttpProcessor {
 
         MultiMap headers = context.request().headers();
 
-        String ticket = headers.get("ticket");
+        String ticket = headers.get("Authorization");
         if (StringUtils.isEmpty(ticket)) {
-            ticket = context.request().getParam("ticket");
+            ticket = context.request().getParam("Authorization");
         }
         if (StringUtils.isEmpty(ticket))
             return false;
+
+        if(ticket.startsWith("bearer ")){
+            ticket = ticket.substring(7);
+        }
 
         String clientId = headers.get("clientId");
         String appId = headers.get("appId");

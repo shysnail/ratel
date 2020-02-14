@@ -15,11 +15,11 @@ public class DemoAuth extends AbstractAuthHttpProcessor {
 
     @Override
     public String usage() {
-        return "Auth2.0方式<br/>" +
-                "使用方式：在请求头附带租户口令。header(accessToken, 租户口令)" +
+        return "oAuth2.0方式<br/>" +
+                "使用方式：在请求头附带租户口令。header(Authorization, bearer 租户口令)" +
                 "<br/>" +
-                "获取口令时方式:<br/>" +
-                "认证api?clientId=租户id&cipher=md5(clientSecret+key)&key=随机code<br/>" +
+                "获取口令方式:<br/>" +
+                "认证api?clientId=租户id&cipher=md5(clientSecret+timestamp)&timestamp=请求时的时间戳，long型，精确到毫秒<br/>" +
                 "本例仅做展示，不执行实际验证";
     }
 
