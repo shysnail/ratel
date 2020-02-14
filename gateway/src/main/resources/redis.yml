@@ -1,3 +1,4 @@
 mode: SINGLE
+password: ${redis.password}
 masterAddresses:
-  - "localhost:6379"
+  - "${redis.address}"

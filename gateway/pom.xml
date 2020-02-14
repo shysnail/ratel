@@ -39,6 +39,8 @@
                 <db.password>123456</db.password>
                 <cluster.port>56789</cluster.port>
                 <zkhosts>localhost:2181</zkhosts>
+                <redis.address>localhost:6379</redis.address>
+                <redis.password></redis.password>
                 <jmx>-Djava.rmi.server.hostname=0.0.0.0 -Dcom.sun.management.jmxremote.port=8990 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false</jmx>
             </properties>
         </profile>
@@ -53,6 +55,8 @@
                 <db.password>cKLoTOt$x4</db.password>
                 <cluster.port>56789</cluster.port>
                 <zkhosts>10.96.0.78:2181</zkhosts>
+                <redis.address>10.96.2.179:6379</redis.address>
+                <redis.password>QRHBibt7</redis.password>
                 <jmx></jmx>
             </properties>
         </profile>
