@@ -1,4 +1,5 @@
-FROM registry1.cosmoplat.com/common/java8-apm:1.1.0
+#FROM registry1.cosmoplat.com/common/java8-apm:1.1.0
+FROM registry1.cosmoplat.com/cosmoplat/java:openjdk-8-jre
 
 VOLUME /var/applogs
 
