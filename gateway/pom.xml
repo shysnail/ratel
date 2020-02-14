@@ -48,7 +48,6 @@
         <profile>
             <id>release</id>
             <properties>
-                <logger.rootdir>/var/applogs</logger.rootdir>
                 <ratel.mode>PRODUCT</ratel.mode>
                 <db.url>jdbc:mysql://10.96.2.128:3306/ratel</db.url>
                 <db.username>ratel</db.username>

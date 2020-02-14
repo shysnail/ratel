@@ -220,7 +220,7 @@
             <id>release</id>
             <properties>
                 <logger.level>INFO</logger.level>
-                <logger.rootdir>logs</logger.rootdir>
+                <logger.rootdir>/var/applogs</logger.rootdir>
                 <ratel.version>1.0-RELEASE</ratel.version>
             </properties>
         </profile>
