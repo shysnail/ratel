@@ -198,8 +198,8 @@
             <groupId>org.hyperic</groupId>
             <artifactId>sigar</artifactId>
             <version>1.6.4</version>
+            <systemPath>${project.basedir}/lib/sigar-1.6.4.jar</systemPath>
         </dependency>
-
 
     </dependencies>
 
