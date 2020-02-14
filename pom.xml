@@ -194,13 +194,13 @@
             <version>3.3.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.hyperic</groupId>
-            <artifactId>sigar</artifactId>
-            <version>1.6.4</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/sigar-1.6.4.jar</systemPath>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.hyperic</groupId>-->
+            <!--<artifactId>sigar</artifactId>-->
+            <!--<version>1.6.4</version>-->
+            <!--<scope>system</scope>-->
+            <!--<systemPath>${project.basedir}/lib/sigar-1.6.4.jar</systemPath>-->
+        <!--</dependency>-->
 
     </dependencies>
 
