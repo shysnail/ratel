@@ -19,6 +19,6 @@
     <script type="text/javascript" src="${context.domain!''}/h-ui-lib/jquery-ui/1.9.1/jquery-ui.min.js"></script>
     <script type="text/javascript" src="${context.domain!''}/h-ui/js/H-ui.js"></script>
     <script type="text/javascript" src="${context.domain!''}/h-ui-lib/jquery.SuperSlide/2.1.1/jquery.SuperSlide.min.js"></script>
-    <script type="text/javascript" src="${context.domain!''}/js/jquery.cookie.js"></script>
-    <script type="text/javascript" src="${context.domain!''}/js/jquery.md5.js"></script>
-    <script type="text/javascript" src="${context.domain!''}/js/common.js"></script>
+    <script type="text/javascript" src="${context.domain!''}/scripts/jquery.cookie.js"></script>
+    <script type="text/javascript" src="${context.domain!''}/scripts/jquery.md5.js"></script>
+    <script type="text/javascript" src="${context.domain!''}/scripts/common.js"></script>

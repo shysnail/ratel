@@ -83,8 +83,8 @@
         </div>
     </div>
 </section>
-<script type="text/javascript" src="js/map.js"></script>
-<script type="text/javascript" src="js/echarts.common.min.js"></script>
+<script type="text/javascript" src="scripts/map.js"></script>
+<script type="text/javascript" src="scripts/echarts.common.min.js"></script>
 
 </body>
 <script type="text/javascript">
