@@ -113,7 +113,7 @@
                                     <extraArgument>-XX:SurvivorRatio=8</extraArgument>
                                     <extraArgument>-XX:MetaspaceSize=128m</extraArgument>
                                     <extraArgument>-XX:MaxMetaspaceSize=256m</extraArgument>
-                                    <extraArgument>-Xss128k</extraArgument>
+                                    <extraArgument>-Xss228k</extraArgument>
                                 </extraArguments>
                             </jvmSettings>
                         </program>
