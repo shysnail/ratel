@@ -72,6 +72,8 @@ public class StandardAuth extends AbstractAuthHttpProcessor {
         String appId = headers.get("appId");
 
         String tokenJson = (String) cache.get("TK_" + appId + "." + clientId);
+        logger.debug("got token{} for {}-{}", tokenJson, appId, clientId);
+
         if (StringUtils.isEmpty(tokenJson)) {
             return false;
         }
@@ -80,7 +82,7 @@ public class StandardAuth extends AbstractAuthHttpProcessor {
 
         JsonObject json = new JsonObject(tokenJson);
         String token = json.getString("token");
-        long expiresAt = json.getLong("expireAt");
+        long expiresAt = json.getLong("expires");
 
         //已过期
 //        if (expiresAt < System.currentTimeMillis()) {
