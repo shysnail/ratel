@@ -81,9 +81,12 @@ public class HttpUpstreamProxy extends HttpProxy {
             }
         }
 
+        //如果使用这种方式，需要先将请求体提出来，否则请求end，请求体就拿不到了。
 //        context.vertx().runOnContext(upstream -> {
-            doUpstream(context, clientRequest, clientHeaders);
+//            doUpstream(context, clientRequest, clientHeaders);
 //        });
+
+        doUpstream(context, clientRequest, clientHeaders);
     }
 
     private void doUpstream(RoutingContext context, HttpServerRequest clientRequest, MultiMap clientHeaders) {
