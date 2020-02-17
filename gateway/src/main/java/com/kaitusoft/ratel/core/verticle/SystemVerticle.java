@@ -36,7 +36,7 @@ public class SystemVerticle extends AbstractVerticle {
      * 暂未启用此方法
      */
     private static final Map<Api, Set<Target>> API_DEAD_TARGETS = new ConcurrentHashMap<>();
-    private static int COLLECT_PERIOD = 120000;
+    private static int COLLECT_PERIOD = 300000;
 
 //    /** JVM最大内存量 */
 //    private long maxMemory = 0;
