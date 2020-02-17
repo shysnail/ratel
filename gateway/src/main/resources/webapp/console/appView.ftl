@@ -552,7 +552,7 @@
                 $('#upstreamOption\\.proxyPolicy').change();
 
                 var targets = "";
-                for (var i = 0; i < upstreamOption.targets.length; i++) {
+                for (var i = 0; upstreamOption.targets != undefined && i < upstreamOption.targets.length; i++) {
                     var t = upstreamOption.targets[i];
                     targets += "SERVER: " + t.url + " 权重：" + t.weight + "<br/>"
                 }

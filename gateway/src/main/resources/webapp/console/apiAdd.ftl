@@ -826,7 +826,7 @@
                         $("#upstreamOption_maxPoolSize").find(":input").val(upstream.maxPoolSize);
                     }
                     var targets = upstream.targets;
-                    for (var i = 0; i < targets.length; i++) {
+                    for (var i = 0; targets && i < targets.length; i++) {
                         var t = targets[i];
                         addUpstream(t.url, t.weight);
                     }
