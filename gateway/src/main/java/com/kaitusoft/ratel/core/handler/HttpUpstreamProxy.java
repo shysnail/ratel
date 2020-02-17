@@ -66,7 +66,7 @@ public class HttpUpstreamProxy extends HttpProxy {
         MultiMap clientHeaders = clientRequest.headers();
 
 //        clientHeaders.remove("Cookie").remove("cookie");
-//        clientHeaders.remove("Host").remove("host");
+        clientHeaders.remove("Host").remove("host");
 
         if (upstreamOption.getAppendHeaders() != null)
             upstreamOption.getAppendHeaders().forEach((k, v) -> {
@@ -81,9 +81,9 @@ public class HttpUpstreamProxy extends HttpProxy {
             }
         }
 
-        context.vertx().runOnContext(upstream -> {
+//        context.vertx().runOnContext(upstream -> {
             doUpstream(context, clientRequest, clientHeaders);
-        });
+//        });
     }
 
     private void doUpstream(RoutingContext context, HttpServerRequest clientRequest, MultiMap clientHeaders) {
@@ -286,16 +286,17 @@ public class HttpUpstreamProxy extends HttpProxy {
         });
 
         if (passBody != null) {
-            if (hasBody(clientRequest)) {
-                passBody.pass(reqId, clientRequest, upstream);
-            } else {
-                Buffer buffer = context.remove(ContextAttribute.CTX_REQ_BODY);
-                if (buffer != null && buffer.length() > 0) {
-                    passBody.pass(reqId, upstreamMethod, buffer, upstream);
-                } else {
-                    upstream.end();
-                }
-            }
+            passBody.pass(reqId, clientRequest, upstream);
+//            if (hasBody(clientRequest)) {
+//                passBody.pass(reqId, clientRequest, upstream);
+//            } else {
+//                Buffer buffer = context.remove(ContextAttribute.CTX_REQ_BODY);
+//                if (buffer != null && buffer.length() > 0) {
+//                    passBody.pass(reqId, upstreamMethod, buffer, upstream);
+//                } else {
+//                    upstream.end();
+//                }
+//            }
         } else {
             upstream.end();
         }
