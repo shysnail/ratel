@@ -69,7 +69,7 @@ public class DefaultAccessLimit extends HttpProcessor {
         long interval = checkTime - lastCheckTime;
         logger.debug("限速 频次 :{}/{}，当前次数:{}， 间隔:{}", option.getLimit() + "|" + option.getLimitPerClient() + "|" + option.getLimitPerIp(), option.getInterval() + option.getTimeUnit().toString(), totalCount.get(), interval);
 
-        //按照ip计数
+        //按照请求方身份
         if (option.getLimitPerClient() > 0) {
             StringBuilder idsb = new StringBuilder();
             for (String key : option.getKeys()) {
@@ -120,6 +120,10 @@ public class DefaultAccessLimit extends HttpProcessor {
 
         }
 
+        /*
+         * 对本接口总访问数做限制
+         * 一般不推荐，一般推荐：用户
+         */
         if (option.getLimit() > 0) {
             if (intervalCount.get() > option.getLimit()) {
                 if (interval <= INTERVAL)

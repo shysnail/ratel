@@ -211,7 +211,7 @@
                                 </div>
                                 <div class="check-box">
                                     <input type="radio" id="passBody_passBodyType-2" name="passBody.passBodyType"
-                                           value="ALL_PASS">
+                                           value="ALL_HOLD">
                                     <label for="passBody_passBodyType-2">不透传</label>
                                 </div>
                                 <div class="check-box">
