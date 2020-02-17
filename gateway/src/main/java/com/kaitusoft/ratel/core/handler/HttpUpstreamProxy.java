@@ -81,7 +81,12 @@ public class HttpUpstreamProxy extends HttpProxy {
             }
         }
 
-        //如果使用这种方式，需要先将请求体提出来，否则请求end，请求体就拿不到了。
+        //如果使用runOnContext这种方式，需要先将请求体提出来，否则请求end，请求体就拿不到了。
+
+//        clientRequest.bodyHandler(body -> {
+//            if (body != null)
+//                context.put(ContextAttribute.CTX_REQ_BODY, body);
+//        });
 //        context.vertx().runOnContext(upstream -> {
 //            doUpstream(context, clientRequest, clientHeaders);
 //        });
@@ -288,6 +293,9 @@ public class HttpUpstreamProxy extends HttpProxy {
 
         });
 
+        /*
+        如果是runOnContext，这里需要修改
+         */
         if (passBody != null) {
             passBody.pass(reqId, clientRequest, upstream);
 //            if (hasBody(clientRequest)) {
