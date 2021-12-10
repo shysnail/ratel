@@ -22,7 +22,7 @@
         <!--<version.fastjson>1.2.3</version.fastjson>-->
         <version.jedis>2.9.0</version.jedis>
         <version.druid>1.1.9</version.druid>
-        <version.log4j>2.11.0</version.log4j>
+        <version.log4j>2.15.0</version.log4j>
         <version.slf4j>1.7.21</version.slf4j>
         <version.common.pool2>2.2</version.common.pool2>
         <mainClass>com.kaitusoft.ratel.Startup</mainClass><!-- 启动类 -->
